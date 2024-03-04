@@ -53,11 +53,11 @@ class DetailExport implements FromView
         $option_questions = array();
         $piaDpiaRop_ids = [2,9,12];
         
-          $filled_questions = DB::table('external_users_forms')->select('*' )
-          ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->pluck('question_key');
+          $filled_questions = DB::table('user_form_links')->select('*' )
+          ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->pluck('question_key');
 
-           $filled_questions_internal = DB::table('user_forms')->select('*' )
-          ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->pluck('question_key');
+           $filled_questions_internal = DB::table('user_form_links')->select('*' )
+          ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->pluck('question_key');
         
           $filled_questions = $filled_questions->merge($filled_questions_internal);
        
@@ -117,14 +117,14 @@ class DetailExport implements FromView
              $temporary_question  = DB::table('questions')->where('question' , $option )->pluck('form_key');
                  // $question_response = DB::table('external_users_filled_response')->wherein('question_key' , $temporary_question )->get();
                  
-                 $question_response = DB::table('external_users_forms')->select('*' )->wherein('external_users_filled_response.question_key' , $temporary_question )
-                       ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->get();
+                 $question_response = DB::table('user_form_links')->select('*' )->wherein('external_users_filled_response.question_key' , $temporary_question )
+                       ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->get();
 
 
                   // $question_response2 = DB::table('internal_users_filled_response')->wherein('question_key' , $temporary_question )->get();
 
-                   $question_response2 = DB::table('user_forms')->select('*' )->wherein('internal_users_filled_response.question_key' , $temporary_question )
-                         ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->get();
+                   $question_response2 = DB::table('user_form_links')->select('*' )->wherein('internal_users_filled_response.question_key' , $temporary_question )
+                         ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->get();
 
 
                   // dd($question_response);
@@ -228,14 +228,14 @@ array_push($option_questions, array(
                                               })
                                            ->pluck('form_key'); 
         $mc_ids = $mc_ids->merge($new_data_inv_mc_ids);                                                                                       
-            $emails = DB::table('external_users_forms')->select('*' )
-                ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
+            $emails = DB::table('user_form_links')->select('*' )
+                ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
                 // dd($emails);
 
              // $emails = DB::table('external_users_filled_response')->wherein('question_key' , $mc_ids)->select('user_email','external_user_form_id')->get();
    
-                 $emails_internal = DB::table('user_forms')->select('*' )
-                  ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
+                 $emails_internal = DB::table('user_form_links')->select('*' )
+                  ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
                   // dd($emails_internal);
    
         // $emails_internal = DB::table('internal_users_filled_response')->wherein('question_key' , $mc_ids)->select('user_id as user_email'  ,'user_form_id as external_user_form_id' )->get();
@@ -300,16 +300,16 @@ array_push($option_questions, array(
 
                   }
          
-              $exuserfrmid = DB::table('external_users_forms')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
+              $exuserfrmid = DB::table('user_form_links')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
               $form_name = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title')->first();
               $form_name_fr = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title_fr')->first();
 
               if($form_name == null) {
-                 $exuserfrmid = DB::table('user_forms')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
+                 $exuserfrmid = DB::table('user_form_links')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
                  $form_name = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title')->first();
               }
                if($form_name_fr == null) {
-                 $exuserfrmid = DB::table('user_forms')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
+                 $exuserfrmid = DB::table('user_form_links')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
                  $form_name_fr = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title_fr')->first();
               }
 
@@ -411,12 +411,12 @@ $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en) ];
             $client_id = Auth::user()->client_id;
             $option_questions = array();
             // $filled_questions = DB::table('external_users_filled_response')->pluck('question_key');          
-            $filled_questions = DB::table('external_users_forms')->select('*' )
-             ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->pluck('question_key');
+            $filled_questions = DB::table('user_form_links')->select('*' )
+             ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->pluck('question_key');
           // $filled_questions = DB::table('external_users_filled_response')->pluck('question_key');
           // $filled_questions_internal = DB::table('internal_users_filled_response')->pluck('question_key');
-           $filled_questions_internal = DB::table('user_forms')->select('*' )
-          ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->pluck('question_key');
+           $filled_questions_internal = DB::table('user_form_links')->select('*' )
+          ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->pluck('question_key');
           $filled_questions = $filled_questions->merge($filled_questions_internal);
           $question = [];
           // if($category_id == 1){  
@@ -449,19 +449,19 @@ $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en) ];
 
              $option = $value->question;
              $temporary_question  = DB::table('questions')->where('question' , $option )->pluck('form_key');
-                 $question_response = DB::table('external_users_forms')->select('*' )
+                 $question_response = DB::table('user_form_links')->select('*' )
                             ->wherein('external_users_filled_response.question_key' , $temporary_question )
                                       ->join(
                                              'external_users_filled_response' ,
-                                             'external_users_forms.id' , '=' ,
+                                             'user_form_links.id' , '=' ,
                                              'external_users_filled_response.external_user_form_id')
-                                      ->where('external_users_forms.client_id' , $client_id)->get();
+                                      ->where('user_form_links.client_id' , $client_id)->get();
 
-                  $question_response2 = DB::table('user_forms')->select('*' )
+                  $question_response2 = DB::table('user_form_links')->select('*' )
                                       ->wherein('internal_users_filled_response.question_key' , $temporary_question )
                                       ->join(
                                              'internal_users_filled_response' ,
-                                              'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->get();
+                                              'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->get();
 
 
                   if(count($question_response2) > 5){
@@ -537,12 +537,12 @@ $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en) ];
        
 
 
-            $emails = DB::table('external_users_forms')->select('*' )
-                ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
+            $emails = DB::table('user_form_links')->select('*' )
+                ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
 
            
-                 $emails_internal = DB::table('user_forms')->select('*' )
-                  ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
+                 $emails_internal = DB::table('user_form_links')->select('*' )
+                  ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->wherein('question_key' , $mc_ids)->get();
              
          if(count($emails_internal) > 5){
           foreach($emails_internal as $internal_question){
@@ -674,10 +674,10 @@ $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en) ];
 
             }
          
-              $exuserfrmid = DB::table('external_users_forms')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
+              $exuserfrmid = DB::table('user_form_links')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
               $form_name = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title')->first();
               if($form_name == null) {
-                 $exuserfrmid = DB::table('user_forms')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
+                 $exuserfrmid = DB::table('user_form_links')->where('id' ,$users->external_user_form_id)->pluck('sub_form_id')->first();
                  $form_name = DB::table('sub_forms')->where('id' ,$exuserfrmid)->pluck('title')->first();
               }
            array_push($data, array(
