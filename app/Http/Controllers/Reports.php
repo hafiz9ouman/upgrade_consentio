@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 
 class Reports extends Controller{
 
@@ -170,7 +173,7 @@ class Reports extends Controller{
 
     }
 
-    public function get_asset_report($id){
+    public function get_asset_report($id, Request $request){
         
         $group_id=$id;
 
@@ -180,7 +183,7 @@ class Reports extends Controller{
 
         $group = DB::table('forms')
         ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
-        ->select('audit_questions_groups.group_name')
+        // ->select('audit_questions_groups.group_name')
         ->where('forms.group_id', $group_id)
         ->get();
         // dd($group);
@@ -189,19 +192,21 @@ class Reports extends Controller{
         ->join('group_questions', 'group_questions.section_id', 'group_section.id')
         ->select('group_questions.question_short', 'group_questions.question_short_fr')
         ->where('group_section.group_id', $group_id)
+        ->orderBy('group_questions.question_num', 'asc')
         ->get();
         // dd($questions);
 
         $form = DB::table('forms')->where('group_id', $group_id)->select('id')->first();
         $form_id = $form->id;
 
-        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->pluck('id');
+        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->where('client_id', $company_id)->pluck('id');
 
         $remediation_plans = [];
         $client_id=Auth::user()->client_id;
         
         foreach ($subforms as $subform) {
             $plans = DB::table('user_responses')
+                ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
                 ->join('evaluation_rating', 'evaluation_rating.rate_level', 'user_responses.rating')
                 ->join('sub_forms', 'sub_forms.id', 'user_responses.sub_form_id')
                 ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
@@ -220,20 +225,36 @@ class Reports extends Controller{
                   'assets.business_owner', 
                   'assets.business_unit', 
                   'data_classifications.classification_name_en', 
+                  'data_classifications.classification_name_fr', 
                   'impact.impact_name_en', 
+                  'impact.impact_name_fr', 
                   'user_responses.question_response'
                   )
-                ->orderby('user_responses.question_id', 'ASC')
+                ->orderBy('group_questions.question_num', 'asc')
                 ->get();
 
-            $remediation_plans[$subform] = $plans;
+                if(count($plans) > 0){
+                    $remediation_plans[$subform] = $plans;
+                }
         }
+        // $remediation_plans = $remediation_plans->paginate(2);
+        // $remediation_plans = Paginate::paginate($remediation_plans,1);
+        // $remediation_plans = $this->paginate($remediation_plans);
         // dd($remediation_plans);
 
+        if($request->Segment(1)=="dash"){
+            return view("reports.audit_report_dash", compact('group','group_id', 'data', 'remediation_plans', 'company'));
+        }
         
                 
         return view("reports.asset_report", compact('group','group_id', 'data', 'remediation_plans', 'company'));
 
+    }
+
+    public function paginate($items, $perPage = 2, $page = null, $options = []){
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
     }
     
     public function getAssetsByFilters($id, Request $request){
@@ -261,19 +282,21 @@ class Reports extends Controller{
         ->join('group_questions', 'group_questions.section_id', 'group_section.id')
         ->select('group_questions.question_short', 'group_questions.question_short_fr')
         ->where('group_section.group_id', $group_id)
+        ->orderBy('group_questions.question_num', 'asc')
         ->get();
         // dd($questions);
 
         $form = DB::table('forms')->where('group_id', $group_id)->select('id')->first();
         $form_id = $form->id;
 
-        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->pluck('id');
+        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->where('client_id', $company_id)->pluck('id');
 
         $remediation_plans = [];
         $client_id=Auth::user()->client_id;
         
         foreach ($subforms as $subform) {
             $plans = DB::table('user_responses')
+                ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
                 ->join('evaluation_rating', 'evaluation_rating.rate_level', 'user_responses.rating')
                 ->join('sub_forms', 'sub_forms.id', 'user_responses.sub_form_id')
                 ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
@@ -293,9 +316,11 @@ class Reports extends Controller{
                 'assets.country', 
                 'assets.business_unit', 
                 'data_classifications.classification_name_en', 
+                'data_classifications.classification_name_fr', 
                 'impact.impact_name_en', 
+                'impact.impact_name_fr', 
                 'user_responses.question_response')
-                ->orderBy('user_responses.question_id', 'ASC');
+                ->orderBy('group_questions.question_num', 'asc');
 
             if (!empty($class)) {
                 $plans->whereIn('data_classifications.classification_name_en', $class);
@@ -320,21 +345,24 @@ class Reports extends Controller{
         return response()->json($remediation_plans);
     }
 
-    public function remediation_report(){
+    public function get_remediation_report($id, Request $request){
         // dd($id);
-        // $group_id=$id;
+        $group_id=$id;
 
-        // $data = DB::table('group_section')
-        // ->join('group_questions', 'group_questions.section_id', 'group_section.id')
-        // ->select('group_questions.question_short', 'group_questions.question_short_fr')
-        // ->where('group_section.group_id', $group_id)
-        // ->get();
-        // dd($questions);
+        $group = DB::table('forms')
+        ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+        // ->select('audit_questions_groups.group_name')
+        ->where('forms.group_id', $group_id)
+        ->get();
+        // dd($group);
 
         // $form = DB::table('forms')->where('group_id', $group_id)->select('id')->first();
         // $form_id = $form->id;
 
         // $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->pluck('id');
+
+        $company_id= Auth::User()->client_id;
+        $company = DB::table('users')->where('id', $company_id)->select('name')->first();
 
         $client_id=Auth::user()->client_id;
 
@@ -345,14 +373,17 @@ class Reports extends Controller{
                     ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
             })
             ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
             ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
             ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
             ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
             ->leftjoin('impact', 'impact.id', 'assets.impact_id')
             ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
             ->where('remediation_plans.client_id', '=', $client_id)
+            ->where('forms.group_id', '=', $group_id)
             ->select('assets.name as asset_name', 
             'assets.business_unit', 
+            'forms.title', 
             'sub_forms.other_id', 
             'group_questions.control_id', 
             'group_questions.question_short', 
@@ -369,14 +400,18 @@ class Reports extends Controller{
             
         
         // dd($remediation_plans);
+        if($request->Segment(1)=="dash"){
+            return view("reports.reme_report_dash", compact('remediation_plans', 'client_id', 'group_id', 'group', 'company'));
+        }
                 
-        return view("reports.all_remediation_report", compact('remediation_plans', 'client_id'));
+        return view("reports.one_remediation_report", compact('remediation_plans', 'client_id', 'group_id', 'group', 'company'));
 
     }
 
-    public function getRemediationByBusinessUnits(Request $request){
+    public function getoneRemediationByBusinessUnits(Request $request){
         
         $selectedUnits = $request->input('units');
+        $group_id = $request->input('group');
         // dd($selectedUnits);
 
         // Fetch assets from the database based on selected business units
@@ -389,15 +424,18 @@ class Reports extends Controller{
                     ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
             })
             ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
             ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
             ->join('assets', 'assets.id', 'sub_forms.asset_id')
             ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
             ->leftjoin('impact', 'impact.id', 'assets.impact_id')
             ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
             ->where('remediation_plans.client_id', '=', $client_id)
+            ->where('forms.group_id', '=', $group_id)
             ->whereIn('assets.business_unit', $selectedUnits)
             ->select('assets.name as asset_name', 
             'assets.business_unit', 
+            'forms.title', 
             'sub_forms.other_id', 
             'group_questions.control_id', 
             'group_questions.question_short', 
@@ -434,14 +472,17 @@ class Reports extends Controller{
                     ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
             })
             ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
             ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
             ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
             ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
             ->leftjoin('impact', 'impact.id', 'assets.impact_id')
             ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
             ->where('remediation_plans.client_id', '=', $client_id)
+            ->where('forms.group_id', '=', $group_id)
             ->select('assets.name as asset_name', 
             'assets.business_unit', 
+            'forms.title', 
             'sub_forms.other_id', 
             'group_questions.control_id', 
             'group_questions.question_short', 
@@ -477,6 +518,254 @@ class Reports extends Controller{
         return response()->json($units);
     }
 
+    public function remediation_report(Request $request){
+        // dd($id);
+        // $group_id=$id;
+
+        // $data = DB::table('group_section')
+        // ->join('group_questions', 'group_questions.section_id', 'group_section.id')
+        // ->select('group_questions.question_short', 'group_questions.question_short_fr')
+        // ->where('group_section.group_id', $group_id)
+        // ->get();
+        // dd($questions);
+
+        // $form = DB::table('forms')->where('group_id', $group_id)->select('id')->first();
+        // $form_id = $form->id;
+
+        // $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->pluck('id');
+
+        $client_id=Auth::user()->client_id;
+
+        
+        $remediation_plans = DB::table('remediation_plans')
+            ->join('user_responses', function ($join) {
+                $join->on('remediation_plans.control_id', '=', 'user_responses.question_id')
+                    ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
+            })
+            ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
+            ->join('group_section', 'group_section.id', 'group_questions.section_id')
+            ->join('audit_questions_groups', 'audit_questions_groups.id', 'group_section.group_id')
+            ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
+            ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
+            ->leftjoin('impact', 'impact.id', 'assets.impact_id')
+            ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
+            ->where('remediation_plans.client_id', '=', $client_id)
+            ->select('assets.name as asset_name', 
+            'assets.business_unit', 
+            'sub_forms.other_id', 
+            'group_questions.control_id', 
+            'group_questions.question_short', 
+            'audit_questions_groups.group_name', 
+            'audit_questions_groups.group_name_fr', 
+            'user_responses.rating', 
+            'users.name as user_name', 
+            'remediation_plans.proposed_remediation', 
+            'remediation_plans.completed_actions', 
+            'remediation_plans.eta', 
+            'remediation_plans.status', 
+            'remediation_plans.post_remediation_rating'
+            )
+            ->get();
+
+            if($request->Segment(1)=="dash"){
+                return view("reports.global_report_dash", compact('remediation_plans', 'client_id'));
+            }
+        
+        // dd($remediation_plans);
+                
+        return view("reports.all_remediation_report", compact('remediation_plans', 'client_id'));
+
+    }
+
+    public function getRemediationByBusinessUnits(Request $request){
+        
+        $selectedUnits = $request->input('units');
+        $selectedGroup = $request->input('groups');
+        // dd($selectedUnits);
+
+        // Fetch assets from the database based on selected business units
+        $client_id=Auth::user()->client_id;
+
+        if($selectedUnits || $selectedGroup){
+            // dd('ok');
+            $units = DB::table('remediation_plans')
+            ->join('user_responses', function ($join) {
+                $join->on('remediation_plans.control_id', '=', 'user_responses.question_id')
+                    ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
+            })
+            ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
+            ->join('group_section', 'group_section.id', 'group_questions.section_id')
+            ->join('audit_questions_groups', 'audit_questions_groups.id', 'group_section.group_id')
+            ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
+            ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
+            ->leftjoin('impact', 'impact.id', 'assets.impact_id')
+            ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
+            ->where('remediation_plans.client_id', '=', $client_id)
+            ->select('assets.name as asset_name', 
+            'assets.business_unit', 
+            'sub_forms.other_id', 
+            'group_questions.control_id', 
+            'group_questions.question_short', 
+            'audit_questions_groups.group_name', 
+            'audit_questions_groups.group_name_fr', 
+            'user_responses.rating', 
+            'users.name as user_name', 
+            'remediation_plans.proposed_remediation', 
+            'remediation_plans.completed_actions', 
+            'remediation_plans.eta', 
+            'remediation_plans.status', 
+            'remediation_plans.post_remediation_rating'
+            )
+            ->orderBy('remediation_plans.id', 'ASC');
+
+            if (!empty($selectedUnits)) {
+                $units->whereIn('assets.business_unit', $selectedUnits);
+            }
+
+            if (!empty($selectedGroup)) {
+                $units->whereIn('audit_questions_groups.group_name', $selectedGroup);
+            }
+
+            $units = $units->get();
+
+            // dd($units);
+
+            foreach ($units as $data) {
+                if($data->rating){
+                    $color = DB::table('evaluation_rating')->where('rate_level', $data->rating)->where('owner_id', $client_id)->first();
+                    $data->bg_icolor = $color->color;
+                    $data->t_icolor = $color->text_color;
+                    $data->irating = $color->rating;
+                }
+
+                if($data->post_remediation_rating){
+                    $post = DB::table('evaluation_rating')->where('id', $data->post_remediation_rating)->first();
+                    $data->bg_pcolor = $post->color;
+                    $data->t_pcolor = $post->text_color;
+                    $data->prating = $post->rating; 
+                }  
+            }
+        }
+        else{
+            $units = DB::table('remediation_plans')
+            ->join('user_responses', function ($join) {
+                $join->on('remediation_plans.control_id', '=', 'user_responses.question_id')
+                    ->whereColumn('remediation_plans.sub_form_id', '=', 'user_responses.sub_form_id');
+            })
+            ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join('group_questions', 'group_questions.id', 'user_responses.question_id')
+            ->join('group_section', 'group_section.id', 'group_questions.section_id')
+            ->join('audit_questions_groups', 'audit_questions_groups.id', 'group_section.group_id')
+            ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
+            ->leftjoin('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
+            ->leftjoin('impact', 'impact.id', 'assets.impact_id')
+            ->leftjoin('users', 'users.id', 'remediation_plans.person_in_charge')
+            ->where('remediation_plans.client_id', '=', $client_id)
+            ->select('assets.name as asset_name', 
+            'assets.business_unit', 
+            'sub_forms.other_id', 
+            'group_questions.control_id', 
+            'group_questions.question_short', 
+            'audit_questions_groups.group_name', 
+            'audit_questions_groups.group_name_fr', 
+            'user_responses.rating', 
+            'users.name as user_name', 
+            'remediation_plans.proposed_remediation', 
+            'remediation_plans.completed_actions', 
+            'remediation_plans.eta', 
+            'remediation_plans.status', 
+            'remediation_plans.post_remediation_rating'
+            )
+            ->get();
+
+            // dd($units);
+
+            foreach ($units as $data) {
+                if($data->rating){
+                    $color = DB::table('evaluation_rating')->where('id', $data->rating)->first();
+                    $data->bg_icolor = $color->color;
+                    $data->t_icolor = $color->text_color;
+                    $data->irating = $color->rating;
+                }
+
+                if($data->post_remediation_rating){
+                    $post = DB::table('evaluation_rating')->where('id', $data->post_remediation_rating)->first();
+                    $data->bg_pcolor = $post->color;
+                    $data->t_pcolor = $post->text_color;
+                    $data->prating = $post->rating; 
+                }  
+            }
+        }
+        
+
+        // Return the assets as a JSON response
+        return response()->json($units);
+    }
+    
+    public function make_favorite(Request $request){
+        // dd($request->all());
+        $group_id= $request->group_id;
+        if($group_id){
+            DB::table("forms")->where('group_id', $group_id)->update([
+                "is_fav"=>1,
+            ]);
+            return response()->json([
+                "code" => 200,
+                "message" => "Report Favorite"
+            ]);
+        }
+        else{
+            return response()->json([
+                "code" => 404,
+                "message" => "Not Found"
+            ]);
+        }
+        
+    }
+
+    public function remove_favorite(Request $request){
+        // dd($request->all());
+        $group_id= $request->group_id;
+        if($group_id){
+            DB::table("forms")->where('group_id', $group_id)->update([
+                "is_fav"=>0,
+            ]);
+            return response()->json([
+                "code" => 200,
+                "message" => "Report Favorite Removed"
+            ]);
+        }
+        else{
+            return response()->json([
+                "code" => 404,
+                "message" => "Not Found"
+            ]);
+        }
+
+    }
+
+    public function favor_report(){
+
+        $client_id= Auth::user()->client_id;
+
+        $fav_id = DB::table('forms')
+        ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+        ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+        ->where('forms.type', 'audit')
+        ->where('sub_forms.client_id', $client_id)
+        ->where('forms.is_fav', 1)
+        ->select('forms.group_id', 'audit_questions_groups.group_name',  'audit_questions_groups.group_name_fr')
+        ->groupby('sub_forms.parent_form_id')
+        ->orderby('date_created', 'desc')
+        ->get();
+
+        return response()->json([
+            'group_ids'=> $fav_id
+        ]);
+    }
+
     ///////////////////
     public function __construct(){
 
@@ -508,40 +797,46 @@ class Reports extends Controller{
         $user   = Auth::user()->id;
         $client_id = Auth::user()->client_id;
         $option_questions = [];
-        $piaDpiaRop_ids = [2, 9, 12];
+        // $piaDpiaRop_ids = [2, 9, 12];
 
-        $filled_questions = DB::table('external_users_forms')->select('*')
-            ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')
-            ->where('external_users_forms.client_id', $client_id)
+        $filled_questions = DB::table('user_form_links')->select('*')
+            ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')
+            ->where('user_form_links.client_id', $client_id)
             ->pluck('question_key');
+            // dd($filled_questions);
 
-        $filled_questions_internal = DB::table('user_forms')->select('*')
-            ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')
-            ->where('user_forms.client_id', $client_id)->pluck('question_key');
+        $filled_questions_internal = DB::table('user_form_links')->select('*')
+            ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')
+            ->where('user_form_links.client_id', $client_id)
+            ->pluck('question_key');
+            // dd($filled_questions_internal);
 
         $filled_questions = $filled_questions->merge($filled_questions_internal);
 
-        $question = DB::table('questions')->where('type', 'mc')->wherein('form_id', $piaDpiaRop_ids)->wherein('form_key', $filled_questions)
-            ->where(function ($query) {
-                return $query
-                    ->where('question_num', '=', null)
-                    ->orWhere('question_num', '=', '');
-            })
+        // dd($filled_questions);
+
+        $question = DB::table('questions')->where('type', 'mc')
+        // ->wherein('form_id', $piaDpiaRop_ids)
+        ->where('is_data_inventory_question', 1)
+        ->wherein('form_key', $filled_questions)
 		->get();
+
+        // dd($question);
 
         $data_inv_forms = DB::table('questions')->where('is_data_inventory_question', 1)->pluck('form_id')->unique()->toArray();
 
+        // dd($data_inv_forms);
+
         $new_data_inv_questions = DB::table('questions')->where('type', 'mc')->wherein('form_id', $data_inv_forms)->wherein('form_key', $filled_questions)
             ->where('is_data_inventory_question', 1)
-            ->where(function ($query) {
-                return $query
-                    ->where('question_num', '=', null)
-                    ->orWhere('question_num', '=', '');
-            })
         ->get();
+
+        // dd($new_data_inv_questions);
 
         $question = $question->merge($new_data_inv_questions);
         $question = $question->unique('question');
+        // dd($question);
+
         $en_opt = array();
         $fr_opt = array();
 
@@ -566,12 +861,15 @@ class Reports extends Controller{
             $option = $value->question;
             $option_fr = $value->question_fr;
             $temporary_question = DB::table('questions')->where('question', $option)->pluck('form_key');
+            // dd($temporary_question);
 
-            $question_response = DB::table('external_users_forms')->select('*')->wherein('external_users_filled_response.question_key', $temporary_question)
-                ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id', $client_id)->get();
+            $question_response = DB::table('user_form_links')->select('*')->wherein('external_users_filled_response.question_key', $temporary_question)
+                ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id', $client_id)->get();
+                // dd($question_response);
 
-            $question_response2 = DB::table('user_forms')->select('*')->wherein('internal_users_filled_response.question_key', $temporary_question)
-                ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')->where('user_forms.client_id', $client_id)->get();
+            $question_response2 = DB::table('user_form_links')->select('*')->wherein('internal_users_filled_response.question_key', $temporary_question)
+                ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')->where('user_form_links.client_id', $client_id)->get();
+                // dd($question_response2);
 
             if (count($question_response2) > 5) {
                 foreach ($question_response2 as $internal_question) {
@@ -632,33 +930,27 @@ class Reports extends Controller{
             }
         }
 
-        $mc_ids = DB::table('questions')->where('type', 'mc')->wherein('form_id', $piaDpiaRop_ids)
-		->where(function ($query) {
-			return $query
-				->where('question_num', '=', null)
-				->orWhere('question_num', '=', '');
-		})->pluck('form_key');
+        $mc_ids = DB::table('questions')->where('type', 'mc')
+        // ->wherein('form_id', $piaDpiaRop_ids)
+        ->where('is_data_inventory_question', 1)
+        ->pluck('form_key');
 
         $data_inv_forms = DB::table('questions')->where('is_data_inventory_question', 1)->pluck('form_id')->unique()->toArray();
 
         $new_data_inv_mc_ids = DB::table('questions')->where('type', 'mc')->wherein('form_id', $data_inv_forms)
             ->where('is_data_inventory_question', 1)
-            ->where(function ($query) {
-                return $query
-                    ->where('question_num', '=', null)
-                    ->orWhere('question_num', '=', '');
-            })
         ->pluck('form_key');
 		
         $mc_ids = $mc_ids->merge($new_data_inv_mc_ids);
-        $emails = DB::table('external_users_forms')->select('*')
-            ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')
-            ->where('external_users_forms.client_id', $client_id)->wherein('question_key', $mc_ids)
+
+        $emails = DB::table('user_form_links')->select('*')
+            ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')
+            ->where('user_form_links.client_id', $client_id)->wherein('question_key', $mc_ids)
         ->get();
 
-        $emails_internal = DB::table('user_forms')->select('*')
-            ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')
-            ->where('user_forms.client_id', $client_id)->wherein('question_key', $mc_ids)
+        $emails_internal = DB::table('user_form_links')->select('*')
+            ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')
+            ->where('user_form_links.client_id', $client_id)->wherein('question_key', $mc_ids)
 		->get();
 
         if (count($emails_internal) > 5) {
@@ -706,16 +998,16 @@ class Reports extends Controller{
                         $flag = false;
                     }
                 }
-                $exuserfrmid = DB::table('external_users_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                 $form_name = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title')->first();
                 $form_name_fr = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title_fr')->first();
 
                 if ($form_name == null) {
-                    $exuserfrmid = DB::table('user_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                    $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                     $form_name = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title')->first();
                 }
                 if ($form_name_fr == null) {
-                    $exuserfrmid = DB::table('user_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                    $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                     $form_name_fr = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title_fr')->first();
                 }
                 $finalar = array_filter($finalar);
@@ -788,6 +1080,7 @@ class Reports extends Controller{
                 $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en)];
             }
         }
+        // dd($option_questions);
 
         return view('reports.global_data_inventory', compact('final', 'data', 'option_questions', 'final_fr'));
     }
@@ -803,39 +1096,37 @@ class Reports extends Controller{
         $option_questions = array();
         $piaDpiaRop_ids = [2, 9, 12];
 
-        $filled_questions = DB::table('external_users_forms')->select('*')
-            ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')
-            ->where('external_users_forms.client_id', $client_id)
+        $filled_questions = DB::table('user_form_links')->select('*')
+            ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')
+            ->where('user_form_links.client_id', $client_id)
             ->pluck('question_key');
          
-        $filled_questions_internal = DB::table('user_forms')->select('*')
-            ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')
-            ->where('user_forms.client_id', $client_id)
+        $filled_questions_internal = DB::table('user_form_links')->select('*')
+            ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')
+            ->where('user_form_links.client_id', $client_id)
             ->pluck('question_key');
 
         $filled_questions = $filled_questions->merge($filled_questions_internal);
+        // dd($filled_questions);
+
         $question = DB::table('questions')
                     ->where('type', 'mc')
+                    // ->where('is_data_inventory_question', 1)
                     ->wherein('form_id', $piaDpiaRop_ids)
                     ->wherein('form_key', $filled_questions)
-                    ->where(function ($query) {
-                        return $query
-                            ->where('question_num', '=', null)
-                            ->orWhere('question_num', '=', '');
-                    })->get();
+                    ->get();
 
         $data_inv_forms = DB::table('questions')->where('is_data_inventory_question', 1)->pluck('form_id')->unique()->toArray();
+        // dd($data_inv_forms);
 
         $new_data_inv_questions = DB::table('questions')->where('type', 'mc')->wherein('form_id', $data_inv_forms)->wherein('form_key', $filled_questions)
 		->where('is_data_inventory_question', 1)
-		->where(function ($query) {
-			return $query
-				->where('question_num', '=', null)
-				->orWhere('question_num', '=', '');
-		})->get();
+		->get();
+        // dd($new_data_inv_questions);
 
         $question = $question->merge($new_data_inv_questions);
         $question = $question->unique('question');
+        // dd($question);
 
         //Bari start
         $en_opt = [];
@@ -862,11 +1153,11 @@ class Reports extends Controller{
             $option = $value->question;
             $option_fr = $value->question_fr;
             $temporary_question = DB::table('questions')->where('question', $option)->pluck('form_key');
-            $question_response = DB::table('external_users_forms')->select('*')->wherein('external_users_filled_response.question_key', $temporary_question)
-                ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id', $client_id)->get();
+            $question_response = DB::table('user_form_links')->select('*')->wherein('external_users_filled_response.question_key', $temporary_question)
+                ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id', $client_id)->get();
 
-            $question_response2 = DB::table('user_forms')->select('*')->wherein('internal_users_filled_response.question_key', $temporary_question)
-                ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')->where('user_forms.client_id', $client_id)->get();
+            $question_response2 = DB::table('user_form_links')->select('*')->wherein('internal_users_filled_response.question_key', $temporary_question)
+                ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')->where('user_form_links.client_id', $client_id)->get();
 
             if (count($question_response2) > 5) {
                 foreach ($question_response2 as $internal_question) {
@@ -936,31 +1227,24 @@ class Reports extends Controller{
             }
         }
 		
-        $mc_ids = DB::table('questions')->where('type', 'mc')->wherein('form_id', $piaDpiaRop_ids)
-		->where(function ($query) {
-			return $query
-				->where('question_num', '=', null)
-				->orWhere('question_num', '=', '');
-		})
+        $mc_ids = DB::table('questions')->where('type', 'mc')
+        ->wherein('form_id', $piaDpiaRop_ids)
+        // ->where('is_data_inventory_question', 1)
 		->pluck('form_key');
 
         $data_inv_forms = DB::table('questions')->where('is_data_inventory_question', 1)->pluck('form_id')->unique()->toArray();
 
         $new_data_inv_mc_ids = DB::table('questions')->where('type', 'mc')->wherein('form_id', $data_inv_forms)
 		->where('is_data_inventory_question', 1)
-		->where(function ($query) {
-			return $query
-				->where('question_num', '=', null)
-				->orWhere('question_num', '=', '');
-		})
 		->pluck('form_key');
 
         $mc_ids = $mc_ids->merge($new_data_inv_mc_ids);
-        $emails = DB::table('external_users_forms')->select('*')
-            ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id', $client_id)->wherein('question_key', $mc_ids)->get();
+        
+        $emails = DB::table('user_form_links')->select('*')
+            ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id', $client_id)->wherein('question_key', $mc_ids)->get();
 
-        $emails_internal = DB::table('user_forms')->select('*')
-            ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')->where('user_forms.client_id', $client_id)->wherein('question_key', $mc_ids)->get();
+        $emails_internal = DB::table('user_form_links')->select('*')
+            ->join('internal_users_filled_response', 'user_form_links.id', '=', 'internal_users_filled_response.user_form_id')->where('user_form_links.client_id', $client_id)->wherein('question_key', $mc_ids)->get();
 
         if (count($emails_internal) > 5) {
             foreach ($emails_internal as $internal_question) {
@@ -976,9 +1260,11 @@ class Reports extends Controller{
         $data = [];
         $flag = false;
         $count = 0;
+        // dd($emails);
 
         if (count($emails) > 0) {
             foreach ($emails as $users) {
+                // dd($users);
 				
                 $ex_user_res = DB::table('external_users_filled_response')->wherein('question_key', $mc_ids)->where('external_user_form_id', $users->external_user_form_id)->get();
 
@@ -1011,17 +1297,20 @@ class Reports extends Controller{
                     }
                 }
 
-                $exuserfrmid = DB::table('external_users_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                 $form_name = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title')->first();
+                $form_id = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('id')->first();
                 $form_name_fr = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title_fr')->first();
 
                 if ($form_name == null) {
-                    $exuserfrmid = DB::table('user_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                    $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                     $form_name = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title')->first();
+                    $form_id = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('id')->first();
                 }
                 if ($form_name_fr == null) {
-                    $exuserfrmid = DB::table('user_forms')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
+                    $exuserfrmid = DB::table('user_form_links')->where('id', $users->external_user_form_id)->pluck('sub_form_id')->first();
                     $form_name_fr = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('title_fr')->first();
+                    $form_id = DB::table('sub_forms')->where('id', $exuserfrmid)->pluck('id')->first();
                 }
                 //bari start
                 $finalar = array_filter($finalar);
@@ -1056,8 +1345,74 @@ class Reports extends Controller{
                 }
                 if ($language == 'en') {
                     $op_count = $count;
+                    $ac_id= DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                    ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                    ->join('questions', 'questions.form_id', 'forms.id')
+                    ->where('sub_forms.client_id', $client_id)
+                    ->where('questions.question', 'What activity are you assessing?')
+                    ->pluck('form_key');
+                    // dd($ac_id);
+                    $as_id= DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                    ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                    ->join('questions', 'questions.form_id', 'forms.id')
+                    ->where('sub_forms.client_id', $client_id)
+                    ->where(function ($query) {
+                        $query->where('questions.question', 'What assets are used to process the data for this activity?')
+                              ->orWhere('questions.question', 'What assets are used to store and process data for this activity?');
+                    })
+                    ->pluck('form_key');
+                    // dd($as_id);
+                    if(count($ac_id)>0){
+                        // $activity = Null;
+                        $activity = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                        ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                        ->join('internal_users_filled_response', 'user_form_links.id', 'internal_users_filled_response.user_form_id')
+                        ->where('user_form_links.user_id', $users->user_id)
+                        ->where('user_form_links.client_id', $client_id)
+                        ->where('internal_users_filled_response.question_key', $ac_id)
+                        ->pluck('question_response')->first();
+                        
+                        if($activity == Null){
+                            $activity = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                            ->join('external_users_filled_response', 'user_form_links.id', 'external_users_filled_response.external_user_form_id')
+                            ->where('user_form_links.user_id', NULL)
+                            ->where('user_form_links.client_id', $client_id)
+                            ->where('external_users_filled_response.question_key', $ac_id)
+                            ->pluck('question_response')->first();
+                        }
+                        // dd($activity);
+                    }
+                    else{
+                        $activity=null;
+                    }
+                    if(count($as_id)>0){
+                        // $asset = Null;
+                        $asset = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                        ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                        ->join('internal_users_filled_response', 'user_form_links.id', 'internal_users_filled_response.user_form_id')
+                        ->where('user_form_links.user_id', $users->user_id)
+                        ->where('user_form_links.client_id', $client_id)
+                        ->where('internal_users_filled_response.question_key', $as_id)
+                        ->pluck('question_response')->first();
+                        if($asset == Null){
+                            $asset = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                            ->join('external_users_filled_response', 'user_form_links.id', 'external_users_filled_response.external_user_form_id')
+                            ->where('user_form_links.user_id', NULL)
+                            ->where('user_form_links.client_id', $client_id)
+                            ->where('external_users_filled_response.question_key', $as_id)
+                            ->pluck('question_response')->first();
+                        }
+                    }
+                    else{
+                        $asset=null;
+                    }
+                    // dd($asset);
                     array_push($data, array(
                         "email" => $users->user_email,
+                        "activity" => $activity,
+                        "asset" => $asset,
                         "response" => $finalar,
                         "response_fr" => $finalar_fr,
                         "sub_form_title" => $form_name,
@@ -1071,8 +1426,74 @@ class Reports extends Controller{
                     $finalar_fr = $finalar;
                     $finalar = $temp;
                     $op_count = $count;
+                    $ac_id= DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                    ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                    ->join('questions', 'questions.form_id', 'forms.id')
+                    ->where('sub_forms.client_id', $client_id)
+                    ->where('questions.question', 'What activity are you assessing?')
+                    ->pluck('form_key');
+                    // dd($ac_id);
+                    $as_id= DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                    ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                    ->join('questions', 'questions.form_id', 'forms.id')
+                    ->where('sub_forms.client_id', $client_id)
+                    ->where(function ($query) {
+                        $query->where('questions.question', 'What assets are used to process the data for this activity?')
+                              ->orWhere('questions.question', 'What assets are used to store and process data for this activity?');
+                    })
+                    ->pluck('form_key');
+                    // dd($as_id);
+                    
+                    if(count($ac_id)>0){
+                        // $activity = Null;
+                        $activity = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                        ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                        ->join('internal_users_filled_response', 'user_form_links.id', 'internal_users_filled_response.user_form_id')
+                        ->where('user_form_links.user_id', $users->user_id)
+                        ->where('user_form_links.client_id', $client_id)
+                        ->where('internal_users_filled_response.question_key', $ac_id)
+                        ->pluck('question_response')->first();
+                        if($activity == Null){
+                            $activity = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                            ->join('external_users_filled_response', 'user_form_links.id', 'external_users_filled_response.external_user_form_id')
+                            ->where('user_form_links.user_id', NULL)
+                            ->where('user_form_links.client_id', $client_id)
+                            ->where('external_users_filled_response.question_key', $ac_id)
+                            ->pluck('question_response')->first();
+                        }
+                    }
+                    else{
+                        $activity=null;
+                    }
+                    // dd($activity);
+                    if(count($as_id)>0){
+                        // $asset = Null;
+                        $asset = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                        ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                        ->join('internal_users_filled_response', 'user_form_links.id', 'internal_users_filled_response.user_form_id')
+                        ->where('user_form_links.user_id', $users->user_id)
+                        ->where('user_form_links.client_id', $client_id)
+                        ->where('internal_users_filled_response.question_key', $as_id)
+                        ->pluck('question_response')->first();
+                        if($asset == Null){
+                            $asset = DB::table('sub_forms')->where('sub_forms.id', $form_id)
+                            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+                            ->join('external_users_filled_response', 'user_form_links.id', 'external_users_filled_response.external_user_form_id')
+                            ->where('user_form_links.user_id', NULL)
+                            ->where('user_form_links.client_id', $client_id)
+                            ->where('external_users_filled_response.question_key', $as_id)
+                            ->pluck('question_response')->first();
+                        }
+                    }
+                    else{
+                        $asset=null;
+                    }
+                    // dd($asset);
                     array_push($data, array(
                         "email" => $users->user_email,
+                        "activity" => $activity,
+                        "asset" => $asset,
                         "response" => $finalar,
                         "response_fr" => $finalar_fr,
                         "sub_form_title" => $form_name,
@@ -1096,6 +1517,7 @@ class Reports extends Controller{
                 $final_fr[] = $opt_final_fr[array_search($final1, $opt_final_en)];
             }
         }
+        // dd($data);
 
         return view('reports.detail_data_inventory', compact('final', 'data', 'option_questions', 'final_fr'));
     }

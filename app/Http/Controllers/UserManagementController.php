@@ -96,7 +96,7 @@ class UserManagementController extends Controller{
     }
 
     public function store_edit(Request $request,$id){
-        //dd($request->all());
+        // dd($request->all());
 
         $this->validate($request, [
             'name' => 'required',
@@ -108,6 +108,7 @@ class UserManagementController extends Controller{
         );
 
         $mail_verification = $request['mail_verification'];
+        $is_blocked = $request['is_blocked'];
         $any = $request->input('email');
         $company_id = Auth::user()->client_id;
 
@@ -204,6 +205,14 @@ class UserManagementController extends Controller{
                     "created_by" => Auth::user()->id,
                 );
             }
+
+            if($is_blocked == "on"){
+                $data["is_blocked"] = "Yes";
+            }
+            else{
+                $data["is_blocked"] = "No";
+            }
+            // dd($data);
             if ($request->input('password')) {
                 $data['password'] = bcrypt($request->input('password'));
             }

@@ -39,7 +39,7 @@ class AuditFormsController extends Controller{
                 ->where('type', 'audit')
                 ->selectRaw('audit_questions_groups.group_name_fr as group_name, forms.title_fr as title, count(sub_forms.id) as subforms_count, user_id, forms.id as form_id, forms.group_id as group_id, forms.date_created')
                 ->groupBy('forms.id')
-                ->orderBy('date_created')
+                ->orderBy('client_forms.client_form_id', 'DESC')
                 ->get();
         }else{
             $audit_forms = DB::table('forms')
@@ -50,7 +50,7 @@ class AuditFormsController extends Controller{
                 ->where('type', 'audit')
                 ->selectRaw('audit_questions_groups.group_name as group_name, forms.title, count(sub_forms.id) as subforms_count, user_id, forms.id as form_id, forms.group_id as group_id, forms.date_created')
                 ->groupBy('forms.id')
-                ->orderBy('date_created')
+                ->orderBy('client_forms.client_form_id', 'DESC')
                 ->get();
         }
         // echo "<pre>";
@@ -92,7 +92,8 @@ class AuditFormsController extends Controller{
                 'assets.name as asset_name',
                 'user_form_links.form_link_id'
             )
-        ->get();
+            ->orderBy('user_form_links.created', 'DESC')
+            ->get();
 
         // print("<pre>");
         // print_r($sub_forms);
@@ -307,6 +308,7 @@ class AuditFormsController extends Controller{
                     audit_questions_groups.group_name_fr,
                     "External" as user_type'
                     ))
+                    ->orderby('ufl.updated_at', 'DESC')
             ->get();
 
             $int_forms = DB::table('sub_forms')
@@ -336,7 +338,7 @@ class AuditFormsController extends Controller{
                     audit_questions_groups.group_name_fr, 
                     "Internal" as user_type'
                 ))
-                ->orderby('sub_forms.id')
+                ->orderby('ufl.updated_at', 'DESC')
             ->get();
             
             $completed_forms = $int_forms->merge($ext_forms);
@@ -366,7 +368,8 @@ class AuditFormsController extends Controller{
                     assets.asset_number, 
                     assets.name as asset_name, 
                     "Internal" as user_type'))
-                ->get();
+                    ->orderby('ufl.updated_at', 'DESC')
+                    ->get();
             $completed_forms = $int_forms;
         }
         if (Auth::user()->role == 1){
@@ -421,6 +424,7 @@ class AuditFormsController extends Controller{
                     audit_questions_groups.group_name_fr,
                     "External" as user_type'
                     ))
+                    ->orderby('ufl.created', 'DESC')
             ->get();
 
             $int_forms = DB::table('sub_forms')
@@ -451,7 +455,7 @@ class AuditFormsController extends Controller{
                     audit_questions_groups.group_name_fr, 
                     "Internal" as user_type'
                 ))
-                ->orderby('sub_forms.id')
+                ->orderby('ufl.created', 'DESC')
             ->get();
             
             $completed_forms = $int_forms->merge($ext_forms);
@@ -481,6 +485,7 @@ class AuditFormsController extends Controller{
                     assets.asset_number, 
                     assets.name as asset_name, 
                     "Internal" as user_type'))
+                    ->orderby('ufl.created', 'DESC')
                 ->get();
             $completed_forms = $int_forms;
         }
@@ -525,7 +530,7 @@ class AuditFormsController extends Controller{
             ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
             ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
             ->where('parent_form_id', '=', $form_id)
-            ->select('sub_forms.*', 'assets.name AS asset_name', 'assets.asset_number', 'forms.title as parent_form_title', 'audit_questions_groups.group_name', 'audit_questions_groups.group_name_fr');
+            ->select('sub_forms.*', 'assets.name AS asset_name', 'assets.asset_number', 'forms.title as parent_form_title', 'audit_questions_groups.group_name', 'audit_questions_groups.group_name_fr')->orderBy('sub_forms.id', 'DESC');
         if (Auth::user()->role == 1) {
             $subforms_list = $subforms_list->get();
         } else {
@@ -1136,25 +1141,111 @@ class AuditFormsController extends Controller{
 
         $expiry_note  = "";
 
-        // if (strtotime(date('Y-m-d')) > strtotime($user_form_link_info->expiry_time)){
-        //     if (Auth::user()->role == 2){
-        //         if ($user_form_link_info->is_locked != '1') {
-        //             $expiry_note = 'The user failed to submit form before expiry time .';
-        //         }
-        //     }
-        // }
-        // else if (!$user_form_link_info->is_accessible) {
-        //     return view('user_form_not_accessible');
-        // }
+        if (strtotime(date('Y-m-d')) > strtotime($user_form_link_info->expiry_time)){
+            // dd("ok");
+            if (Auth::user()->role == 2 || Auth::user()->user_type == 1) {
+                if ($user_form_link_info->is_locked != '1') {
+                    $expiry_note = 'The user failed to submit form before expiry time .';
+                    $user_form_link_info->is_locked = 1;
+                }
+            }
+        }
+        if (!$user_form_link_info->is_accessible) {
+            return view('user_form_not_accessible');
+        }
+        if ($user_form_link_info->is_temp_lock == 1) {
+            // dd("ok3");
+            $expiry_note = __('The Form is locked by Admin');
+            $user_form_link_info->is_locked = 1;
+        }
+        // dd($user_form_link_info);
 
         $client_id  = $user_form_link_info->client_id;
         $user_id    = $user_form_link_info->user_id; 
         $subfirm_id = $user_form_link_info->sub_form_id;
 
         $form_details  = SubForm::with('form.group.sections.questions')->find($subfirm_id);
+        $group_id      = $form_details->form->group->id;
         foreach ($form_details->form->group->sections as $section) {
             foreach ($section->questions as  $question){
                 $question->responses = UserResponse::where('sub_form_id', $subfirm_id)->where('question_id',  $question->id)->first();
+                // dd($question->responses);
+                if($question->responses==null){
+                    continue;
+                }
+                if($question->type == 'sc'){
+                    if(session('locale')=='fr'){
+                        $value = $question->responses->question_response;
+
+                        $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($value){
+                                $query->Where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                            })->pluck('option_fr')->first();
+                        
+                        if($translation){
+                            $question->responses->question_response = $translation;
+                        }
+                    }
+                    if(session('locale')=='en'){
+                        $value = $question->responses->question_response;
+
+                        $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($value){
+                                $query->Where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                            })->pluck('option_en')->first();
+                        
+                        if($translation){
+                            $question->responses->question_response = $translation;
+                        }
+                    }
+                }
+                if($question->type == 'mc'){
+                    $value = $question->responses->question_response;
+                    $value = array_map('trim', explode(',', $value));
+                    // dd($value);
+                    if(session('locale')=='fr'){
+                        foreach($value as $index=>$val){
+                            $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($val){
+                                $query->Where('option_en', $val)
+                                ->orWhere('option_fr', $val);
+                            })->pluck('option_fr')->first();
+                            // dd($translation);
+
+                            if($translation){
+                                $value[$index] = $translation;
+                            }
+                        }
+                        $question->responses->question_response = implode(",", $value); 
+                    }
+                    if(session('locale')=='en'){
+                        foreach($value as $index=>$val){
+                            $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($val){
+                                $query->Where('option_en', $val)
+                                ->orWhere('option_fr', $val);
+                            })->pluck('option_en')->first();
+                            // dd($translation);
+
+                            if($translation){
+                                $value[$index] = $translation;
+                            }
+                        }
+                        $question->responses->question_response = implode(",", $value); 
+                    }
+                    
+                }
+                
             }
         }
 
@@ -1302,6 +1393,7 @@ class AuditFormsController extends Controller{
             $remediation_added   = DB::table('remediation_plans')->where('sub_form_id', $sub_form_id)->count();
             $remediation_plan    = DB::table('remediation_plans')->where('sub_form_id', $sub_form_id)->first();
             $remediation_plan    = DB::table('remediation_plans')->where('sub_form_id', $sub_form_id)->first();
+            $locked_ratting      = DB::table('sub_forms')->where('id', $sub_form_id)->select('rating_loc')->first();
 
 
             $sections = GroupSection::where('group_id', $group)->get();   
@@ -1318,6 +1410,7 @@ class AuditFormsController extends Controller{
                 'total_questions'       => $total_questions,
                 'responded_questions'   => $responded_questions,
                 'added_ratting'         => $added_ratting,
+                'rating_locked'         => $locked_ratting,
                 'week_questions'        => $week_questions,
                 'remediation_added'     => $remediation_added,
                 'remediation_plan'      => $remediation_plan,
@@ -1793,14 +1886,32 @@ class AuditFormsController extends Controller{
         }
         $expiry_note    = "";
         if (strtotime(date('Y-m-d')) > strtotime($user_form_link_info->expiry_time)){
-            if (Auth::user()->role == 2){
-                if ($user_form_link_info->is_locked != '1') {
-                    $expiry_note = 'The user failed to submit form before expiry time .';
+            if ($user_form_link_info->is_locked != '1') {
+                $expiry_note = 'The user failed to submit form before expiry time .';
+                if (!Auth::check()){
+                    $user_form_link_info->is_accessible = 0;
                 }
+                if (Auth::check()){
+                    $user_form_link_info->is_locked = 1;
+                }
+                // dd($user_form_link_info);
             }
         }
-        else if (!$user_form_link_info->is_accessible) {
+        if (!Auth::check()) {
+            // dd("not auth");
+            if ($user_form_link_info->is_locked == '1' || $user_form_link_info->is_temp_lock == '1') {
+                $user_form_link_info->is_accessible = 0;
+                // dd($form_info[0]);
+            }
+        }
+        // dd($user_form_link_info);
+        if (!$user_form_link_info->is_accessible) {
             return view('user_form_not_accessible');
+        }
+        if ($user_form_link_info->is_temp_lock == 1) {
+            $expiry_note = __('The Form is locked by Admin');
+            $user_form_link_info->is_locked = 1;
+            
         }
         $client_id  = $user_form_link_info->client_id;
         $user_email = $user_form_link_info->user_email; 
@@ -1812,6 +1923,82 @@ class AuditFormsController extends Controller{
         foreach ($form_details->form->group->sections as $section) {
             foreach ($section->questions as  $question){
                 $question->responses = UserResponse::where('sub_form_id', $subfirm_id)->where('question_id',  $question->id)->first();
+                // dd($question->responses);
+                if($question->responses==null){
+                    continue;
+                }
+                if($question->type == 'sc'){
+                    if(session('locale')=='fr'){
+                        $value = $question->responses->question_response;
+
+                        $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($value){
+                                $query->Where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                            })->pluck('option_fr')->first();
+                        
+                        if($translation){
+                            $question->responses->question_response = $translation;
+                        }
+                    }
+                    if(session('locale')=='en'){
+                        $value = $question->responses->question_response;
+
+                        $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($value){
+                                $query->Where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                            })->pluck('option_en')->first();
+                        
+                        if($translation){
+                            $question->responses->question_response = $translation;
+                        }
+                    }
+                }
+                if($question->type == 'mc'){
+                    $value = $question->responses->question_response;
+                    $value = array_map('trim', explode(',', $value));
+                    // dd($value);
+                    if(session('locale')=='fr'){
+                        foreach($value as $index=>$val){
+                            $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($val){
+                                $query->Where('option_en', $val)
+                                ->orWhere('option_fr', $val);
+                            })->pluck('option_fr')->first();
+                            // dd($translation);
+
+                            if($translation){
+                                $value[$index] = $translation;
+                            }
+                        }
+                        $question->responses->question_response = implode(",", $value); 
+                    }
+                    if(session('locale')=='en'){
+                        foreach($value as $index=>$val){
+                            $translation = DB::table('options_link')
+                            ->where('question_id', $question->id)
+                            ->where('form_id', $section->id)
+                            ->where( function($query) use ($val){
+                                $query->Where('option_en', $val)
+                                ->orWhere('option_fr', $val);
+                            })->pluck('option_en')->first();
+                            // dd($translation);
+
+                            if($translation){
+                                $value[$index] = $translation;
+                            }
+                        }
+                        $question->responses->question_response = implode(",", $value); 
+                    }
+                    
+                }
             }
         }
         if (count($form_details->form->group->sections) > 0) {
@@ -1961,7 +2148,7 @@ class AuditFormsController extends Controller{
 
         if (Auth::check()) {
             $template = 'admin.client.client_app';
-            $user_type = 'in';
+            $user_type = 'auditin';
             $user_role = Auth::user()->role;
             $is_super = Auth::user()->user_type;
 
@@ -2007,6 +2194,21 @@ class AuditFormsController extends Controller{
         return $update;
     }
 
+    public function ajax_lock_rating_audit_form(Request $request){
+        $client_id = null;
+        if ($request->client_id) {
+            $client_id = $request->client_id;
+        } else {
+
+            $client_id = auth()->user()->client_id;
+        }
+        $form_link_id = $request->input('sub_form_id');
+
+        $update = DB::table('sub_forms')->where("id", $form_link_id)
+                ->update(["rating_loc" => 1]);
+        return $update;
+    }
+
     public function audit_assignees($form_id = 1){
         if (Auth::user()->role != 1) {
             return abort('404');
@@ -2045,5 +2247,32 @@ class AuditFormsController extends Controller{
             'assigned_client_ids' => $assigned_client_ids,
             'form_id' => $form_id,
             'client_list' => $client_list]);
+    }
+
+    public function updateSorting(Request $request){
+        $id = $request->fq_id;
+        $sort_order = $request->sort_order;
+        $group_id = $request->group_id;
+
+        $included = DB::table('group_questions')
+            ->join('group_section', 'group_section.id', 'group_questions.section_id')
+            ->where('group_section.group_id', $group_id)
+            ->where('group_questions.id', "!=", $id)
+            ->where('question_num', $sort_order)
+            ->count();
+        if ($included > 0) {
+            return response()->json([
+                "msg" => "Sorting Already Exist!",
+            ]);
+        } else {
+            DB::table('group_questions')->where('id', $id)
+                ->update([
+                    'question_num' => $sort_order,
+                ]);
+            return response()->json([
+                "status" => 200,
+                "msg" => "Sort Order Updated Successfully!",
+            ]);
+        }
     }
 }

@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\GroupSection;
 use App\Question;
 use App\Group;
+use DB;
 
 class Groups extends Controller
 {
@@ -13,7 +14,7 @@ class Groups extends Controller
     
     public function list(){
         try {
-            $groups = Group::get();
+            $groups = Group::orderBy('id', 'desc')->get();
             return view("groups.group_list", compact('groups'));
         } catch (\Exception $ex) {
             return redirect()->back()->with('msg', $ex->getMessage());
@@ -34,6 +35,17 @@ class Groups extends Controller
                 'group_name'    => 'required|max:255',
                 'group_name_fr' => 'required|max:255'
             ]);
+
+            $groupName = $request->input('group_name');
+            $groupNameFr = $request->input('group_name_fr');
+
+            $group = Group::where('group_name', $groupName)
+                ->orWhere('group_name_fr', $groupNameFr)
+                ->get();
+            
+            if($group->isNotEmpty()){
+                return redirect()->back()->with('message', 'Group Name Already Exist');
+            }
     
             $group = new Group;
             $group->insert([
@@ -43,7 +55,7 @@ class Groups extends Controller
             return redirect('group/list')->with('msg', 'New Group Successfully Added');
     
         } catch (\Exception $ex) {
-            return redirect()->back()->with('msg', $ex->getMessage());
+            return redirect()->back()->with('message', $ex->getMessage());
         }
     }
 
@@ -62,6 +74,22 @@ class Groups extends Controller
                 'group_name'    => 'required|max:255',
                 'group_name_fr' => 'required|max:255'
             ]);
+
+            $groupName = $request->input('group_name');
+            $groupNameFr = $request->input('group_name_fr');
+            $idToExclude = $id;
+
+            $group = Group::where(function ($query) use ($groupName, $groupNameFr) {
+                $query->where('group_name', $groupName)
+                      ->orWhere('group_name_fr', $groupNameFr);
+            })
+            ->whereNotIn('id', [$idToExclude])
+            ->get();
+            
+            if($group->isNotEmpty()){
+                return redirect()->back()->with('msg', 'Group Name Already Exist');
+            }
+
             $group = Group::find($id);
             $group->group_name      = $request->group_name;
             $group->group_name_fr   = $request->group_name_fr;
@@ -117,6 +145,21 @@ class Groups extends Controller
                     $question->question_comment_fr   = $old_questions->question_comment_fr;
                     $question->section_id            = $section_id;
                     $question->save();
+
+                    ////option link
+                    if(isset($question->options) && isset($question->options_fr) && $question->type !="qa"){
+                        $opt = explode(", ", $question->options);
+                        $opt_fr = explode(", ", $question->options_fr);
+                        foreach($opt as $index => $op){
+                            DB::table('options_link')->insert([
+                                'option_en'     => $op,
+                                'option_fr'     => $opt_fr[$index],
+                                'question_id'   => $question->id,
+                                'form_id'       => $question->section_id,
+                            ]);
+                        }
+                    }
+                    /////
                 }
             }
 
@@ -141,6 +184,14 @@ class Groups extends Controller
                     'status'    => false,
                     'error'     => $validator->errors()->first(),
                     'data'      => null
+                ], 200);
+            }
+            $dublicate=GroupSection::where('section_title', strtoupper($request->section_title))->where('group_id', $request->group_id)->count();
+            // dd($dublicate);
+            if($dublicate > 0){
+                return response()->json([
+                    'status' => false,
+                    'success' => "Section Name Already Exist",
                 ], 200);
             }
 
@@ -231,6 +282,7 @@ class Groups extends Controller
                 'question_options'      => 'required_if:type,sc|min:1',
                 'question_options_fr'   => 'required_if:type,sc|min:1',
                 'section_id'            => 'required',
+                'control_id'            => 'required',
                 ],[
                 'question_title.required'           => __('English Question Can Not Be Empty.'),
                 'question_title_fr.required'        => __('French Question Can Not Be Empty.'),
@@ -239,7 +291,8 @@ class Groups extends Controller
                 'question_options.min'              => __('Please provide at least one English option to proceed'),
                 'question_options_fr.min'           => __('Please provide at least one French option to proceed'),
                 'q_type.required'                   => __('No Question is selected.'),
-                'type.required'                     => __('Please select question type.')
+                'type.required'                     => __('Please select question type.'),
+                'control_id.required'               => __('Control ID Can Not Be Empty.')
             ]);
 
             if('control_id'){}
@@ -258,12 +311,36 @@ class Groups extends Controller
                 ], 200);
             }
 
+            if(isset($request->question_options) && isset($request->question_options_fr)){
+                $opt = explode(",", $request->question_options);
+                $opt_fr = explode(",", $request->question_options_fr);
+                $count = count($opt);
+                $count_fr = count($opt_fr);
+                if($count != $count_fr){
+                    return response()->json([
+                        'status'    => false,
+                        'error'     => 'English & French Options Count Doesn`t Match.',
+                    ], 200);
+                }
+            }
+
             $allow_attach = 0;
             if($request->add_attachments_box) $allow_attach = 1;
             
             $section_number         = GroupSection::find( $request->section_id);
-            $question_number        = Question::where('section_id', $request->section_id)->count();
-            $final_question_number  = ($section_number->number) . ".". ($question_number + 1);
+            $question_number        = Question::where('section_id', $request->section_id)->orderBy('question_num', 'DESC')->pluck('question_num')->first();
+            
+            if($question_number){
+                $question_number = $question_number + 1/100;
+            }
+            else{
+                $question_number = 1/100;
+                $question_number = $section_number->number + $question_number;
+            }
+            // $question_number        = ($question_number + 1)/100;
+            // $final_question_number  = ($section_number->number + $question_number);
+            // $final_question_number  = number_format($final_question_number, 2);
+            $final_question_number  = number_format($question_number, 2);
             $question = new Question;
             $question->question              = $request->question_title;
             $question->question_fr           = $request->question_title_fr;
@@ -292,6 +369,22 @@ class Groups extends Controller
                 $question->control_id   = $request->control_id;
             }
             $question->save();
+
+            ////option link
+            if(isset($question->options) && isset($question->options_fr) && $question->type !="qa"){
+                $opt = explode(", ", $question->options);
+                $opt_fr = explode(", ", $question->options_fr);
+                foreach($opt as $index => $op){
+                    DB::table('options_link')->insert([
+                        'option_en'     => $op,
+                        'option_fr'     => $opt_fr[$index],
+                        'question_id'   => $question->id,
+                        'form_id'       => $question->section_id,
+                    ]);
+                }
+            }
+            /////
+
             return response()->json([
                 'status' => true,
                 'success' => "Question Successfully Added",
@@ -329,6 +422,24 @@ class Groups extends Controller
         try {
             $question = Question::find($request->q_id);
             switch ($request->name) {
+                case 'edit_con_id':
+                    $group = GroupSection::find($question->section_id);
+                    $check = DB::table('group_questions')
+                    ->join('group_section', 'group_section.id', 'group_questions.section_id')
+                    ->where('group_section.group_id', $group->group_id)
+                    ->whereNotIn('group_questions.id', [$request->q_id])
+                    ->pluck('control_id')
+                    ->toArray();
+                    if (in_array($request->val, $check)) {
+                        return response()->json([
+                            'status'  => true,
+                            'code'    => 200,
+                            'success' => "Control Id Exists",
+                        ], 200);
+                    }
+                    // dd($check);
+                    $question->control_id = $request->val;
+                    break;
                 case 'edit_en_q':
                     $question->question = $request->val;
                     break;
@@ -341,10 +452,50 @@ class Groups extends Controller
                 case 'edit_fr_c':
                     $question->question_comment_fr = $request->val;
                     break;
+                case 'edit_en_o':
+                    $question->options = str_replace(",", ", ", implode(",",array_map('trim', explode(',', $request->val))));
+                    break;
+                case 'edit_fr_o':
+                    $question->options_fr = str_replace(",", ", ", implode(",",array_map('trim', explode(',', $request->val))));
+                    break;
                 default:
                     break;
             }
+            
+            if($request->name == "edit_en_o" || $request->name == "edit_fr_o"){
+                $opt = explode(", ", $question->options);
+                $opt_fr = explode(", ", $question->options_fr);
+                $count = count($opt);
+                $count_fr = count($opt_fr);
+                if($count != $count_fr){
+                    return response()->json([
+                        'status' => true,
+                        'code' => 200,
+                        'success' => "English & French Option Count Doesn`t Match.",
+                    ], 200);
+                }
+            }
             $question->save();
+            ////option link
+            if($request->name == "edit_en_o"){
+                $opt = explode(", ", $question->options);
+                $opt_fr = explode(", ", $question->options_fr);
+                foreach($opt_fr as $index => $op){
+                    DB::table('options_link')->where('question_id', $question->id)->where('option_fr', $op)->update([
+                        'option_en'     => $opt[$index],
+                    ]);
+                }
+            }
+            if($request->name == "edit_fr_o"){
+                $opt = explode(", ", $question->options);
+                $opt_fr = explode(", ", $question->options_fr);
+                foreach($opt as $index => $op){
+                    DB::table('options_link')->where('question_id', $question->id)->where('option_en', $op)->update([
+                        'option_fr'     => $opt_fr[$index],
+                    ]);
+                }
+            }
+            /////
             return response()->json([
                 'status' => true,
                 'success' => "Successfully Updated",

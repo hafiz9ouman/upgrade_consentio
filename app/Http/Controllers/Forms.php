@@ -159,7 +159,7 @@ class Forms extends Controller{
             $form_info = $form_info
 
                 ->select('*', 'afs.id as afs_sec_id', 'afs.section_title as admin_sec_title', 'questions.question_section_id as q_sec_id')
-                ->orderBy('form_questions.sort_order')
+                ->orderBy('questions.question_num')
                 ->get();
 
             $user_type = 'admin';
@@ -182,7 +182,7 @@ class Forms extends Controller{
                         'cfs.id as cfs_sec_id',
                         'cfs.section_title as client_sec_title',
                         'questions.question_section_id as q_sec_id')
-                    ->orderBy('form_questions.sort_order')
+                    ->orderBy('questions.question_num')
 
                     ->get();
             } else {
@@ -199,7 +199,7 @@ class Forms extends Controller{
                         'cfs.id as cfs_sec_id',
                         'cfs.section_title as client_sec_title',
                         'questions.question_section_id as q_sec_id')
-                    ->orderBy('form_questions.sort_order')
+                    ->orderBy('questions.question_num')
 
                     ->get();
             }
@@ -490,7 +490,7 @@ class Forms extends Controller{
                 ->leftJoin('client_form_sections as cfs', 'cfs.admin_form_sec_id', '=', DB::raw('afs.id AND cfs.client_id = ' . $client_id))
                 ->where('user_form_links.form_link_id', '=', $form_link_id)
                 ->where('form_questions.display_question', 'yes')
-                ->orderBy('sort_order')
+                ->orderBy('questions.question_num')
                 ->select('*',
                     'questions.options_fr as options',
                     // 'questions.question_fr as question',
@@ -518,7 +518,7 @@ class Forms extends Controller{
                 ->leftJoin('client_form_sections as cfs', 'cfs.admin_form_sec_id',  DB::raw('afs.id AND cfs.client_id = ' . $client_id))
                 ->where('user_form_links.form_link_id',  $form_link_id)
                 ->where('form_questions.display_question', 'yes')
-                ->orderBy('sort_order')
+                ->orderBy('questions.question_num')
                 ->select('*',
                     'user_form_links.client_id',
                     'user_form_links.id as uf_id',
@@ -540,26 +540,116 @@ class Forms extends Controller{
             if (Auth::check()) {
                 if ((Auth::user()->role == 2 || Auth::user()->user_type == 1) && Auth::user()->client_id == $client_id) {
                     if ($form_info[0]->is_locked != '1') {
-                        $expiry_note = 'The user failed to submit form before expiry time.';
+                        $expiry_note = __('The user failed to submit form before expiry time.');
+                        foreach($form_info as $form_loc){
+                            $form_loc->is_locked = 1;
+                        }
+                        // $form_info->is_locked = 1;
+                        // dd($form_info);
                     }
                 }
             } 
         }else if (isset($form_info[0]) && !$form_info[0]->is_accessible) {
             return view('user_form_not_accessible');
+        }else if ($form_info[0]->is_temp_lock == 1) {
+            // dd("ok3");
+            $expiry_note = __('The Form is locked by Admin');
+            foreach($form_info as $form_loc){
+                $form_loc->is_locked = 1;
+            }
         }
 
         $filled_info = DB::table('user_form_links')
-            ->join('user_responses', 'user_form_links.user_id', '=', DB::raw('user_responses.user_id AND user_form_links.sub_form_id = user_responses.sub_form_id'))
-            ->join('questions', 'questions.id', '=', 'user_responses.question_id')
+            ->join('internal_users_filled_response', 'user_form_links.user_id', '=', DB::raw('internal_users_filled_response.user_id AND user_form_links.sub_form_id = internal_users_filled_response.sub_form_id'))
+            ->join('questions', 'questions.id', '=', 'internal_users_filled_response.question_id')
             ->where('user_form_links.form_link_id', '=', $form_link_id)
-            ->select('question_key', 'question_response', 'question_id', 'additional_comment', 'additional_info', 'questions.type', 'custom_case')->get();
+            ->select('question_key', 'questions.form_id', 'question_response', 'question_id', 'additional_comment', 'additional_info', 'questions.type', 'custom_case', 'internal_users_filled_response.attachment')->get();
         $custom_responses = [];
+        // dd($filled_info);
 
 
         $question_key_index = [];
-        foreach ($filled_info as $key => $user_response) {
+        foreach ($filled_info as $user_response) {
+            if ($user_response->type == 'sc') {
+                if(session('locale') == 'fr'){
+                    $value=$user_response->question_response;
+
+                    $Translation=DB::table('options_link')
+                    ->where('form_id', $user_response->form_id)
+                    ->where('question_id', $user_response->question_id)
+                    ->where(function ($query) use ($value) {
+                        $query->where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                    })
+                    ->pluck('option_fr')->first();
+
+                    // dd($Translation);
+                    if ($Translation) {
+                        // Update the array value with the French translation
+                        $user_response->question_response = $Translation;
+                    }
+                    // dd($user_response->question_response);
+                }
+                if(session('locale') == 'en'){
+                    $value=$user_response->question_response;
+                    
+                    $Translation=DB::table('options_link')
+                    ->where('form_id', $user_response->form_id)
+                    ->where('question_id', $user_response->question_id)
+                    ->where(function ($query) use ($value) {
+                        $query->where('option_en', $value)
+                              ->orWhere('option_fr', $value);
+                    })
+                    ->pluck('option_en')->first();
+
+                    // dd($Translation);
+                    if ($Translation) {
+                        // Update the array value with the French translation
+                        $user_response->question_response = $Translation;
+                    }
+                // dd($user_response->question_response);
+            }
+            }
             if ($user_response->type == 'mc') {
+                // dd($user_response);
                 $user_response->question_response = explode(', ', $user_response->question_response);
+                if(session('locale') == 'fr'){
+                    foreach($user_response->question_response as $index=>$value){
+                        // dd($user_response->question_id);
+                        $Translation=DB::table('options_link')
+                        ->where('form_id', $user_response->form_id)
+                        ->where('question_id', $user_response->question_id)
+                        ->where(function ($query) use ($value) {
+                            $query->where('option_en', $value)
+                                  ->orWhere('option_fr', $value);
+                        })
+                        ->pluck('option_fr')->first();
+                        // dd($Translation);
+                        if ($Translation) {
+                            // Update the array value with the French translation
+                            $user_response->question_response[$index] = $Translation;
+                        }
+                    }
+                    // dd($user_response->question_response);
+                }
+                if(session('locale') == 'en'){
+                    foreach($user_response->question_response as $index=>$value){
+                        $Translation=DB::table('options_link')
+                        ->where('form_id', $user_response->form_id)
+                        ->where('question_id', $user_response->question_id)
+                        ->where(function ($query) use ($value) {
+                            $query->where('option_en', $value)
+                                  ->orWhere('option_fr', $value);
+                        })
+                        ->pluck('option_en')->first();
+                        // dd($Translation);
+                        if ($Translation) {
+                            // Update the array value with the French translation
+                            $user_response->question_response[$index] = $Translation;
+                        }
+                    }
+                    // dd($user_response->question_response);
+                }
             }
 
             if ($user_response->custom_case == '1') {
@@ -573,6 +663,7 @@ class Forms extends Controller{
                 'question_comment' => $user_response->additional_comment,
                 'question_type' => $user_response->type,
                 'additional_resp' => $user_response->additional_info,
+                'attachment' => $user_response->attachment,
             ];
         }
 
@@ -795,6 +886,7 @@ class Forms extends Controller{
                 $hidden_pb = true;
             }
         }
+        // dd($form_type);
         if (count($form_info) > 0) {
             return view('forms.in_user_form_sec_wise', [
                 'form_type'     => $form_type,
@@ -838,7 +930,8 @@ class Forms extends Controller{
 
             $file_path = $img_dir_path . $img_name;
 
-            DB::table('internal_users_filled_response')
+            if($req->attachment==1){
+                DB::table('internal_users_filled_response')
                 ->updateOrInsert(
                     [
                         'user_form_id'     => $user_form_id,
@@ -849,22 +942,56 @@ class Forms extends Controller{
                         'user_id'          => $user_id,
                         // 'user_email'       => 0,
                     ],
-                    ['question_response' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    ['attachment' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
                 );
             
-            DB::table('user_responses')
-                ->updateOrInsert(
-                    [
-                        'user_form_id'      => $user_form_id,
-                        'form_id'           => $form_id,
-                        'sub_form_id'       => $subform_id,
-                        'question_id'       => $question_id,
-                        'question_key'      => $question_key,
-                        'user_id'           => $user_id ],
-                    [   'question_response' => $file_path, "is_internal" => 1, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
-                );
+                DB::table('user_responses')
+                    ->updateOrInsert(
+                        [
+                            'user_form_id'      => $user_form_id,
+                            'form_id'           => $form_id,
+                            'sub_form_id'       => $subform_id,
+                            'question_id'       => $question_id,
+                            'question_key'      => $question_key,
+                            'user_id'           => $user_id ],
+                        [   'attachment' => $file_path, "is_internal" => 1, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    );
 
-            return;
+                return;
+            }
+            else{
+                DB::table('internal_users_filled_response')
+                    ->updateOrInsert(
+                        [
+                            'user_form_id'     => $user_form_id,
+                            'form_id'          => $form_id,
+                            'sub_form_id'      => $subform_id,
+                            'question_id'      => $question_id,
+                            'question_key'     => $question_key,
+                            'user_id'          => $user_id,
+                            // 'user_email'       => 0,
+                        ],
+                        ['question_response' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    );
+                
+                DB::table('user_responses')
+                    ->updateOrInsert(
+                        [
+                            'user_form_id'      => $user_form_id,
+                            'form_id'           => $form_id,
+                            'sub_form_id'       => $subform_id,
+                            'question_id'       => $question_id,
+                            'question_key'      => $question_key,
+                            'user_id'           => $user_id ],
+                        [   'question_response' => $file_path, "is_internal" => 1, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    );
+
+                $result = $question_id;
+
+                return response()->json([
+                    'result' => $result
+                ]);
+            }
         }
 
         $user_form_id = $req->input('user-form-id');
@@ -1036,7 +1163,6 @@ class Forms extends Controller{
             }
 
             if (strpos($post_key, 'd-') !== false) {
-                echo 'd-';exit;
                 $date_field = explode('-', $post_key);
 
                 $question_id = $date_field[1];
@@ -1073,10 +1199,52 @@ class Forms extends Controller{
                         'question_response' => 'Date Picker Option',
                         'created' => date('Y-m-d H:i:s')];
                     echo '<pre>';
-                    print_r($insert_data);exit;
                     DB::table('internal_users_filled_response')->insert($insert_data);
+                    print_r($insert_data);exit; 
                 }
             }   
+
+            if (strpos($post_key, 't-') !== false) {
+                $date_field = explode('-', $post_key);
+
+                $question_id = $date_field[1];
+                $question_key = 'q-' . $question_id;
+
+                if (DB::table('internal_users_filled_response')
+                    ->where([
+                        'user_form_id' => $user_form_id,
+                        'sub_form_id' => $subform_id,
+                        'form_id' => $form_id,
+                        'user_id' => $user_id,
+                        'question_id' => $question_id,
+                    ])
+                    ->exists()) {
+                    DB::table('internal_users_filled_response')
+                        ->where([
+                            'user_form_id' => $user_form_id,
+                            'sub_form_id' => $subform_id,
+                            'form_id' => $form_id,
+                            'user_id' => $user_id,
+                            'question_id' => $question_id,
+                        ])
+                        ->update(['additional_info' => $user_responses,
+                            'question_response' => 'Time Picker Option']);
+                } else {
+                    $insert_data = [
+                        'user_form_id' => $user_form_id,
+                        'sub_form_id' => $subform_id,
+                        'form_id' => $form_id,
+                        'question_id' => $question_id,
+                        'question_key' => $question_key,
+                        'user_id' => $user_id,
+                        'additional_info' => $user_responses,
+                        'question_response' => 'Time Picker Option',
+                        'created' => date('Y-m-d H:i:s')];
+                    echo '<pre>';
+                    DB::table('internal_users_filled_response')->insert($insert_data);
+                    print_r($insert_data);exit; 
+                }
+            }  
         }
     }
 
@@ -1100,7 +1268,32 @@ class Forms extends Controller{
 
             $file->move($destinationpath, $img_name);
 
-            DB::table('external_users_filled_response')
+            if($req->attachment==1){
+                DB::table('external_users_filled_response')
+                ->updateOrInsert(
+                    [
+                        'external_user_form_id' => $user_id,
+                        'form_id' => $form_id,
+                        'question_id' => $question_id,
+                        'question_key' => $question_key,
+                        'user_email' => $user_email],
+                    ['attachment' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                );
+
+                DB::table('user_responses')
+                    ->updateOrInsert(
+                        [
+                            'user_form_id'  => $user_id,
+                            'form_id'       => $form_id,
+                            'question_id'   => $question_id,
+                            'question_key'  => $question_key,
+                            'user_email'    => $user_email],
+                        ['attachment' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    );
+                return;
+            }
+            else{
+                DB::table('external_users_filled_response')
                 ->updateOrInsert(
                     [
                         'external_user_form_id' => $user_id,
@@ -1111,17 +1304,22 @@ class Forms extends Controller{
                     ['question_response' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
                 );
 
-            DB::table('user_responses')
-                ->updateOrInsert(
-                    [
-                        'user_form_id'  => $user_id,
-                        'form_id'       => $form_id,
-                        'question_id'   => $question_id,
-                        'question_key'  => $question_key,
-                        'user_email'    => $user_email],
-                    ['question_response' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
-                );
-            return;
+                DB::table('user_responses')
+                    ->updateOrInsert(
+                        [
+                            'user_form_id'  => $user_id,
+                            'form_id'       => $form_id,
+                            'question_id'   => $question_id,
+                            'question_key'  => $question_key,
+                            'user_email'    => $user_email],
+                        ['question_response' => $file_path, 'custom_case' => 1, 'created' => date('Y-m-d H:i:s')]
+                    );
+                $result = $question_id;
+
+                return response()->json([
+                    'result' => $result
+                ]);
+            }
         }
 
         $form_id            = $req->input('form-id');
@@ -1354,6 +1552,45 @@ class Forms extends Controller{
                     DB::table('external_users_filled_response')->insert($insert_data);
                 }
             }
+
+            if (strpos($post_key, 't-') !== false) {
+                $date_field = explode('-', $post_key);
+
+                $question_id = $date_field[1];
+                $question_key = 'q-' . $question_id;
+
+                if (DB::table('external_users_filled_response')
+                    ->where([
+                        'form_id' => $form_id,
+                        'user_email' => $user_email,
+                        'question_id' => $question_id,
+                        'external_user_form_id' => $req['user-form-id'],
+                    ])
+                    ->exists()) {
+
+                    DB::table('external_users_filled_response')
+                        ->where([
+                            'form_id' => $form_id,
+                            'user_email' => $user_email,
+                            'question_id' => $question_id,
+                        ])
+                        ->update(['additional_info' => $user_responses,
+                            'question_response' => 'Time Picker Option']);
+                } else {
+
+                    $insert_data = [
+                        'external_user_form_id' => $user_id,
+                        'form_id' => $form_id,
+                        'question_id' => $question_id,
+                        'question_key' => $question_key,
+                        'user_email' => $user_email,
+                        'additional_info' => $user_responses,
+                        'question_response' => 'Time Picker Option',
+                        'created' => date('Y-m-d H:i:s')];
+
+                    DB::table('external_users_filled_response')->insert($insert_data);
+                }
+            } 
         }
     }
 
@@ -1526,9 +1763,10 @@ class Forms extends Controller{
             $forms_info = DB::table('forms')
             ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
             ->where('forms.type', $type)->select('title', 'title_fr', 'group_name', 'forms.id as form_id', 'forms.date_created')
+            ->orderBy('forms.date_created', 'desc')
             ->get();
         } else {
-            $forms_info = DB::table('forms')->where('type',"!=", 'audit')->select('title', 'title_fr', 'forms.id as form_id', 'forms.date_created')->get();
+            $forms_info = DB::table('forms')->where('type',"!=", 'audit')->select('title', 'title_fr', 'forms.id as form_id', 'forms.date_created')->orderBy('forms.date_created', 'desc')->get();
         }
         // dd($forms_info);
         return view('forms.forms_list', ['user_type' => 'admin', 'forms_list' => $forms_info, 'type' => $type]);
@@ -1623,7 +1861,7 @@ class Forms extends Controller{
             ->where('type', 'assessment')
             ->selectRaw('forms.title, count(sub_forms.id) as subforms_count, user_id, forms.id as form_id, forms.date_created')
             ->groupBy('forms.id')
-            ->orderBy('date_created')
+            ->orderBy('date_created', 'DESC')
             ->get();
 
         if (session('locale') == 'fr') {
@@ -1634,7 +1872,7 @@ class Forms extends Controller{
                 ->where('type', 'assessment')
                 ->selectRaw('forms.title_fr as title, count(sub_forms.id) as subforms_count, user_id, forms.id as form_id, forms.date_created')
                 ->groupBy('forms.id')
-                ->orderBy('date_created')
+                ->orderBy('date_created', 'DESC')
                 ->get();
         }
 
@@ -1650,7 +1888,6 @@ class Forms extends Controller{
         if ($data != null) {
             foreach ($data as $value) {
                 $assigned_permissions = explode(',', $value);
-
             }
         }
         if (!in_array('Completed Forms', $assigned_permissions)) {
@@ -1660,6 +1897,7 @@ class Forms extends Controller{
         $role_id = Auth::user()->role;
         $mytime = Carbon::now();
         $result = null;
+
 
         if ((Auth::user()->role == 2 || Auth::user()->role == 3) || (Auth::user()->role == 3 && Auth::user()->user_type == 1)) {
             /*
@@ -1672,21 +1910,21 @@ class Forms extends Controller{
                 AND   user_form_links.client_id = 120
                 GROUP BY sub_forms.id
              */
-            $ext_forms = DB::table('user_form_links as exf')
-                ->join('sub_forms', 'exf.sub_form_id', '=', 'sub_forms.id')
-                ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-                ->where('forms.type', 'assessment')
-                ->where('exf.client_id', $client_id)
-                ->select('*', DB::raw('exf.user_email as email,
-                                    SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) as ex_completed_forms,
-                                    COUNT(exf.user_email) as total_external_users_count,
-                                    forms.title as form_title,
-                                    forms.title_fr as form_title_fr,
-                                    sub_forms.title as subform_title,
-                                    sub_forms.title_fr as subform_title_fr,
-                                    "External" as user_type'))
-                ->groupBy('sub_forms.id')
-                ->get();
+            // $ext_forms = DB::table('user_form_links as exf')
+            //     ->join('sub_forms', 'exf.sub_form_id', '=', 'sub_forms.id')
+            //     ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
+            //     ->where('forms.type', 'assessment')
+            //     ->where('exf.client_id', $client_id)
+            //     ->select('*', DB::raw('exf.user_email as email,
+            //                         SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) as ex_completed_forms,
+            //                         COUNT(exf.user_email) as total_external_users_count,
+            //                         forms.title as form_title,
+            //                         forms.title_fr as form_title_fr,
+            //                         sub_forms.title as subform_title,
+            //                         sub_forms.title_fr as subform_title_fr,
+            //                         "External" as user_type'))
+            //     ->groupBy('sub_forms.id')
+            //     ->get();
 
             /*
                 SELECT sub_forms.id, users.email, sub_forms.title as subform_title, forms.title as form_title, 'internal' as user_type,
@@ -1706,17 +1944,17 @@ class Forms extends Controller{
                     ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
                     ->where('forms.type', 'assessment')
                     ->where('exf.client_id', $client_id)
-                    ->where('is_locked', 1)
+                    ->where('exf.is_locked', 1)
+                    ->where('exf.is_internal', 0)
                     ->select('*', DB::raw('exf.user_email as email,
-                        SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) as ex_completed_forms,
-                        COUNT(exf.user_email) as total_external_users_count,
                         forms.title as form_title,
                         forms.title_fr as form_title_fr,
                         sub_forms.title as subform_title,
                         sub_forms.title_fr as subform_title_fr,
                         "External" as user_type'))
-                    ->groupBy('sub_forms.id')
+                    ->orderBy('exf.created', 'desc')
                     ->get();
+                    // dd($ext_forms);
 
                 $int_forms = DB::table('user_form_links as uf')
                     ->join('users', 'users.id', '=', 'uf.user_id')
@@ -1725,97 +1963,103 @@ class Forms extends Controller{
                     ->where('forms.type', 'assessment')
                     ->where('uf.client_id', $client_id)
                     ->where('uf.is_locked', 1)
+                    ->where('uf.is_internal', 1)
                     ->select('*', DB::raw('users.email,
-                                        SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) as in_completed_forms,
-                                        COUNT(users.email) as total_internal_users_count,
                                         forms.title as form_title,
                                         forms.title_fr as form_title_fr,
                                         sub_forms.title as subform_title,
                                         sub_forms.title_fr as subform_title_fr,
                                         form_link_id as form_link,
                                         "Internal" as user_type'))
-                    ->groupBy('sub_forms.id')
+                    ->orderBy('uf.created', 'desc')
                     ->get();
-                $all_forms = $int_forms->merge($ext_forms);
-                $all_form_data = json_decode(json_encode($all_forms), true);
+                    // dd($int_forms);
+                $completed_forms = $int_forms->merge($ext_forms);
+                // $all_forms = $int_forms->merge($ext_forms);
 
-                foreach ($all_form_data as $data) {
-                    DB::Table('tmp_Data')->insert([
-                        'form_link_id' => $data['form_link_id'] ?? "",
-                        'percent_completed' => $data['percent_completed'] ?? "",
-                        'is_locked' => $data['is_locked'] ?? "",
-                        'is_accessible' => $data['is_accessible'] ?? "",
-                        'sub_form_id' => $data['sub_form_id'] ?? "",
-                        'client_id' => $data['client_id'] ?? "",
-                        'created' => $data['created'] ?? "",
-                        'updated' => $data['updated'] ?? "",
-                        'expiry_time' => $data['expiry_time'] ?? "",
-                        'name' => $data['name'] ?? "",
-                        'is_email_varified' => $data['is_email_varified'] ?? "",
-                        'email_varification_code' => $data['email_varification_code'] ?? "",
-                        'browser_check_code' => $data['browser_check_code'] ?? "",
-                        'email' => $data['email'] ?? "",
-                        'website' => $data['website'] ?? "",
-                        'role' => $data['role'] ?? "",
-                        'company' => $data['company'] ?? "",
-                        'status' => $data['status'] ?? "",
-                        'created_by' => $data['created_by'] ?? "",
-                        'image_name' => $data['image_name'] ?? "",
-                        'tfa' => $data['tfa'] ?? "",
-                        'remember_token' => $data['remember_token'] ?? "",
-                        'created_at' => $data['created_at'] ?? "",
-                        'updated_at' => $data['updated_at'] ?? "",
-                        'rememberme_browser_type' => $data['rememberme_browser_type'] ?? "",
-                        'title' => $data['title'] ?? "",
-                        'title_fr' => $data['title_fr'] ?? "",
-                        'parent_form_id' => $data['parent_form_id'] ?? "",
-                        'lang' => $data['lang'] ?? "",
-                        'code' => $data['code'] ?? "",
-                        'comments' => $data['comments'] ?? "",
-                        'type' => $data['type'] ?? "",
-                        'date_created' => $data['date_created'] ?? "",
-                        'expiry' => $data['expiry'] ?? "",
-                        'date_updated' => $data['date_updated'] ?? "",
-                        'in_completed_forms' => $data['in_completed_forms'] ?? "",
-                        'total_internal_users_count' => $data['total_internal_users_count'] ?? "",
-                        'total_external_users_count' => $data['total_external_users_count'] ?? "",
-                        'ex_completed_forms' => $data['ex_completed_forms'] ?? "",
-                        'form_title' => $data['form_title'] ?? "",
-                        'subform_title' => $data['subform_title'] ?? "",
-                        'subform_title_fr' => $data['subform_title_fr'] ?? "",
-                        'form_link' => $data['form_link'] ?? "",
-                        'user_type' => $data['user_type'],
-                        'user_id' => auth::user()->id,
-                    ]);
-                }
+                // $all_form_data = json_decode(json_encode($all_forms), true);
+                // // dd($all_forms);
+                // // dd($all_form_data);
 
-                $completed_forms = DB::Table('tmp_Data')->where('user_id', auth::user()->client_id)
-                                    ->orwhere('is_locked', 1)
-                                    ->where('in_completed_forms', 1)
-                                    ->orderby('updated_at', 'desc')->get();
+                // foreach ($all_form_data as $data) {
+                //     DB::Table('tmp_Data')->insert([
+                //         'form_link_id' => $data['form_link_id'] ?? "",
+                //         'percent_completed' => $data['percent_completed'] ?? "",
+                //         'is_locked' => $data['is_locked'] ?? "",
+                //         'is_accessible' => $data['is_accessible'] ?? "",
+                //         'sub_form_id' => $data['sub_form_id'] ?? "",
+                //         'client_id' => $data['client_id'] ?? "",
+                //         'created' => $data['created'] ?? "",
+                //         'updated' => $data['updated'] ?? "",
+                //         'expiry_time' => $data['expiry_time'] ?? "",
+                //         'name' => $data['name'] ?? "",
+                //         'is_email_varified' => $data['is_email_varified'] ?? "",
+                //         'email_varification_code' => $data['email_varification_code'] ?? "",
+                //         'browser_check_code' => $data['browser_check_code'] ?? "",
+                //         'email' => $data['email'] ?? "",
+                //         'website' => $data['website'] ?? "",
+                //         'role' => $data['role'] ?? "",
+                //         'company' => $data['company'] ?? "",
+                //         'status' => $data['status'] ?? "",
+                //         'created_by' => $data['created_by'] ?? "",
+                //         'image_name' => $data['image_name'] ?? "",
+                //         'tfa' => $data['tfa'] ?? "",
+                //         'remember_token' => $data['remember_token'] ?? "",
+                //         'created_at' => $data['created_at'] ?? "",
+                //         'updated_at' => $data['updated_at'] ?? "",
+                //         'rememberme_browser_type' => $data['rememberme_browser_type'] ?? "",
+                //         'title' => $data['title'] ?? "",
+                //         'title_fr' => $data['title_fr'] ?? "",
+                //         'parent_form_id' => $data['parent_form_id'] ?? "",
+                //         'lang' => $data['lang'] ?? "",
+                //         'code' => $data['code'] ?? "",
+                //         'comments' => $data['comments'] ?? "",
+                //         'type' => $data['type'] ?? "",
+                //         'date_created' => $data['date_created'] ?? "",
+                //         'expiry' => $data['expiry'] ?? "",
+                //         'date_updated' => $data['date_updated'] ?? "",
+                //         'in_completed_forms' => $data['in_completed_forms'] ?? "",
+                //         'total_internal_users_count' => $data['total_internal_users_count'] ?? "",
+                //         'total_external_users_count' => $data['total_external_users_count'] ?? "",
+                //         'ex_completed_forms' => $data['ex_completed_forms'] ?? "",
+                //         'form_title' => $data['form_title'] ?? "",
+                //         'subform_title' => $data['subform_title'] ?? "",
+                //         'subform_title_fr' => $data['subform_title_fr'] ?? "",
+                //         'form_link' => $data['form_link'] ?? "",
+                //         'user_type' => $data['user_type'],
+                //         'user_id' => auth::user()->id,
+                //     ]);
+                // }
 
-                DB::table('tmp_Data')->where('user_id', auth::user()->id)->truncate();
+                // $completed_forms = DB::Table('tmp_Data')->where('user_id', auth::user()->id)
+                //                     ->orwhere('is_locked', 1)
+                //                     ->where('in_completed_forms', 1)
+                //                     ->orderby('updated_at', 'desc')->get();
+                //                     // dd($completed_forms);
 
+                // DB::table('tmp_Data')->where('user_id', auth::user()->id)->truncate();
+                // dd("admin");
             } else {
-                $client_id = Auth::user()->id;
+                // dd("user side");
+                $user_id = Auth::user()->id;
                 $int_forms = DB::table('user_form_links as uf')
-
-                    ->join('users', 'users.id', '=', 'uf.user_id')
-                    ->join('sub_forms', 'uf.sub_form_id', '=', 'sub_forms.id')
-                    ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-                    ->where('uf.user_id', $client_id)
-                ->where('is_locked', 1)
+                    ->join('users', 'users.id', 'uf.user_id')
+                    ->join('sub_forms', 'uf.sub_form_id', 'sub_forms.id')
+                    ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                    ->where('forms.type', 'assessment')
+                    ->where('uf.user_id', $user_id)
+                    ->where('uf.is_locked', 1)
+                    ->where('uf.is_internal', 1)
                     ->select('*', DB::raw('users.email,
-                                SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) as in_completed_forms,
-                                COUNT(users.email) as total_internal_users_count,
                                 forms.title as form_title,
                                 forms.title_fr as form_title_fr,
                                 sub_forms.title as subform_title,
                                 sub_forms.title_fr as subform_title_fr,
                                 form_link_id as form_link,
                                 "Internal" as user_type'))
-                    ->groupBy('sub_forms.id')
+                    ->orderBy('uf.created', 'desc')
                     ->get();
+                
                 $completed_forms = $int_forms;
             }
 
@@ -1830,7 +2074,7 @@ class Forms extends Controller{
                 //  $completed_forms = $result;
 
             }
-            //dd($completed_forms);
+            // dd($completed_forms);
             // tohandle null values
             if ($completed_forms == null) {$completed_forms = [];}
 
@@ -1897,7 +2141,7 @@ class Forms extends Controller{
         $subforms_list = DB::table('sub_forms')
             ->where('parent_form_id', '=', $form_id)
             ->join('forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-            ->select('sub_forms.*', 'forms.title as parent_form_title');
+            ->select('sub_forms.*', 'forms.title as parent_form_title')->orderBy('sub_forms.id', 'DESC');
         //->get();
 
         if (Auth::user()->role == 1) {
@@ -2009,7 +2253,7 @@ class Forms extends Controller{
     }
 
     public function ex_users_show_form($client_id, $user_id, $client_email, $subform_id, $user_email, $date_time){
-
+        
         $accoc_info = [
             'client_id' => $client_id,
             'user_id' => $user_id,
@@ -2046,7 +2290,7 @@ class Forms extends Controller{
                 ->leftJoin('admin_form_sections as afs', 'questions.question_section_id', '=', 'afs.id')
                 ->leftJoin('client_form_sections as cfs', 'cfs.admin_form_sec_id', '=', DB::raw('afs.id AND cfs.client_id = ' . $client_id))
                 ->where('user_form_links.form_link', '=', $form_link_id)
-                ->orderBy('sort_order')
+                ->orderBy('questions.question_num')
                 ->select('*',
                     'questions.options_fr as options',
                     'questions.question_info_fr as question_info',
@@ -2072,7 +2316,7 @@ class Forms extends Controller{
                 ->leftJoin('admin_form_sections as afs', 'questions.question_section_id', '=', 'afs.id')
                 ->leftJoin('client_form_sections as cfs', 'cfs.admin_form_sec_id', '=', DB::raw('afs.id AND cfs.client_id = ' . $client_id))
                 ->where('user_form_links.form_link', '=', $form_link_id)
-                ->orderBy('sort_order')
+                ->orderBy('questions.question_num')
                 ->select('*',
                     'form_questions.form_id as form_id',
                     'user_form_links.id as uf_id',
@@ -2090,33 +2334,63 @@ class Forms extends Controller{
 
             return abort('404');
         }
+        
         $expiry_note = '';
         if (isset($form_info[0]) && strtotime(date('Y-m-d')) > strtotime($form_info[0]->form_expiry_time)) {
-            if (Auth::check()) {
-                // $client_id = $form_info[0]->client_id;
-                // dd($client_id);
+            // if (Auth::check()) {
+            //     // $client_id = $form_info[0]->client_id;
+            //     // dd($client_id);
 
-                if ((Auth::user()->role == 2 || Auth::user()->user_type == 1) && Auth::user()->client_id == $client_id) {
-                    if ($form_info[0]->is_locked != '1') {
-                        $expiry_note = __('The user failed to submit form before expiry time.');
-                    }
-                } else {
-                    // return view('user_form_expired');
-                    // $expiry_note = 'Failed to submit form before expiry time.';
+            //     if ((Auth::user()->role == 2 || Auth::user()->user_type == 1) && Auth::user()->client_id == $client_id) {
+            //         if ($form_info[0]->is_locked != '1') {
+            //             $expiry_note = __('The user failed to submit form before expiry time.');
+            //             $form_info[0]->is_accessible = 0;
+            //             dd($form_info[0]);
+            //         }
+            //     } else {
+            //         // return view('user_form_expired');
+            //         // $expiry_note = 'Failed to submit form before expiry time.';
 
-                }
-            } else {
-                // return view('user_form_expired');7
-                // $expiry_note = 'Failed to submit form before expiry time.';
+            //     }
+            // } else {
+            //     // return view('user_form_expired');7
+            //     // $expiry_note = 'Failed to submit form before expiry time.';
 
+            // }
+            if ($form_info[0]->is_locked != '1') {
+                $expiry_note = __('The user failed to submit form before expiry time.');
+                $form_info[0]->is_accessible = 0;
+                // dd($form_info[0]);
             }
-        } else if (isset($form_info[0]) && !$form_info[0]->is_accessible) {
+        }
+        if (!Auth::check()) {
+            // dd("not auth");
+            if ($form_info[0]->is_locked == '1') {
+                $form_info[0]->is_accessible = 0;
+                // dd($form_info[0]);
+            }
+        }
+        if (isset($form_info[0]) && !$form_info[0]->is_accessible) {
+            return view('user_form_not_accessible');
+        }
+        if ($form_info[0]->is_temp_lock == 1) {
+            // dd("ok3");
+            if (!Auth::check()) {
+                $form_info[0]->is_accessible = 0;
+            }
+            
+            $expiry_note = __('The Form is locked by Admin');
+            foreach($form_info as $form_loc){
+                $form_loc->is_locked = 1;
+            }
+        }
+        if (isset($form_info[0]) && !$form_info[0]->is_accessible) {
             return view('user_form_not_accessible');
         }
 
         $filled_info = DB::table('user_form_links')
-            ->join('user_responses', 'user_form_links.id', '=', 'user_responses.user_form_id')
-            ->join('questions', 'questions.id', '=', 'user_responses.question_id')
+            ->join('external_users_filled_response', 'user_form_links.id', '=', 'external_users_filled_response.external_user_form_id')
+            ->join('questions', 'questions.id', '=', 'external_users_filled_response.question_id')
             ->where('user_form_links.form_link', '=', $form_link_id)
             ->get();
 
@@ -2125,8 +2399,86 @@ class Forms extends Controller{
         $question_key_index = [];
 
         foreach ($filled_info as $key => $user_response) {
+            if ($user_response->type == 'sc') {
+                if(session('locale') == 'fr'){
+                    $value=$user_response->question_response;
+
+                    $Translation=DB::table('options_link')
+                    ->where('form_id', $user_response->form_id)
+                    ->where('question_id', $user_response->question_id)
+                    ->where(function ($query) use ($value) {
+                        $query->where('option_en', $value)
+                                ->orWhere('option_fr', $value);
+                    })
+                    ->pluck('option_fr')->first();
+
+                    // dd($Translation);
+                    if ($Translation) {
+                        // Update the array value with the French translation
+                        $user_response->question_response = $Translation;
+                    }
+                    // dd($user_response->question_response);
+                }
+                if(session('locale') == 'en'){
+                    $value=$user_response->question_response;
+                    
+                    $Translation=DB::table('options_link')
+                    ->where('form_id', $user_response->form_id)
+                    ->where('question_id', $user_response->question_id)
+                    ->where(function ($query) use ($value) {
+                        $query->where('option_en', $value)
+                              ->orWhere('option_fr', $value);
+                    })
+                    ->pluck('option_en')->first();
+
+                    // dd($Translation);
+                    if ($Translation) {
+                        // Update the array value with the French translation
+                        $user_response->question_response = $Translation;
+                    }
+                // dd($user_response->question_response);
+            }
+            }
             if ($user_response->type == 'mc') {
+                // dd($user_response);
                 $user_response->question_response = explode(', ', $user_response->question_response);
+                if(session('locale') == 'fr'){
+                    foreach($user_response->question_response as $index=>$value){
+                        // dd($user_response->question_id);
+                        $Translation=DB::table('options_link')
+                        ->where('form_id', $user_response->form_id)
+                        ->where('question_id', $user_response->question_id)
+                        ->where(function ($query) use ($value) {
+                            $query->where('option_en', $value)
+                                  ->orWhere('option_fr', $value);
+                        })
+                        ->pluck('option_fr')->first();
+                        // dd($Translation);
+                        if ($Translation) {
+                            // Update the array value with the French translation
+                            $user_response->question_response[$index] = $Translation;
+                        }
+                    }
+                    // dd($user_response->question_response);
+                }
+                if(session('locale') == 'en'){
+                    foreach($user_response->question_response as $index=>$value){
+                        $Translation=DB::table('options_link')
+                        ->where('form_id', $user_response->form_id)
+                        ->where('question_id', $user_response->question_id)
+                        ->where(function ($query) use ($value) {
+                            $query->where('option_en', $value)
+                                  ->orWhere('option_fr', $value);
+                        })
+                        ->pluck('option_en')->first();
+                        // dd($Translation);
+                        if ($Translation) {
+                            // Update the array value with the French translation
+                            $user_response->question_response[$index] = $Translation;
+                        }
+                    }
+                    // dd($user_response->question_response);
+                }
             }
 
             if ($user_response->custom_case == '1') {
@@ -2140,6 +2492,7 @@ class Forms extends Controller{
                 'question_comment' => $user_response->additional_comment,
                 'question_type' => $user_response->type,
                 'additional_resp' => $user_response->additional_info,
+                'attachment' => $user_response->attachment,
             ];
         }
 
@@ -2440,6 +2793,7 @@ class Forms extends Controller{
                 $hidden_pb = true;
             }
         }
+        // dd($question_key_index);
         if (count($form_info) > 0) {
             return view('forms.ex_user_form_sec_wise', ['questions' => $form_info,
                 'hide_pb' => $hidden_pb,
@@ -2515,10 +2869,15 @@ class Forms extends Controller{
 
         $parent_form_id = DB::table('sub_forms')->pluck('parent_form_id');
         $subform_id = DB::table('sub_forms')->pluck('id');
-        //dd($subform_id);
+        // dd($subform_id);
 
-        if (!$parent_form_id) {
-            return abort('404');
+        // if (!$parent_form_id) {
+        //     return abort('404');
+        // }
+
+        if (!count($parent_form_id)>0) {
+            $parent_form_id=0;
+            // dd($subform_id);
         }
 
         // $forms=DB::table('sub_forms')->get();
@@ -2527,6 +2886,7 @@ class Forms extends Controller{
         $parent_form_info = DB::table('forms')->where('id', $parent_form_id)->first();
 
         $client_id = Auth::user()->client_id;
+        $user_id = Auth::user()->id;
 
         $int_form_user_list = DB::table('user_form_links')->where('sub_forms.client_id', $client_id)
             ->join('sub_forms', 'sub_forms.id', '=', 'user_form_links.sub_form_id')
@@ -2534,22 +2894,47 @@ class Forms extends Controller{
             ->join('users', 'users.id', '=', 'user_form_links.user_id')
             ->where('forms.type', 'assessment')
             ->where('user_form_links.is_internal', 1)
+            ->where('user_form_links.is_locked', 0)
+            // ->where('user_form_links.user_id', $user_id)
             ->wherein('sub_form_id', $subform_id)
-            ->select(DB::raw('*, user_form_links.created as uf_created, user_form_links.expiry_time as uf_expiry_time, "internal", is_locked'))->get();
+            ->select(DB::raw('*, user_form_links.created as uf_created, user_form_links.expiry_time as uf_expiry_time, "internal", is_locked'))
+            ->orderBy('user_form_links.created', 'desc')
+            ->get();
         $ext_form_user_list = DB::table('user_form_links')->where('sub_forms.client_id', $client_id)
             ->join('sub_forms', 'sub_forms.id', '=', 'user_form_links.sub_form_id')
             ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
             ->wherein('sub_form_id', $subform_id)
             ->where('user_form_links.is_internal', 0)
+            ->where('user_form_links.is_locked', 0)
             ->where('forms.type', 'assessment')
             ->select(DB::raw('*, user_form_links.created as uf_created, user_form_links.expiry_time as uf_expiry_time, "external", is_locked'))
-        ->get();
+            ->orderBy('user_form_links.created', 'desc')
+            ->get();
 
         if (isset($_GET['ext_user_only']) && $_GET['ext_user_only'] == '1') {
             $form_user_list = $ext_form_user_list;
         } else {
             $form_user_list = $int_form_user_list->merge($ext_form_user_list);
         }
+
+        if(Auth::user()->role == 3){
+            $int_form_user_list = DB::table('user_form_links')->where('sub_forms.client_id', $client_id)
+            ->join('sub_forms', 'sub_forms.id', '=', 'user_form_links.sub_form_id')
+            ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+            ->join('users', 'users.id', '=', 'user_form_links.user_id')
+            ->where('forms.type', 'assessment')
+            ->where('user_form_links.is_internal', 1)
+            ->where('user_form_links.is_locked', 0)
+            ->where('user_form_links.user_id', $user_id)
+            ->wherein('sub_form_id', $subform_id)
+            ->select(DB::raw('*, user_form_links.created as uf_created, user_form_links.expiry_time as uf_expiry_time, "internal", is_locked'))
+            ->orderBy('user_form_links.created', 'desc')
+            ->get();
+
+            $form_user_list = $int_form_user_list;
+        }
+
+        
 
         $user_type = 'client';
         if (Auth::user()->role == 1) {
@@ -2835,6 +3220,7 @@ class Forms extends Controller{
                     $user_email = DB::table('users')->where('id', $user_id)->pluck('email')->first();
 
                     $CompanyUserForm = "CompanyUserForm";
+                    $ExtUserForm = "CompanyUserForm";
                     $form_email      = "form_email";
                     if (Form::find($sub_form_info->parent_form_id)->type == 'audit'){
                         $ExtUserForm = "internal";
@@ -2843,18 +3229,18 @@ class Forms extends Controller{
 
                     $data = array('name' => $org_name, 'form_link_id' => $form_link_id, 'user_form' => $ExtUserForm, 'expiry_time' => $expiry_time, 'client_info' => $client_info);
 
-                    $transport = new Swift_SmtpTransport(env('MAIL_HOST'), env('MAIL_PORT'), env('MAIL_ENCRYPTION'));
-                    $transport->setUsername(env('mail_username'));
-                    $transport->setPassword(env('MAIL_PASSWORD'));
-                    $swift_mailer = new Swift_Mailer($transport);
-                    Mail::setSwiftMailer($swift_mailer);
+                    // $transport = new Swift_SmtpTransport(env('MAIL_HOST'), env('MAIL_PORT'), env('MAIL_ENCRYPTION'));
+                    // $transport->setUsername(env('mail_username'));
+                    // $transport->setPassword(env('MAIL_PASSWORD'));
+                    // $swift_mailer = new Swift_Mailer($transport);
+                    // Mail::setSwiftMailer($swift_mailer);
                     $reciever_email = $user_email;
-                    $sender_email = env('MAIL_FROM_ADDRESS');
+                    $sender_email = 'noreply@consentio.cloud';
                     $subject = $sb_title;
                     Mail::send(['html' => $form_email], $data, function ($message) use ($reciever_email, $sender_email, $subject) {
                         $message->to($reciever_email, 'Consentio Forms')->subject
                             ($subject);
-                        $message->from($sender_email, $sender_email);
+                        $message->from($sender_email, 'Consentio');
                     });
 
                 }
@@ -3105,10 +3491,13 @@ class Forms extends Controller{
 
         $sub_forms = DB::table('sub_forms')
             ->join("forms", "sub_forms.parent_form_id", "forms.id")
-            ->leftjoin('user_form_links', 'sub_forms.id', '=', 'user_form_links.sub_form_id')
+            ->join('user_form_links', 'sub_forms.id', '=', 'user_form_links.sub_form_id')
             ->where('user_form_links.user_id', $user_id)
             ->where('type', 'assessment')
+            ->select('sub_forms.title', 'sub_forms.title_fr', 'forms.*', 'sub_forms.*', 'user_form_links.*')
+            ->orderBy('user_form_links.created', 'desc')
             ->get();
+            // dd($sub_forms);
 
         return view('client_subform', ['sub_forms' => $sub_forms]);
 
@@ -3309,6 +3698,22 @@ class Forms extends Controller{
     }
 
     public function store_new_form(Request $request){
+        if($request->type == "audit"){
+            $this->validate($request, [
+                'title' => 'required',
+                'title_fr' => 'required',
+                'type' => 'required',
+                'group_id' => 'required',
+                ],
+                [
+                    'title.required' => __('Please provide proper English Form name to proceed.'),
+                    'title_fr.required' => __('Please provide proper French Form name to proceed.'),
+                    'type.required' => __('Please provide Form type to proceed.'),
+                    'group_id.required' => __('Please provide Question Group to proceed.'),
+                ]
+    
+            );
+        }
 
         $this->validate($request, [
             'title' => 'required',
@@ -3325,6 +3730,23 @@ class Forms extends Controller{
         $now = Carbon::now();
 
         $request['date_created'] = $request['date_updated'] = $now;
+        if($request->type == "assessment"){
+            $check=DB::table('forms')->where('type', 'assessment')->where('title', $request['title'])->orwhere('title_fr', $request['title_fr'])->count();
+            if($check>0){
+                return redirect()->back()->with('alert', __('Assessment with this Name Already Exist'));
+            }
+        }
+        if($request->type == "audit"){
+            $check=DB::table('forms')->where('type', 'audit')->where('title', $request['title'])->orwhere('title_fr', $request['title_fr'])->count();
+            if($check>0){
+                return redirect()->back()->with('alert', __('Audit with this Name Already Exist'));
+            }
+            $check=DB::table('forms')->where('type', 'audit')->where('group_id', $request['group_id'])->count();
+            if($check>0){
+                return redirect()->back()->with('alert', __('Question Group Already Assigned to Form'));
+            }
+        }
+        
         $response = DB::table('forms')->insertGetId([
             'title'     => $request['title'],
             'title_fr'  => $request['title_fr'],
@@ -3336,9 +3758,9 @@ class Forms extends Controller{
         ]);
 
         if ($request->type == "audit") {
-            return redirect('Forms/AdminFormsList/audit')->with('message', __('From added successfully'));    
+            return redirect('Forms/AdminFormsList/audit')->with('message', __('Audit Form added Successfully'));    
         }
-        return redirect('Forms/AdminFormsList')->with('message', __('From added successfully'));
+        return redirect('Forms/AdminFormsList')->with('message', __('Form added Successfully'));
 
     }
 
@@ -3375,7 +3797,7 @@ class Forms extends Controller{
             ->join('questions', 'form_questions.question_id', '=', 'questions.id')
             ->where('forms.id', '=', $id)
             ->where('form_questions.display_question', 'yes')
-            ->orderBy('form_questions.sort_order')
+            ->orderBy('questions.question_num')
             ->leftJoin('admin_form_sections as afs', 'questions.question_section_id', '=', 'afs.id');
 
         $form_info = $form_info->select('*', 'afs.id as afs_sec_id', 'afs.section_title as admin_sec_title', 'questions.question_section_id as q_sec_id')->get();
@@ -3388,7 +3810,7 @@ class Forms extends Controller{
             ->join('forms', 'form_questions.form_id', '=', 'forms.id')
             ->join('questions', 'form_questions.question_id', '=', 'questions.id')
             ->where('forms.id', '=', $id)
-            ->orderBy('form_questions.sort_order')
+            ->orderBy('questions.question_num')
             ->select('*', 'questions.question_section_id as q_sec_id')
             ->get();
 
@@ -3652,26 +4074,36 @@ class Forms extends Controller{
             [
                 'section_title' => 'required',
                 'section_title_fr' => 'required',
-                'question_title' => 'required',
-                'question_title_fr' => 'required',
-                'question_options' => 'required_if:q_type,mc|min:1',
-                'question_options_fr' => 'required_if:q_type,mc|min:1',
-                'question_options' => 'required_if:q_type,sc|min:1',
-                'question_options_fr' => 'required_if:q_type,sc|min:1',
-                'q_type' => 'required',
+                // 'question_title' => 'required',
+                // 'question_title_fr' => 'required',
+                // 'question_options' => 'required_if:q_type,mc|min:1',
+                // 'question_options_fr' => 'required_if:q_type,mc|min:1',
+                // 'question_options' => 'required_if:q_type,sc|min:1',
+                // 'question_options_fr' => 'required_if:q_type,sc|min:1',
+                // 'q_type' => 'required',
             ],
             [
                 'section_title.required' => __('English Section Title Can Not Be Empty.'),
                 'section_title_Fr.required' => __('French Section Title Can Not Be Empty.'),
-                'question_title.required' => __('English Question Title Can Not Be Empty.'),
-                'question_title_fr.required' => __('French Question Title Can Not Be Empty.'),
-                'question_options.required_if' => __('English Question Options Can Not Be Empty.'),
-                'question_options_fr.required_if' => __('French Question Options Can Not Be Empty.'),
-                'question_options.min' => __('Please provide atleast one English option to proceed'),
-                'question_options_fr.min' => __('Please provide atleast one French option to proceed'),
-                'q_type.required' => __('Atleast one Question is mendatory to create New Section.'),
+                // 'question_title.required' => __('English Question Title Can Not Be Empty.'),
+                // 'question_title_fr.required' => __('French Question Title Can Not Be Empty.'),
+                // 'question_options.required_if' => __('English Question Options Can Not Be Empty.'),
+                // 'question_options_fr.required_if' => __('French Question Options Can Not Be Empty.'),
+                // 'question_options.min' => __('Please provide atleast one English option to proceed'),
+                // 'question_options_fr.min' => __('Please provide atleast one French option to proceed'),
+                // 'q_type.required' => __('Atleast one Question is mendatory to create New Section.'),
             ]
         );
+
+        // if(isset($request->question_options) && isset($request->question_options_fr)){
+        //     $opt = explode(",", $request->question_options);
+        //     $opt_fr = explode(",", $request->question_options_fr);
+        //     $count = count($opt);
+        //     $count_fr = count($opt_fr);
+        //     if($count != $count_fr){
+        //         return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+        //     }
+        // }
 
         $allow_attach = 0;
         if ($request->add_attachments_box){
@@ -3698,6 +4130,10 @@ class Forms extends Controller{
             'form_id' => $request['form_id'],
             'sec_num' => $last_section_num + 1,
         ]);
+
+        return redirect()->back()->with('success', __('Successfully Added Section'));
+
+        ///////wasted
         $section_num = DB::table('admin_form_sections')->where('id', $section_id)->where('form_id', $request->form_id)->pluck('sec_num')->first();
         $last_question_num = DB::table('questions')->where('question_section_id', $section_id)->where('question_num', '!=', null)->count();
         if ($last_question_num == 0) {
@@ -3731,6 +4167,21 @@ class Forms extends Controller{
 
         DB::table('questions')->where('id', $question_id)->update(['form_key' => 'q-' . $question_id]);
 
+        ////option link
+        if(isset($request->question_options) && isset($request->question_options_fr)){
+            $opt = explode(",", $request->question_options);
+            $opt_fr = explode(",", $request->question_options_fr);
+            foreach($opt as $index => $op){
+                DB::table('options_link')->insert([
+                    'option_en'     => $op,
+                    'option_fr'     => $opt_fr[$index],
+                    'question_id'   => $question_id,
+                    'form_id'       => $request->form_id,
+                ]);
+            }
+        }
+        /////
+
         // DB::table('form_questions')->insert([
         //     'form_id' => $request->form_id,
         //     'question_id' => $question_id,
@@ -3754,11 +4205,22 @@ class Forms extends Controller{
 
     public function add_special_question_to_form(Request $request){
 
-        // return $request->all();
+        // dd($request->all());
         $attachments = $request->add_attachments_box;
-        for ($i = sizeof($request->add_attachments_box); $i < sizeof($request->s_question_title); $i++){ 
-            $attachments[$i] = false;
+        if(isset($request->s_question_title)){
+            if($attachments==null){
+                for ($i = 0; $i < sizeof($request->s_question_title); $i++){ 
+                    $attachments[$i] = false;
+                }
+            }
+            else{
+                for ($i = sizeof($request->add_attachments_box); $i < sizeof($request->s_question_title); $i++){ 
+                    $attachments[$i] = false;
+                }
+            }
         }
+        
+        // dd($attachments);
 
         $obj    = (object) null;
         $obj_fr = (object) null;
@@ -3770,6 +4232,7 @@ class Forms extends Controller{
             $this->validate($request, 
                 [
                     'question_title' => 'required',
+                    'question_title_fr' => 'required',
 
                     's_question_title' => 'required|array',
                     's_question_title.*' => 'required|min:1',
@@ -3801,15 +4264,41 @@ class Forms extends Controller{
 
                 ]
             );
-            $section_num = DB::table('admin_form_sections')->where('id', $request->this_section_id)->where('form_id', $request->form_id)->pluck('sec_num')->first();
-            $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->count();
 
-            if ($last_question_num == 0) {
-                $last_question_num = 1;
-            } else {
-                $last_question_num++;
+            if(isset($request->s_question_options) && isset($request->s_question_options_fr)){
+                $allElements = implode(',', $request->s_question_options);
+                $countOfElements = count(explode(',', $allElements));
+                $allElements_fr = implode(',', $request->s_question_options_fr);
+                $countOfElements_fr = count(explode(',', $allElements_fr));
+                if($countOfElements != $countOfElements_fr){
+                    return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+                }
+                // dd('ok');
             }
-            $question_number = $section_num . '.' . $last_question_num;
+
+            $section_num = DB::table('admin_form_sections')->where('id', $request->this_section_id)->where('form_id', $request->form_id)->pluck('sec_num')->first();
+            // $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->count();
+
+            // if ($last_question_num == 0) {
+            //     $last_question_num = 1;
+            // } else {
+            //     $last_question_num++;
+            // }
+            // $question_number = $section_num . '.' . $last_question_num;
+
+            $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->where('parent_q_id', null)->orderBy('question_num', 'DESC')->pluck('question_num')->first();
+            if($last_question_num){
+                // $last_question_num = explode('.', $last_question_num)[1];
+                $last_question_num = $last_question_num + 1/100;
+                $question_number = $last_question_num;
+                $question_number = number_format($question_number, 2);    
+                // dd($last_question_num);
+            }
+            else{
+                $last_question_num = 1/100;
+                $question_number = $section_num + $last_question_num;
+                $question_number = number_format($question_number, 2);
+            }
 
             $sort_order = DB::table('questions')->where('form_id', $request->form_id)->count();
 
@@ -3852,9 +4341,11 @@ class Forms extends Controller{
                 'question_id' => $parent_question_id,
                 'sort_order' => $parent_sord_order_num,
             ]);
+            // dd($request->s_q_type);
 
             if (is_array($request->s_q_type)) {
                 foreach ($request->s_q_type as $key => $question_type) {
+                    // dd($request->s_q_type);
                     $allow_attach = 0;
                     $accepted_files = "";
                     if ($attachments[$key]){
@@ -3864,17 +4355,17 @@ class Forms extends Controller{
 
 
                     $section_num = DB::table('admin_form_sections')->where('id', $parent_question_array['question_section_id'])->where('form_id', $request->form_id)->pluck('sec_num')->first();
-                    $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->count();
+                    // $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->count();
 
-                    if ($last_question_num == 0) 
-                    {
-                        $last_question_num = 1;
-                    } 
-                    else {
-                        $last_question_num++;
-                    }
+                    // if ($last_question_num == 0) 
+                    // {
+                    //     $last_question_num = 1;
+                    // } 
+                    // else {
+                    //     $last_question_num++;
+                    // }
 
-                    $question_number = $section_num . '.' . $last_question_num;
+                    // $question_number = $section_num . '.' . $last_question_num;
 
                     $sort_order = DB::table('questions')->where('form_id', $request->form_id)->count();
 
@@ -3896,13 +4387,33 @@ class Forms extends Controller{
 
                         $obj->dd = $data;
                         $obj_fr->dd = $data;
+                        dd("data Inventry");
+
+                        if(isset($request->s_question_options[$key]) && isset($request->s_question_options_fr[$key])){
+                            // trimming options
+                            $opt = explode(",", $request->s_question_options[$key]);
+                            $trim_opt=array_map(function($item){ return trim($item); }, $opt);
+                            $s_question_options = $request->input('s_question_options');
+                            $s_question_options[$key]=implode(",", $trim_opt);
+                            $request->merge(['s_question_options' => $s_question_options]);
+
+                            $opt = explode(",", $request->s_question_options_fr[$key]);
+                            $trim_opt_fr=array_map(function($item){ return trim($item); }, $opt);
+                            $s_question_options_fr = $request->input('s_question_options_fr');
+                            $s_question_options_fr[$key]=implode(",", $trim_opt_fr);
+                            $request->merge(['s_question_options_fr' => $s_question_options_fr]);
+                            // trimming end
+                        }
+
+                        $question_number = $question_number + 0.0001;
+                        $question_number = number_format($question_number, 4);
 
                         $child_question_array = array(
                             'question'              => $request->s_question_title[$key],
                             'question_fr'           => $request->s_question_title_fr[$key],
                             'question_short'        => $request->question_title_short,
                             'question_short_fr'     => $request->question_title_short_fr,
-                            'question_num'          => null,
+                            'question_num'          => $question_number,
                             'options'               => ($request->s_question_options[$key] != '0') ? str_replace(',', ', ', $request->s_question_options[$key]) : '',
                             'options_fr'            => ($request->s_question_options_fr[$key] != '0') ? str_replace(',', ', ', $request->s_question_options_fr[$key]) : '',
                             'question_section'      => null,
@@ -3927,6 +4438,22 @@ class Forms extends Controller{
                         $child_question_id = DB::table('questions')->insertGetId($child_question_array);
 
                         DB::table('questions')->where('id', $child_question_id)->update(['form_key' => 'q-' . $child_question_id]);
+                        // dd($request->s_question_options[$key]);
+
+                        ////option link
+                        if(isset($request->s_question_options[$key]) && isset($request->s_question_options_fr[$key])){
+                            $opt = explode(",", $request->s_question_options[$key]);
+                            $opt_fr = explode(",", $request->s_question_options_fr[$key]);
+                            foreach($opt as $index => $op){
+                                DB::table('options_link')->insert([
+                                    'option_en'     => $op,
+                                    'option_fr'     => $opt_fr[$index],
+                                    'question_id'   => $child_question_id,
+                                    'form_id'       => $request->form_id,
+                                ]);
+                            }
+                        }
+                        /////
 
                         $__sec_num = $section_num - 1;
                         $child_sord_order_num = $__sec_num + ($last_question_num / 100);
@@ -3937,13 +4464,33 @@ class Forms extends Controller{
                         ]);
                         continue;
                     } else {
+                        if(isset($request->s_question_options[$key]) && isset($request->s_question_options_fr[$key])){
+                            // trimming options
+                            // dd($request->s_question_options[$key]);
+                            $opt = explode(",", $request->s_question_options[$key]);
+                            $trim_opt=array_map(function($item){ return trim($item); }, $opt);
+                            $s_question_options = $request->input('s_question_options');
+                            $s_question_options[$key]=implode(",", $trim_opt);
+                            $request->merge(['s_question_options' => $s_question_options]);
+
+                            $opt = explode(",", $request->s_question_options_fr[$key]);
+                            $trim_opt_fr=array_map(function($item){ return trim($item); }, $opt);
+                            $s_question_options_fr = $request->input('s_question_options_fr');
+                            $s_question_options_fr[$key]=implode(",", $trim_opt_fr);
+                            $request->merge(['s_question_options_fr' => $s_question_options_fr]);
+                            // dd($request->s_question_options[$key]);
+                            // trimming end
+                        }
+
+                        $question_number = $question_number + 0.0001;
+                        $question_number = number_format($question_number, 4);
 
                         $child_question_array = array(
                             'question'              => $request->s_question_title[$key],
                             'question_fr'           => $request->s_question_title_fr[$key],
                             'question_short'        => $request->question_title_short,
                             'question_short_fr'     => $request->question_title_short_fr,
-                            'question_num'          => null,
+                            'question_num'          => $question_number,
                             'options'               => ($request->s_question_options[$key] != '0') ? str_replace(',', ', ', $request->s_question_options[$key]) : '',
                             'options_fr'            => ($request->s_question_options_fr[$key] != '0') ? str_replace(',', ', ', $request->s_question_options_fr[$key]) : '',
                             'question_section'      => null,
@@ -3973,6 +4520,21 @@ class Forms extends Controller{
                     }
 
                     $child_question_id = DB::table('questions')->insertGetId($child_question_array);
+
+                    ////option link
+                    if(isset($request->s_question_options[$key]) && isset($request->s_question_options_fr[$key])){
+                        $opt = explode(",", $request->s_question_options[$key]);
+                        $opt_fr = explode(",", $request->s_question_options_fr[$key]);
+                        foreach($opt as $index => $op){
+                            DB::table('options_link')->insert([
+                                'option_en'     => $op,
+                                'option_fr'     => $opt_fr[$index],
+                                'question_id'   => $child_question_id,
+                                'form_id'       => $request->form_id,
+                            ]);
+                        }
+                    }
+                    /////
 
                     DB::table('questions')->where('id', $child_question_id)->update(['form_key' => 'q-' . $child_question_id]);
 
@@ -4032,6 +4594,16 @@ class Forms extends Controller{
 
             ]
         );
+
+        if(isset($request->s_question_options) && isset($request->s_question_options_fr)){
+            $allElements = implode(',', $request->s_question_options);
+            $countOfElements = count(explode(',', $allElements));
+            $allElements_fr = implode(',', $request->s_question_options_fr);
+            $countOfElements_fr = count(explode(',', $allElements_fr));
+            if($countOfElements != $countOfElements_fr){
+                return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+            }
+        }
 
         // dd('in array section' , $request->all());
 
@@ -4287,6 +4859,7 @@ class Forms extends Controller{
             $last_question_num++;
         }
         $question_number = $section_num . '.' . $last_question_num;
+        dd("ok");
 
         $sort_order = DB::table('questions')->where('form_id', $request->form_id)->count();
 
@@ -4317,6 +4890,22 @@ class Forms extends Controller{
 
         // dd($question_array);
         $question_id = DB::table('questions')->insertGetId($question_array);
+
+        ////option link
+        if(isset($request->question_options) && isset($request->question_options_fr)){
+            $opt = explode(",", $request->question_options);
+            $opt_fr = explode(",", $request->question_options_fr);
+            foreach($opt as $index => $op){
+                DB::table('options_link')->insert([
+                    'option_en'     => $op,
+                    'option_fr'     => $opt_fr[$index],
+                    'question_id'   => $question_id,
+                    'form_id'       => $request->form_id,
+                ]);
+            }
+        }
+        /////
+
         DB::table('questions')->where('id', $question_id)->update(['form_key' => 'q-' . $question_id]);
 
         $__sec_num = $section_num - 1;
@@ -4335,23 +4924,85 @@ class Forms extends Controller{
     }
 
     public function add_question_to_form(Request $request){
-        $this->validate($request, [
-            'question_title'        => 'required',
-            'question_title_fr'     => 'required',
-            'question_options'      => 'required_if:q_type,mc|min:1',
-            'question_options_fr'   => 'required_if:q_type,mc|min:1',
-            'question_options'      => 'required_if:q_type,sc|min:1',
-            'question_options_fr'   => 'required_if:q_type,sc|min:1',
-            'q_type'                => 'required',
-         ], [
-            'question_title.required'           => __('English Question Can Not Be Empty.'),
-            'question_title_fr.required'        => __('French Question Can Not Be Empty.'),
-            'question_options.required_if'      => __('English Question Options Can Not Be Empty.'),
-            'question_options_fr.required_if'   => __('French Question Options Can Not Be Empty.'),
-            'question_options.min'              => __('Please provide atleast one English option to proceed'),
-            'question_options_fr.min'           => __('Please provide atleast one French option to proceed'),
-            'q_type.required'                   => __('No Question is selected.'),
-        ]);
+        // dd($request->all());
+        if($request->dropdown_value_from != 0 && $request->dropdown_value_from != 2){
+            $this->validate($request, [
+                'question_title'        => 'required',
+                'question_title_fr'     => 'required',
+                'question_options'      => 'required_if:q_type,mc|min:1',
+                'question_options_fr'   => 'required_if:q_type,mc|min:1',
+                'question_options'      => 'required_if:q_type,sc|min:1',
+                'question_options_fr'   => 'required_if:q_type,sc|min:1',
+                'q_type'                => 'required',
+            ], [
+                'question_title.required'           => __('English Question Can Not Be Empty.'),
+                'question_title_fr.required'        => __('French Question Can Not Be Empty.'),
+                'question_options.required_if'      => __('English Question Options Can Not Be Empty.'),
+                'question_options_fr.required_if'   => __('French Question Options Can Not Be Empty.'),
+                'question_options.min'              => __('Please provide atleast one English option to proceed'),
+                'question_options_fr.min'           => __('Please provide atleast one French option to proceed'),
+                'q_type.required'                   => __('No Question is selected.'),
+            ]);
+        }
+        if($request->q_type != "dc"){
+            $this->validate($request, [
+                'question_title'        => 'required',
+                'question_title_fr'     => 'required',
+                'question_options'      => 'required_if:q_type,mc|min:1',
+                'question_options_fr'   => 'required_if:q_type,mc|min:1',
+                'question_options'      => 'required_if:q_type,sc|min:1',
+                'question_options_fr'   => 'required_if:q_type,sc|min:1',
+                'q_type'                => 'required',
+            ], [
+                'question_title.required'           => __('English Question Can Not Be Empty.'),
+                'question_title_fr.required'        => __('French Question Can Not Be Empty.'),
+                'question_options.required_if'      => __('English Question Options Can Not Be Empty.'),
+                'question_options_fr.required_if'   => __('French Question Options Can Not Be Empty.'),
+                'question_options.min'              => __('Please provide atleast one English option to proceed'),
+                'question_options_fr.min'           => __('Please provide atleast one French option to proceed'),
+                'q_type.required'                   => __('No Question is selected.'),
+            ]);
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from == 0){
+            $request->question_title        = "What activity are you assessing?";
+            $request->question_title_fr     = "Quelle activité évaluez-vous ?";
+            $activity_exist=DB::table('questions')->where('form_id', $request->form_id)->where('dropdown_value_from', 0)->count();
+            if($activity_exist>0){
+                return redirect()->back()->with('message', __('Activity Question Already Exist in the Assessment'));
+            }
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from == 1){
+            $element_exist=DB::table('questions')->where('form_id', $request->form_id)->where('dropdown_value_from', 1)->count();
+            if($element_exist>0){
+                return redirect()->back()->with('message', __('Data Element Question Already Exist in the Assessment'));
+            }
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from == 2){
+            $request->question_title        = "What assets are used to process the data for this activity?";
+            $request->question_title_fr     = "Quels sont les actifs utilisés pour traiter les données dans le cadre de cette activité ?";
+            $asset_exist=DB::table('questions')->where('form_id', $request->form_id)->where('dropdown_value_from', 2)->count();
+            if($asset_exist>0){
+                return redirect()->back()->with('message', __('Asset Question Already Exist in the Assessment'));
+            }
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from == 4){
+            $request->question_options        = "Date Picker Option,Not Sure,Not Applicable";
+            $request->question_options_fr     = "Date Picker Option,Pas certain,Non applicable";
+            $request->q_type                  = "sc";
+            // $exist=DB::table('questions')->where('form_id', $request->form_id)->where('dropdown_value_from', 4)->count();
+            // if($exist>0){
+            //     return redirect()->back()->with('message', __('Date Picker Question Already Exist in the Assessment'));
+            // }
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from == 5){
+            $request->question_options        = "Time Picker Option,Not Sure,Not Applicable";
+            $request->question_options_fr     = "Time Picker Option,Pas certain,Non applicable";
+            $request->q_type                  = "sc";
+            // $exist=DB::table('questions')->where('form_id', $request->form_id)->where('dropdown_value_from', 5)->count();
+            // if($exist>0){
+            //     return redirect()->back()->with('message', __('Time Picker Question Already Exist in the Assessment'));
+            // }
+        }
 
         $allow_attach = 0;
         if ($request->add_attachments_box){
@@ -4361,20 +5012,59 @@ class Forms extends Controller{
 
         $question_ids = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->pluck('id');
 
-        $last_sort_order = DB::table('form_questions')->whereIn('question_id', $question_ids)->orderby('sort_order', 'DESC')->get();
-        $last_sort_order = $last_sort_order[0]->sort_order;
-        $last_sort_order = (int) explode('.', $last_sort_order)[1];
-        $current_order = $last_sort_order + 1;
-        $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->orderBy('question_num', 'DESC')->pluck('question_num')->first();
-        $last_question_num = explode('.', $last_question_num)[1];
-
-        if ($last_question_num == 0) {
-            $last_question_num = 1;
-        } else {
-            $last_question_num++;
+        if(count($question_ids)>0){
+            $last_sort_order = DB::table('form_questions')->whereIn('question_id', $question_ids)->orderby('sort_order', 'DESC')->get();
+            $last_sort_order = $last_sort_order[0]->sort_order;
+            $last_sort_order = (int) explode('.', $last_sort_order)[1];
+            // dd($last_sort_order);
         }
-        $question_number = $section_num . '.' . $last_question_num;
+        else{
+            $last_sort_order=0;
+        }
+        $current_order = $last_sort_order + 1;
+        $last_question_num = DB::table('questions')->where('question_section_id', $request->this_section_id)->where('question_num', '!=', null)->where('parent_q_id', null)->orderBy('question_num', 'DESC')->pluck('question_num')->first();
+        if($last_question_num){
+            // $last_question_num = explode('.', $last_question_num)[1];
+            $last_question_num = $last_question_num + 1/100;
+            $question_number = $last_question_num; 
+            $question_number = number_format($question_number, 2);   
+            // dd($last_question_num);
+        }
+        else{
+            $last_question_num = 1/100;
+            $question_number = $section_num + $last_question_num;
+            $question_number = number_format($question_number, 2);
+        }
+        
+        // if ($last_question_num == 0) {
+        //     $last_question_num = 1;
+        // } else {
+        //     $last_question_num++;
+        // }
+        // $question_number = $section_num + $last_question_num;
+        // dd($question_number);
         $pre_sort_order = DB::table('form_questions')->where('form_id', $request->form_id)->orderBy('sort_order', 'desc')->first();
+
+        if(isset($request->question_options) && isset($request->question_options_fr)){
+            // trimming options
+            //Triming the options
+            $opt = explode(",", $request->question_options);
+            $trim_opt=array_map(function($item){ return trim($item); }, $opt);
+            $request->question_options=implode(",", $trim_opt);
+
+            $opt = explode(",", $request->question_options_fr);
+            $trim_opt_fr=array_map(function($item){ return trim($item); }, $opt);
+            $request->question_options_fr=implode(",", $trim_opt_fr);
+            // Trimming end
+            
+            $opt = explode(",", $request->question_options);
+            $opt_fr = explode(",", $request->question_options_fr);
+            $count = count($opt);
+            $count_fr = count($opt_fr);
+            if($count != $count_fr){
+                return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+            }
+        }
 
         $question_array = [
             'question'              => $request->question_title,
@@ -4407,6 +5097,21 @@ class Forms extends Controller{
 
         DB::table('questions')->where('id', $question_id)->update(['form_key' => 'q-' . $question_id]);
 
+        ////option link
+        if(isset($request->question_options) && isset($request->question_options_fr)){
+            $opt = explode(",", $request->question_options);
+            $opt_fr = explode(",", $request->question_options_fr);
+            foreach($opt as $index => $op){
+                DB::table('options_link')->insert([
+                    'option_en'     => $op,
+                    'option_fr'     => $opt_fr[$index],
+                    'question_id'   => $question_id,
+                    'form_id'       => $request->form_id,
+                ]);
+            }
+        }
+        /////
+
         $__sec_num = $section_num - 1;
         $sord_order_num = $__sec_num + ($current_order / 100);
         DB::table('form_questions')->insert([
@@ -4415,7 +5120,96 @@ class Forms extends Controller{
             'sort_order' => $sord_order_num,
         ]);
 
-        return redirect()->back()->with('success', __('Successfully Added Section'));
+        if($request->q_type=="dc" && $request->dropdown_value_from==1){
+            DB::table('questions')->where('id', $question_id)->update([
+                'is_parent' => 1,
+                'question_assoc_type' => 1,
+                'type' => null,
+                'is_data_inventory_question' => 1,
+                'question_category' => 2,
+            ]);
+            $question_number = $question_number+0.0001;
+            $sections=DB::table('sections')->get();
+            // dd($sections);
+            foreach($sections as $section){
+                $elements=DB::table('assets_data_elements')->where('section_id', $section->id)->where('owner_id', null)->pluck('name')->toArray();
+                $element_fil=array_map(function($item){ return trim($item); }, $elements);
+                $elements = implode(', ', $element_fil);
+
+                $elements_fr=DB::table('assets_data_elements')->where('section_id', $section->id)->where('owner_id', null)->pluck('name_fr')->toArray();
+                $element__fr_fil=array_map(function($item){ return trim($item); }, $elements_fr);
+                $elements_fr = implode(', ', $element__fr_fil);
+                // dd($elements);
+
+                $question_array = [
+                    'question'              => $section->section_name,
+                    'question_fr'           => $section->section_name_fr,
+                    'options'               => $elements,
+                    'options_fr'            => $elements_fr,
+                    'question_num'          => $question_number,
+                    'question_section'      => '',
+                    'question_section_id'   => $request->this_section_id,
+                    'question_assoc_type'   => 2,
+                    'is_data_inventory_question'   => 1,
+                    'dropdown_value_from'   => $request->dropdown_value_from,
+                    'parent_q_id'           => $question_id,
+                    'question_category'     => 2,
+                    'form_id'               => $request->form_id,
+                    'type'                  => 'mc',
+                ];
+
+                $q_id = DB::table('questions')->insertGetId($question_array);
+
+                DB::table('questions')->where('id', $q_id)->update(['form_key' => 'q-' . $q_id]);
+
+                $question_number = $question_number+0.0001;
+                $question_number = number_format($question_number, 4);
+
+                if(isset($elements) && isset($elements_fr)){
+                    $opt = explode(", ", $elements);
+                    $opt_fr = explode(", ", $elements_fr);
+                    foreach($opt as $index => $op){
+                        DB::table('options_link')->insert([
+                            'option_en'     => $op,
+                            'option_fr'     => $opt_fr[$index],
+                            'question_id'   => $q_id,
+                            'form_id'       => $request->form_id,
+                        ]);
+                    }
+                }
+
+                $sord_order_num=$sord_order_num+0.0001;
+                
+                DB::table('form_questions')->insert([
+                    'form_id' => $request->form_id,
+                    'question_id' => $q_id,
+                    'sort_order' => $sord_order_num,
+                ]);
+            }
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from==0){
+            DB::table('questions')->where('id', $question_id)->update([
+                'question'              => 'What activity are you assessing?',
+                'question_fr'           => 'Quelle activité évaluez-vous ?',
+                'type'                  => 'qa',
+                'question_category'     => 2,
+                'dropdown_value_from'   => 0,
+            ]);
+        }
+        if($request->q_type=="dc" && $request->dropdown_value_from==2){
+            DB::table('questions')->where('id', $question_id)->update([
+                'question'              => 'What assets are used to process the data for this activity?',
+                'question_fr'           => 'Quels sont les actifs utilisés pour traiter les données dans le cadre de cette activité ?',
+                'options'               => 'Not Sure, Not Applicable',
+                'options_fr'            => 'Pas sûr, pas applicable',
+                'type'                  => 'mc',
+                'question_category'     => 2,
+                'is_assets_question'    => 1,
+                'dropdown_value_from'   => 2,
+            ]);
+        }
+
+        return redirect()->back()->with('success', __('Successfully Added Question'));
 
     }
 
@@ -4431,14 +5225,50 @@ class Forms extends Controller{
 
     public function update_options(Request $request){
         // dd($request->all());
+        $question = DB::table('questions')->where('id', $request->question_id)->first();
+            $opt = explode(",", $request->updated_options);
+            $trim_opt=array_map(function($item){ return trim($item); }, $opt);
+            $request->updated_options=implode(",", $trim_opt);
+            $opt = explode(",", $request->updated_options);
+
+            $opt_fr = explode(", ", $question->options_fr);
+            // dd($opt_fr);
+            $count = count($opt);
+            $count_fr = count($opt_fr);
+            if($count != $count_fr){
+                return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+            }
         DB::table('questions')->where('id', $request->question_id)->update(['options' => str_replace(",", ", ", $request->updated_options)]);
+            foreach($opt_fr as $index => $op){
+                DB::table('options_link')->where('question_id', $request->question_id)->where('option_fr', $op)->update([
+                    'option_en'     => $opt[$index],
+                ]);
+            }
         return redirect()->back()->with('success', __('English Options Updated Successfully'));
 
     }
 
     public function update_options_fr(Request $request){
         // dd($request->all());
+        $question = DB::table('questions')->where('id', $request->question_id)->first();
+            $opt = explode(", ", $question->options);
+
+            $opt_fr = explode(",", $request->updated_options_fr);
+            $trim_opt=array_map(function($item){ return trim($item); }, $opt_fr);
+            $request->updated_options_fr=implode(",", $trim_opt);
+            $opt_fr = explode(",", $request->updated_options_fr);
+
+            $count = count($opt);
+            $count_fr = count($opt_fr);
+            if($count != $count_fr){
+                return redirect()->back()->with('message', __('French Options and English Options Count Does Not Match.'));
+            }
         DB::table('questions')->where('id', $request->question_id)->update(['options_fr' => str_replace(",", ", ", $request->updated_options_fr)]);
+            foreach($opt as $index => $op){
+                DB::table('options_link')->where('question_id', $request->question_id)->where('option_en', $op)->update([
+                    'option_fr'     => $opt_fr[$index],
+                ]);
+            }
         return redirect()->back()->with('success', __('French Options Updated Successfully'));
 
     }
@@ -4450,6 +5280,170 @@ class Forms extends Controller{
             DB::table('questions')->where('id', $question_id[0])->update(['question_comment_fr' => $request->question_comment_fr]);
         } else {
             DB::table('questions')->where('id', $request->question_id)->update(['question_comment' => $request->question_comment]);
+        }
+    }
+
+    public function duplicate($id){
+        try {
+            // Creating Form
+
+            $old_form       = DB::table('forms')->where('id', $id)->first();
+
+            $new_form_id    = DB::table('forms')->insertGetId([
+                "title"         => $old_form->title.' - '.time(),
+                "title_fr"      => $old_form->title_fr.' - '.time(),
+                "type"          => "assessment",
+                "date_created"  => now()->format('Y-m-d H:i:s'),
+                "date_updated"  => now()->format('Y-m-d H:i:s'),
+                "is_fav"        => 0,
+            ]);
+            DB::table('forms')->where('id', $new_form_id)->update([
+                "code"  => "f".$new_form_id,
+            ]);
+
+            // Form Created Successfully
+
+            // Create Sections
+            $old_sections = DB::table('admin_form_sections')->where('form_id', $old_form->id)->get();
+
+            foreach($old_sections as $old_section){
+                // Create Section
+
+                $new_section_id = DB::table('admin_form_sections')->insertGetId([
+                    "sec_num"           => $old_section->sec_num,
+                    "section_title"     => $old_section->section_title,
+                    "section_title_fr"  => $old_section->section_title_fr,
+                    "form_id"           => $new_form_id,
+                ]);
+
+                // Get Old Questions
+                $old_questions = DB::table("questions")->where('form_id', $old_form->id)->where('question_section_id', $old_section->id)->orderBy('id', 'ASC')->get();
+                // dd($old_questions);
+                foreach($old_questions as $old_question){
+                    $new_question_id = DB::table('questions')->insertGetId([
+                            "question"                      => $old_question->question,
+                            "question_fr"                   => $old_question->question_fr,
+                            "question_info"                 => $old_question->question_info,
+                            "question_info_fr"              => $old_question->question_info_fr,
+                            "question_num"                  => $old_question->question_num,
+                            "is_assets_question"            => $old_question->is_assets_question,
+                            "question_comment"              => $old_question->question_comment,
+                            "question_comment_fr"           => $old_question->question_comment_fr,
+                            "additional_comments"           => $old_question->additional_comments,
+                            "question_assoc_type"           => $old_question->question_assoc_type,
+                            "parent_question"               => $old_question->parent_question,
+                            "is_parent"                     => $old_question->is_parent,
+                            "parent_q_id"                   => $old_question->parent_q_id,
+                            "form_key"                      => $old_question->form_key,
+                            "type"                          => $old_question->type,
+                            "is_data_inventory_question"    => $old_question->is_data_inventory_question,
+                            "options"                       => $old_question->options,
+                            "options_fr"                    => $old_question->options_fr,
+                            "question_section"              => $old_question->question_section,
+                            "question_section_id"           => $new_section_id,
+                            "question_category"             => $old_question->question_category,
+                            "form_id"                       => $new_form_id,
+                            "created_at"                    => $old_question->created_at,
+                            "updated_at"                    => $old_question->updated_at,
+                            "display"                       => $old_question->display,
+                            "attachments"                   => $old_question->attachments,
+                            "dropdown_value_from"           => $old_question->dropdown_value_from,
+                            "not_sure_option"               => $old_question->not_sure_option,
+                            "question_short"                => $old_question->question_short,
+                            "question_short_fr"             => $old_question->question_short_fr,
+                            "attachment_allow"              => $old_question->attachment_allow,
+                    ]);
+
+                    DB::table('questions')->where('id', $new_question_id)->update([
+                        'form_key' => 'q-' . $new_question_id
+                    ]);
+
+                    ////Multi Level
+                    if($old_question->is_parent == 1){
+                        $parent_question = $new_question_id;
+                    }
+                    if($old_question->parent_q_id != null){
+                        DB::table('questions')->where('id', $new_question_id)->update([
+                            'parent_q_id' => $parent_question
+                        ]);
+                    }
+
+                    ////option link
+                    if(isset($question->options) && isset($question->options_fr) && ($question->type =="mc" || $question->type =="sc")){
+                        $opt = explode(", ", $question->options);
+                        $opt_fr = explode(", ", $question->options_fr);
+                        foreach($opt as $index => $op){
+                            DB::table('options_link')->insert([
+                                'option_en'     => $op,
+                                'option_fr'     => $opt_fr[$index],
+                                'question_id'   => $new_question_id,
+                                'form_id'       => $new_section_id,
+                            ]);
+                        }
+                    }
+                    /////
+
+                    DB::table('form_questions')->insert([
+                        'form_id' => $new_form_id,
+                        'question_id' => $new_question_id,
+                        'sort_order' => $old_question->question_num,
+                    ]);
+
+                }
+            }
+            return redirect('Forms/AdminFormsList')->with('message', __('Duplicate Form Generated Successfully'));
+
+        ////////////////////////////////////////
+
+            foreach ($old_group->sections as $old_section) {
+                $section = new GroupSection;
+                $section->section_title     = strtoupper($old_section->section_title);
+                $section->section_title_fr  = strtoupper($old_section->section_title_fr);
+                $section->group_id          = $group_id;
+                $section->number            = $old_section->number;
+                $section->save();
+                $section_id = $section->id;
+                foreach ($old_section->questions as $old_questions){
+                    $question                        = new Question;
+                    $question->question              = $old_questions->question;
+                    $question->question_fr           = $old_questions->question_fr;
+                    $question->question_short        = $old_questions->question_short;
+                    $question->question_short_fr     = $old_questions->question_short_fr;
+                    $question->question_num          = $old_questions->question_num;
+                    $question->type                  = $old_questions->type;
+                    $question->options               = $old_questions->options;
+                    $question->options_fr            = $old_questions->options_fr;
+                    $question->dropdown_value_from   = $old_questions->dropdown_value_from;
+                    $question->control_id            = $old_questions->control_id;
+                    $question->not_sure_option       = $old_questions->not_sure_option;
+                    $question->attachment_allow      = $old_questions->attachment_allow;
+                    $question->accepted_formates     = $old_questions->accepted_formates;
+                    $question->question_comment      = $old_questions->question_comment;
+                    $question->question_comment_fr   = $old_questions->question_comment_fr;
+                    $question->section_id            = $section_id;
+                    $question->save();
+
+                    ////option link
+                    if(isset($question->options) && isset($question->options_fr) && $question->type !="qa"){
+                        $opt = explode(", ", $question->options);
+                        $opt_fr = explode(", ", $question->options_fr);
+                        foreach($opt as $index => $op){
+                            DB::table('options_link')->insert([
+                                'option_en'     => $op,
+                                'option_fr'     => $opt_fr[$index],
+                                'question_id'   => $question->id,
+                                'form_id'       => $question->section_id,
+                            ]);
+                        }
+                    }
+                    /////
+                }
+            }
+
+            return redirect()->back()->with('msg', 'Group Deleted Successfully');   
+        } 
+        catch (\Exception $ex) {
+            return redirect()->back()->with('msg', $ex->getMessage());
         }
     }
 
@@ -4471,7 +5465,7 @@ class Forms extends Controller{
                 $this->delete_update_question_num($question, $all_current_section_questions);
                 DB::table('questions')->where('id', $question->id)->delete();
                 DB::table('form_questions')->where('question_id', $question->id)->delete();
-                $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
+                // $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
                 break;
             //**********************************************************
             //**********************************************************
@@ -4481,7 +5475,7 @@ class Forms extends Controller{
                 DB::table('questions')->wherein('id', $child_ids)->delete();
                 DB::table('form_questions')->wherein('question_id', $child_ids)->delete();
                 DB::table('questions')->where('id', $question->id)->delete();
-                $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
+                // $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
 
                 break;
             //***********************************************************
@@ -4489,7 +5483,7 @@ class Forms extends Controller{
             case 'child':
                 DB::table('questions')->where('id', $question->id)->delete();
                 DB::table('form_questions')->where('question_id', $question->id)->delete();
-                $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
+                // $this->del_section_if_there_is_no_question_in_id($question->question_section_id);
                 break;
             //***********************************************************
             //**********************************************************
@@ -4537,6 +5531,89 @@ class Forms extends Controller{
         DB::table($table)->where($form_link_attr, $link)->update(['is_locked' => $lock_status]);
 
         return response()->json(['status' => 'success', 'msg' => __('status changed')]);
+    }
+
+    public function temp_lock(Request $request){
+
+        // dd($request->all());
+
+        $in_link = $request->input('in_link');
+        $ex_link = $request->input('ex_link');
+
+        // dd($in_link);
+        if($in_link != null){
+            $data = DB::table('user_form_links')
+            ->Where('form_link_id', $in_link)->pluck('is_temp_lock')->first();
+
+            // dd($data);
+
+            if($data == '1'){
+                $lock_status = '0';
+            }
+            else{
+                $lock_status = '1';
+            }
+
+            DB::table('user_form_links')
+            ->Where('form_link_id', $in_link)
+            ->update(['is_temp_lock' => $lock_status]);
+        }
+        if($ex_link != null){
+            $data = DB::table('user_form_links')
+            ->Where('form_link', $ex_link)->pluck('is_temp_lock')->first();
+
+            // dd($data);
+
+            if($data == '1'){
+                $lock_status = '0';
+            }
+            else{
+                $lock_status = '1';
+            }
+
+            DB::table('user_form_links')
+            ->Where('form_link', $ex_link)
+            ->update(['is_temp_lock' => $lock_status]);
+        }
+        
+        return response()->json(['status' => 'success', 'msg' => __('status changed')]);
+    }
+
+
+    public function extend_expire(Request $request){
+
+        // dd($request->all());
+
+        $in_link = $request->input('in_link');
+        $ex_link = $request->input('ex_link');
+
+        $subform_settings = DB::table('subform_client_expiration_settings')->where('client_id', Auth::user()->client_id)->first();
+
+        if (empty($subform_settings)) {
+            $subform_settings = DB::table('subform_admin_expiration_settings')->first();
+        }
+
+        $days = $subform_settings->duration;
+
+        $currentDateTime = date('Y-m-d H:i:s'); // Get the current date and time in the format YYYY-MM-DD HH:MM:SS
+        $newDateTime = date('Y-m-d H:i:s', strtotime($currentDateTime . ' +' . $days . ' days')); // Add $days days to the current date and time
+
+        // dd($in_link);
+        if($in_link != null){
+            DB::table('user_form_links')
+            ->Where('form_link_id', $in_link)
+            ->update(['expiry_time' => $newDateTime]);
+        }
+        if($ex_link != null){
+            DB::table('user_form_links')
+            ->Where('form_link', $ex_link)
+            ->update(['expiry_time' => $newDateTime]);
+        }
+
+        // DB::table('user_form_links')->where('form_link_id', $in_link)->orWhere('form_link', $ex_link)->update(['expiry_time' => $newDateTime]);
+        
+        
+        return response()->json(['status' => 'success', 'msg' => __('expired date Extended to 10 days')]);
     }
 
     public function change_form_access(Request $request){
@@ -4652,21 +5729,43 @@ class Forms extends Controller{
         $form_id = $request->form_id;
         $id = $request->fq_id;
         $sort_order = $request->sort_order;
+        // dd($id);
 
-        $included = DB::table('form_questions')
+        $included = DB::table('questions')
             ->where('form_id', $form_id)
-            ->where('fq_id', "!=", $id)
-            ->where('sort_order', $sort_order)
+            ->where('id', "!=", $id)
+            ->where('question_num', $sort_order)
             ->count();
         if ($included > 0) {
             return response()->json([
                 "msg" => "Sorting Already Exist!",
             ]);
         } else {
-            DB::table('form_questions')->where('fq_id', $id)
+            $question = DB::table('questions')->where('id', $id)->first();
+            if($question->parent_q_id){
+                $sort_order = $sort_order;
+            }
+            else{
+                $sort_order = number_format($sort_order, 2); 
+            }
+            DB::table('questions')->where('id', $id)
                 ->update([
-                    'sort_order' => $sort_order,
+                    'question_num' => $sort_order,
                 ]);
+
+            
+            if($question->is_parent == 1){
+                $child_questions = DB::table('questions')->where('parent_q_id', $id)->orderBy('question_num', 'ASC')->get();
+                foreach($child_questions as $que){
+                    $sort_order = $sort_order + 0.0001;
+                    $sort_order = number_format($sort_order, 4); 
+
+                    DB::table('questions')->where('id', $que->id)
+                    ->update([
+                        'question_num' => $sort_order,
+                    ]);
+                }
+            }
             return response()->json([
                 "status" => 200,
                 "msg" => "Sort Order Updated Successfully!",

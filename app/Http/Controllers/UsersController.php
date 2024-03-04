@@ -26,19 +26,47 @@ class UsersController extends Controller
     {
 
         $data = DB::table("assets_data_elements as ade")
-            ->select("ade.*", "s.section_name", "dc.classification_name_en")
+            ->select("ade.*", "s.section_name","s.section_name_fr", "dc.classification_name_en", "dc.classification_name_fr")
             ->join("sections as s", "ade.section_id", "s.id")->join("data_classifications as dc", "ade.d_classification_id", "dc.id")->orderby('id', "desc")
             ->whereNull('ade.owner_id')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $section = DB::table("sections")->get();
-        $dc_result = DB::table("data_classifications")->get();
+        $dc_result = DB::table("data_classifications")->where('organization_id', null)->get();
+        // dd($data);
 
         return view("admin.users.data_element", [
             "data" => $data,
             "section" => $section,
             "dc_result" => $dc_result,
         ]);
+    }
+
+    public function data_element_group(Request $req)
+    {
+        $req->validate([
+            "name" => "required",
+            "name_fr" => "required",
+            "element_group" => "required",
+            "d_c_name" => "required",
+        ]);
+        $exist = DB::table('assets_data_elements')->where('owner_id', NULL)->pluck('name');
+        $exist_fr = DB::table('assets_data_elements')->where('owner_id', NULL)->pluck('name_fr');
+        $check=$exist->merge($exist_fr)->toArray();
+        if(in_array($req->name, $check)){
+            return redirect("/data_element")->with("alert", "Data Element Already Exist with this Name");
+        }
+        if(in_array($req->name_fr, $check)){
+            return redirect("/data_element")->with("alert", "Data Element Already Exist with this Name");
+        }
+        DB::table("assets_data_elements")->insert([
+            "name" => $req->name,
+            "name_fr" => $req->name_fr,
+            "section_id" => $req->element_group,
+            "d_classification_id" => $req->d_c_name,
+        ]);
+        return redirect("/data_element")->with("message", "Data Element Has Successfully Added");
     }
 
     public function edit_data_element_group($id)
@@ -48,7 +76,7 @@ class UsersController extends Controller
             ->join("sections as s", "ade.section_id", "s.id")->join("data_classifications as dc", "ade.d_classification_id", "dc.id")->where("ade.id", $id)->orderby('id', "desc")
             ->get();
         $section = DB::table("sections")->get();
-        $dc_result = DB::table("data_classifications")->get();
+        $dc_result = DB::table("data_classifications")->where('organization_id', null)->get();
         return view('admin.users.edit_data_element_group', [
             "data" => $data,
             "section" => $section,
@@ -59,15 +87,43 @@ class UsersController extends Controller
     {
         $req->validate([
             "name" => "required",
+            "name_fr" => "required",
             "element_group" => "required",
             "d_c_name" => "required",
         ]);
         DB::table("assets_data_elements")->where("id", $req->id)->update([
             "name" => $req->name,
+            "name_fr" => $req->name_fr,
             "section_id" => $req->element_group,
             "d_classification_id" => $req->d_c_name,
         ]);
-        return redirect("/data_element")->with("success", "Data Has Successfully Updated");
+        return redirect("/data_element")->with("message", "Data Element Has Successfully Updated");
+    }
+
+    public function delete_data_element_group($id)
+    {
+        $data = DB::table("assets_data_elements")
+            ->where("assets_data_elements.id", $id)
+            ->first();
+        $check= DB::table("assets_data_elements")
+        ->where("assets_data_elements.section_id", $data->section_id)
+        ->where("assets_data_elements.owner_id", NULL)
+        ->count();
+        if($check==1){
+            return response()->json([
+                'status'=> '201',
+                'msg'=> 'This Section has only one Data Element'
+            ]);
+        }
+        else{
+            DB::table("assets_data_elements")
+            ->where("assets_data_elements.id", $id)
+            ->delete();
+            return response()->json([
+                'status'=> '200',
+                'msg'=> 'Data Element Deleted Successfully'
+            ]);
+        }
     }
 
     public function permissions($id)
@@ -81,6 +137,8 @@ class UsersController extends Controller
         }
         $permissions = DB::table('module_permissions')->select('module', 'module_title')->get();
 
+        $user_name= DB::table('users')->where('id', $id)->pluck('name');
+
 
         // print("<pre>");
         // print_r($permissions);
@@ -92,7 +150,7 @@ class UsersController extends Controller
         } else {
             $user_type = 'client';
         }
-        return view('admin.users.permission_add_remove', compact('permissions', 'granted_permissions', 'user_type', 'id'));
+        return view('admin.users.permission_add_remove', compact('permissions', 'granted_permissions', 'user_type', 'user_name', 'id'));
     }
 
     public function permissions_store(Request $request){
@@ -129,7 +187,7 @@ class UsersController extends Controller
     public function index()
     {
         if (Auth::user()->role == 1) {
-            $users = User::where('role', 2)->get();
+            $users = User::where('role', 2)->orderBy('created_at', 'desc')->get();
             return view('admin.users.home', compact("users"));
 
         } elseif (Auth::user()->role == 2 || (Auth::user()->role == 3 && Auth::user()->user_type == 1)) {
@@ -411,6 +469,7 @@ class UsersController extends Controller
             $data = [
                 "name" => $request->input('company'),
                 "company" => $request->input('company'),
+				"rememberme_days" => $request->input('rememberme_days'),
                 "website" => $request->input('website'),
                 "phone" => $request->input('phone'),
                 "role" => 4,
@@ -483,13 +542,13 @@ class UsersController extends Controller
 
     public function edit_store(Request $request, $id)
     {
-        // dd($request->all());
+		
         // if (!empty($request->base_string)) {
         //     dd("ok");
         // }
         // $arr = explode('/', mime_content_type($request->base_string));
         // Session::forget('data');
-
+//echo '<pre>';print_r($_POST);exit;
         $this->validate(
             $request,
             [
@@ -504,7 +563,7 @@ class UsersController extends Controller
 
         $test = $data->image_name;
         $inputs = [
-            'password' => $request->password,
+            'password' => $request->upassword,
         ];
         $rules = [
             'password' => [
@@ -517,7 +576,7 @@ class UsersController extends Controller
         ];
         $validation = \Validator::make($inputs, $rules);
 
-        if ($request->password != "") {
+        if ($request->upassword != "") {
             if ($validation->fails()) {
                 if (isset($_POST['mail_verification']) && $_POST['mail_verification'] == 'on') {
                     $data = $request->all();
@@ -530,8 +589,16 @@ class UsersController extends Controller
                 Session::put('data', $data);
                 return redirect('users/edit/' . $id)->with('alert', __('Password must be Min 8 Characters, Alphanumeric with an Upper and lower case!'));
 
-            } elseif ($request->password != $request->rpassword) {
-                $data = $request->all();
+            } elseif ($request->upassword != $request->rpassword) {
+                if (isset($_POST['mail_verification']) && $_POST['mail_verification'] == 'on') {
+                    $data = $request->all();
+                    $data['mail_verification'] = 'on';
+                } else {
+                    $data = $request->all();
+                    $data['mail_verification'] = 'off';
+                }
+
+                Session::put('data', $data);
                 return redirect('users/edit/' . $id)->with('alert', __('Password did not match!'));
 
             } else {
@@ -562,8 +629,8 @@ class UsersController extends Controller
                     $record['login_attempts'] = 0;
                 }
 
-                if ($request->input('password')) {
-                    $record['password'] = bcrypt($request->input('password'));
+                if ($request->input('upassword')) {
+                    $record['password'] = bcrypt($request->input('upassword'));
                 }
                 if ($request->input('id')) {
 
@@ -579,7 +646,7 @@ class UsersController extends Controller
                 return redirect("/admin");
             }
         } else {
-            if ($request->password != $request->rpassword) {
+            if ($request->upassword != $request->rpassword) {
                 return redirect('users/edit/' . $id)->with('alert', __('Password did not match!'));
             } else {
                 if ($request->base_string) {
@@ -621,8 +688,8 @@ class UsersController extends Controller
                     $record['login_attempts'] = 0;
                 }
 
-                if ($request->input('password')) {
-                    $record['password'] = bcrypt($request->input('password'));
+                if ($request->input('upassword')) {
+                    $record['password'] = bcrypt($request->input('upassword'));
                 }
                 if ($request->input('id')) {
                     User::where("id", $request->input("id"))->update($record);
@@ -954,7 +1021,6 @@ class UsersController extends Controller
 
     public function dashboard()
     {
-        $final = null;
         $user = Auth::user()->id;
         $assigned_permissions = [];
         $data = DB::table('module_permissions_users')->where('user_id', $user)->pluck('allowed_module');
@@ -969,137 +1035,14 @@ class UsersController extends Controller
         if (auth()->user()->role == 1) {
             return redirect()->back();
         }
+
+        // =============================================== //
+        /* MAP LAT LNG */
+
+        $user_type = Auth::user()->role;
+        $user_id = Auth::user()->id;
         $client_id = Auth::user()->client_id;
-        $final = null;
-        $client_id = Auth::user()->client_id;
-        $option_questions = [];
-        $piaDpiaRop_ids = [2, 9, 12];
-
-        $filled_questions = DB::table('external_users_forms')->select('*')->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id', $client_id)->pluck('question_key');
-
-        $filled_questions_internal = DB::table('user_forms')->select('*')->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')->where('user_forms.client_id', $client_id)->pluck('question_key');
-
-        $filled_questions = $filled_questions->merge($filled_questions_internal);
-
-        $question = DB::table('questions')->where('type', 'mc')->wherein('form_id', $piaDpiaRop_ids)->wherein('form_key', $filled_questions)->where(function ($query) {
-            return $query
-                ->where('question_num', '=', null)
-                ->orWhere('question_num', '=', '');
-        })
-            ->get();
-
-        $data_inv_forms = DB::table('questions')->where('is_data_inventory_question', 1)->pluck('form_id')->unique()->toArray();
-        $new_data_inv_questions = DB::table('questions')->where('type', 'mc')->wherein('form_id', $data_inv_forms)->wherein('form_key', $filled_questions)
-            ->where('is_data_inventory_question', 1)
-            ->where(function ($query) {
-                return $query
-                    ->where('question_num', '=', null)
-                    ->orWhere('question_num', '=', '');
-            })
-            ->get();
-
-        $question = $question->merge($new_data_inv_questions);
-        $question = $question->unique('question');
-
-        $en_opt = [];
-        $fr_opt = [];
-
-        foreach ($question as $questions) {
-            $data = $questions->options;
-            $options_array = explode(",", $data);
-            $en_opt[] = array_filter(array_map('trim', $options_array));
-        }
-        $opt_final_en = array_flatten($en_opt);
-        foreach ($question as $questions) {
-            $data = $questions->options_fr;
-            $options_array = explode(",", $data);
-            $fr_opt[] = array_filter(array_map('trim', $options_array));
-        }
-        $opt_final_fr = array_flatten($fr_opt);
-
-        $opt = null;
-
-        foreach ($question as $value) {
-
-            $option = $value->question;
-            $option_fr = $value->question_fr;
-            $temporary_question = DB::table('questions')->where('question', $option)->pluck('form_key');
-            // $question_response = DB::table('external_users_filled_response')->wherein('question_key' , $temporary_question )->get();
-
-            $question_response = DB::table('external_users_forms')->select('*')->wherein('external_users_filled_response.question_key', $temporary_question)
-                ->join('external_users_filled_response', 'external_users_forms.id', '=', 'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id', $client_id)->get();
-
-            // $question_response2 = DB::table('internal_users_filled_response')->wherein('question_key' , $temporary_question )->get();
-
-            $question_response2 = DB::table('user_forms')->select('*')->wherein('internal_users_filled_response.question_key', $temporary_question)
-                ->join('internal_users_filled_response', 'user_forms.id', '=', 'internal_users_filled_response.user_form_id')->where('user_forms.client_id', $client_id)->get();
-
-            if (count($question_response2) > 5) {
-                foreach ($question_response2 as $internal_question) {
-                    $internal_question->external_user_form_id = $internal_question->user_form_id;
-                    $internal_question->user_email = DB::table('users')->where('id', $internal_question->user_id)->pluck('name')->first();
-                }
-            }
-            $question_response = $question_response->merge($question_response2);
-            $final_options_array = array();
-            $count = 0;
-            foreach ($question_response as $resp) {
-
-                $remove_duplicate_options = array();
-                $user_responses = explode(',', $resp->question_response);
-                foreach ($user_responses as $pickoption) {
-                    if (!in_array(trim($pickoption), $final_options_array)) {
-                        if (mb_substr($pickoption, 0, 1, "UTF-8") != "{") {
-                            if (strlen($pickoption) > 1) {
-                                $final_options_array[] = trim($pickoption);
-                            }
-                        }
-                    }
-                }
-            }
-
-            //bari start
-
-            $ww = [];
-            $ee = [];
-            foreach ($final_options_array as $qq) {
-                $new = array_search($qq, $opt_final_fr);
-                if ($new !== false) {
-                    $ww[] = $opt_final_en[array_search($qq, $opt_final_fr)];
-                }
-                if ($new == false) {
-                    $ee[] = $opt_final_en[array_search($qq, $opt_final_en)];
-                }
-                $final_options_array = array_merge($ee, $ww);
-            }
-
-            $final_options_array = array_unique($final_options_array);
-            //bari end
-            $count = count($final_options_array);
-
-            foreach ($final_options_array as $tt) {
-                $opt[] = explode(',', $tt);
-            }
-
-            $op_count = $count;
-            array_push($option_questions, [
-                "question_string" => $option,
-                "question_string_fr" => $option_fr,
-                "op_count" => $op_count,
-            ]);
-        }
-
-        $final = [];
-        if ($opt != null) {
-            foreach ($opt as $jugar) {
-
-                $final[] = $jugar[0];
-            }
-        }
-
-        $total_data_types = count($final);
-
-        $client_id = auth()->user()->client_id;
+        
         $lat_value[] = '';
         $lat_detail[] = '';
 
@@ -1125,260 +1068,289 @@ class UsersController extends Controller
                 return redirect(route('client_user_subforms_list'));
             }
         }
-        $id = Auth::user()->client_id;
 
-        // ================================================== //
-        /* PENDING SAR REQUEST ALERTS */
+        /* MAP LAT LNG */
+        // ================================================================================================================= //
 
-        $incomplete_sar_requests = DB::table('sar_requests')
-            ->selectRaw('*, DATEDIFF(due_date, NOW()) AS days_left')
-            ->where('status', 0)
-            ->where('client_id', $id)
-            ->where(DB::raw('DATEDIFF(due_date, NOW())'), '<=', '10')
-            ->orderBy('days_left');
-
-        $days_left = $incomplete_sar_requests->limit(1)->pluck('days_left')->first();
-
-        $incomplete_sar_requests_counts = $incomplete_sar_requests->count();
-
-        $sar_pending_request_info = [
-            'days_left' => $days_left,
-            'request_count' => $incomplete_sar_requests_counts,
-        ];
-
-        /* PENDING SAR REQUEST ALERTS */
-        // =============================================== //
 
         // =============================================== //
         /* DASHBOARD COUNTS */
 
-        $org_users_count = DB::table('users')->where('client_id', $id)->count();
-        $total_organisational_users = DB::table('users')->where('client_id', $id)->where('role', 3)->count();
-        $ext_users_count = DB::table('external_users_forms')->where('client_id', $id)->distinct('email')->count();
-        $total_users = $org_users_count + $ext_users_count;
+        if($user_type == 2){
 
-        $subforms_count = DB::table('sub_forms')->where('client_id', $id)->where('title', '!=', 'SAR Form')->count();
+            // Assessment forms
+            $forms = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'assessment')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '1')
+            // ->groupby('user_form_links.sub_form_id')
+            ->get();
+            $forms=$forms->count();
 
-        $forms_count = DB::table('client_forms')->where('client_id', $id)->count();
+            // Pending Assessment forms
+            $pen_forms = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'assessment')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '0')
+            // ->groupby('user_form_links.sub_form_id')
+            ->get();
+            $pen_forms=$pen_forms->count();
 
-        $ext_sent_forms_count = DB::table('external_users_forms')->where('client_id', $id)->count();
-        $int_sent_forms_count = DB::table('user_forms')->where('client_id', $id)->count();
-        $total_shared_forms = $ext_sent_forms_count + $int_sent_forms_count;
+            // Completed Audits Counts
+            $audits = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'audit')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '1')
+            ->groupby('user_form_links.sub_form_id')
+            ->get();
+             $audits=$audits->count();
+            // dd($audits);
 
-        $ext_completed_forms_count = DB::table('external_users_forms')->where('client_id', $id)->where('is_locked', 1)->count();
-        $int_completed_forms_count = DB::table('user_forms')->where('client_id', $id)->where('is_locked', 1)->count();
-        $total_completed_forms = $ext_completed_forms_count + $int_completed_forms_count;
 
-        $e_incomplete_forms_count = DB::table('external_users_forms')->where('client_id', $id)->where('is_locked', 0)->count();
-        $i_incomplete_forms_count = DB::table('user_forms')->where('client_id', $id)->where('is_locked', 0)->count();
-        $total_incomplete_forms = $e_incomplete_forms_count + $i_incomplete_forms_count;
+            // Pending Audit Counts
+            // $pen_audits = DB::table('forms')
+            // ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            // ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            // ->where('forms.type', 'audit')
+            // ->where('sub_forms.client_id', $client_id)
+            // ->where('user_form_links.is_locked', '0')
+            // ->groupby('user_form_links.sub_form_id')
+            // ->get();
+            // $pen_audits=$pen_audits->count();
+            // dd($pen_audits);
+            $sub_form_ids = DB::table('user_form_links')->where('is_locked', 1)->pluck('sub_form_id')->toArray();
 
-        $int_sar_completed_forms = DB::table('user_forms')->where('user_forms.client_id', $id)
-            ->join('sub_forms', 'sub_forms.id', '=', 'user_forms.sub_form_id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('forms.code', '=', 'f10')
-            ->where('user_forms.is_locked', '=', '1')
-            ->count();
+            $ext_forms = DB::table('sub_forms')
+                ->join('user_form_links as ufl', 'ufl.sub_form_id', 'sub_forms.id')
 
-        $ext_sar_completed_forms = DB::table('external_users_forms')->where('external_users_forms.client_id', $id)
-            ->join('sub_forms', 'sub_forms.id', '=', 'external_users_forms.sub_form_id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('forms.code', '=', 'f10')
-            ->where('external_users_forms.is_locked', '=', '1')
-            ->count();
+                ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
 
-        $total_sar_completed_forms = $int_sar_completed_forms + $ext_sar_completed_forms;
+                ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
 
-        $int_sar_incomplete_forms = DB::table('user_forms')
-            ->join('sub_forms', 'sub_forms.id', '=', 'user_forms.sub_form_id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('forms.code', '=', 'f10')
-            ->where('user_forms.is_locked', '=', '0')
-            ->where('user_forms.client_id', $id)
-            ->count();
+                ->where('ufl.is_locked', '!=', 1)
+                ->where('ufl.is_internal', 0)
+                ->where('ufl.client_id', $client_id)
+                ->whereNotIn('sub_forms.id', $sub_form_ids)
+                ->groupby('sub_forms.id')
+                ->select('*', DB::raw(
+                    'ufl.user_email as email, 
+                    forms.title as form_title, 
+                    forms.title_fr as form_title_fr, 
+                    sub_forms.title as subform_title, 
+                    sub_forms.id as id, 
+                    sub_forms.title_fr as subform_title_fr, 
+                    sub_forms.other_id, 
+                    sub_forms.other_number, 
+                    assets.asset_number, 
+                    assets.name as asset_name, 
+                    audit_questions_groups.group_name,
+                    audit_questions_groups.group_name_fr,
+                    "External" as user_type'
+                    ))
+                    ->orderby('ufl.created', 'DESC')
+            ->get();
 
-        $ext_sar_incomplete_forms = DB::table('external_users_forms')
-            ->join('sub_forms', 'sub_forms.id', '=', 'external_users_forms.sub_form_id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('forms.code', '=', 'f10')
-            ->where('external_users_forms.is_locked', '=', '0')
-            ->where('external_users_forms.client_id', $id)
-            ->count();
-        $sar_subform_id = DB::table('sub_forms')->select('sub_forms.id as subform_id')->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')->where('type', '=', 'sar')->where('client_id', '=', Auth::user()->client_id)->pluck('subform_id')->first();
+            $int_forms = DB::table('sub_forms')
+                ->join('user_form_links as ufl', 'ufl.sub_form_id', 'sub_forms.id')
+                ->join('users', 'users.id', 'ufl.user_id')
+                ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
+                ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+                ->where('ufl.is_locked', 0)
+                ->where('ufl.is_internal', 1)
+                ->where('ufl.client_id', $client_id)
+                ->whereNotIn('sub_forms.id', $sub_form_ids)
+                ->groupby('sub_forms.id')
+                ->select('ufl.*', DB::raw('
+                    users.email,
+                    users.name,
+                    forms.title as form_title,
+                    forms.title_fr as form_title_fr,
+                    sub_forms.id as id, 
+                    sub_forms.title as subform_title,
+                    sub_forms.title_fr as subform_title_fr,
+                    sub_forms.other_id, 
+                    sub_forms.other_number, 
+                    form_link_id as form_link,
+                    assets.asset_number, 
+                    assets.name as asset_name,
+                    audit_questions_groups.group_name,
+                    audit_questions_groups.group_name_fr, 
+                    "Internal" as user_type'
+                ))
+                ->orderby('ufl.created', 'DESC')
+            ->get();
+            
+            $completed_forms = $int_forms->merge($ext_forms);
+            $completed_forms = $completed_forms->unique('sub_form_id');
+            $pen_audits = $completed_forms->count();
+            // dd($pen_audits);
 
-        $total_sar_incomplete_forms = $int_sar_incomplete_forms + $ext_sar_incomplete_forms;
+            // Remediation Counts
+            $remediation = DB::table('remediation_plans')
+            ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join("forms","forms.id", "sub_forms.parent_form_id")
+            ->join("audit_questions_groups","audit_questions_groups.id", "forms.group_id")
+            ->where('remediation_plans.client_id', $client_id)
+            ->groupby('remediation_plans.sub_form_id')
+            ->get();
+            $remediation=$remediation->count();
+            // dd($remediation);
 
-        $total_incident_register_forms = DB::table('incident_register')->where('organization_id', $id)->count();
+        }
+        else{
 
-        $external_user_activities = DB::table('external_users_filled_response')
-            ->whereIn('external_user_form_id', DB::table('external_users_forms')
-                    ->where('client_id', $id)->pluck('id'))
-            ->whereIn('question_id', DB::table('questions')
-                    ->where('question', 'like', '%What activity are you assessing%')->pluck('id'))
-            ->distinct('question_response')
-            ->count();
-        $internal_user_activities = DB::table('internal_users_filled_response')
-            ->whereIn('user_form_id', DB::table('user_forms')
-                    ->where('client_id', $id)->pluck('id'))
-            ->whereIn('question_id', DB::table('questions')
-                    ->where('question', 'like', '%What activity are you assessing%')->pluck('id'))
-            ->distinct('question_response')
-            ->count();
+            $forms = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'assessment')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '1')
+            ->where('user_form_links.user_id', $user_id)
+            // ->groupby('user_form_links.sub_form_id')
+            ->get();
+            $forms=$forms->count();
 
-        $total_activities = $external_user_activities + $internal_user_activities;
+            $pen_forms = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'assessment')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '0')
+            ->where('user_form_links.user_id', $user_id)
+            // ->groupby('user_form_links.sub_form_id')
+            ->get();
+            $pen_forms=$pen_forms->count();
+            
+            // Completed Audits Counts
+            $audits = DB::table('forms')
+            ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            ->where('forms.type', 'audit')
+            ->where('sub_forms.client_id', $client_id)
+            ->where('user_form_links.is_locked', '1')
+            ->where('user_form_links.user_id', $user_id)
+            ->groupby('user_form_links.sub_form_id')
+            ->get();
+             $audits=$audits->count();
 
-        $total_audit_forms = DB::table('forms')
-                            ->join('client_forms', 'forms.id', '=', 'client_forms.form_id')
-                            ->leftjoin('sub_forms', 'forms.id', '=', DB::raw('sub_forms.parent_form_id AND sub_forms.client_id = ' . $client_id))
-                            ->where('client_forms.client_id', '=', Auth::user()->client_id)
-                            ->where('type', 'audit')
-                            ->groupBy('forms.id')
-                            ->count();
+
+            // Pending Audit Counts
+            // $pen_audits = DB::table('forms')
+            // ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+            // ->join('user_form_links', 'user_form_links.sub_form_id', 'sub_forms.id')
+            // ->where('forms.type', 'audit')
+            // ->where('sub_forms.client_id', $client_id)
+            // ->where('user_form_links.is_locked', '0')
+            // ->where('user_form_links.user_id', $user_id)
+            // ->groupby('user_form_links.sub_form_id')
+            // ->get();
+            // $pen_audits=$pen_audits->count();
+            $int_forms = DB::table('user_form_links as ufl')
+                ->join('users', 'users.id', 'ufl.user_id')
+                ->join('sub_forms', 'sub_forms.id', 'ufl.sub_form_id')
+                ->leftjoin('assets', 'assets.id', 'sub_forms.asset_id')
+                ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
+                ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+                ->where('ufl.user_id', Auth::user()->id)
+                ->where('is_locked', 0)
+                ->select('*', DB::raw(
+                    'users.email,
+                    users.client_id,
+                    forms.title as form_title,
+                    forms.title_fr as form_title_fr,
+                    sub_forms.title as subform_title,
+                    sub_forms.title_fr as subform_title_fr,
+                    sub_forms.other_id, 
+                    sub_forms.other_number, 
+                    form_link_id as form_link,
+                    audit_questions_groups.group_name,
+                    audit_questions_groups.group_name_fr,
+                    assets.asset_number, 
+                    assets.name as asset_name, 
+                    "Internal" as user_type'))
+                    ->orderby('ufl.created', 'DESC')
+                ->get();
+            $pen_audits = $int_forms->count();
+
+            // Remediation Counts
+            $remediation = DB::table('remediation_plans')
+            ->join('sub_forms', 'sub_forms.id', 'remediation_plans.sub_form_id')
+            ->join("forms","forms.id", "sub_forms.parent_form_id")
+            ->join("audit_questions_groups","audit_questions_groups.id", "forms.group_id")
+            ->where('remediation_plans.client_id', $client_id)
+            ->where('remediation_plans.person_in_charge', $user_id)
+            ->groupby('remediation_plans.sub_form_id')
+            ->get();
+            $remediation=$remediation->count();
+        };
+                
 
         
 
-        $sar_completed_requests = DB::table('sar_requests')
-            ->where('status', 1)
-            ->where('client_id', $id)
-            ->count();
-
-        $sar_incomplete_requests = DB::table('sar_requests')
-            ->where('status', 0)
-            ->where('client_id', $id)
-            ->count();
-
         /* DASHBOARD COUNTS */
         // ================================================================================================================= //
 
-        // ================================================================================================================= //
-        /* BAR CHART */
+        // =============================================== //
+        /* Table Data */
 
-        $num_of_internal_users = DB::table('sub_forms')
-            ->join('user_forms', 'user_forms.sub_form_id', '=', 'sub_forms.id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('user_forms.client_id', $id)
-            ->select(DB::raw('forms.id, sub_forms.title as subform_title, forms.title as form_title, user_forms.user_id, COUNT(user_forms.user_id) AS user_count'))
-            ->groupBy('forms.id')
-            ->orderBy('forms.id')
-            ->get();
+        $assets = DB::table('assets')->where('client_id' , $client_id )->orderBy('id' , 'desc')->get();
 
-        $num_of_external_users = DB::table('sub_forms')
-            ->join('external_users_forms', 'external_users_forms.sub_form_id', '=', 'sub_forms.id')
-            ->join('forms', 'sub_forms.parent_form_id', '=', 'forms.id')
-            ->where('external_users_forms.client_id', $id)
-            ->select(DB::raw('forms.id, sub_forms.title as subform_title, forms.title as form_title, external_users_forms.user_email, COUNT(external_users_forms.user_email) AS user_count'))
-            ->groupBy('forms.id')
-            ->orderBy('forms.id')
-            ->get();
-
-        $num_of_form_users = [];
-
-        foreach ($num_of_internal_users as $key => $int_form_info) {
-            $num_of_form_users[$int_form_info->id]['name'] = $int_form_info->form_title;
-            $num_of_form_users[$int_form_info->id]['internal'] = $int_form_info->user_count;
-            $num_of_form_users[$int_form_info->id]['total'] = $int_form_info->user_count;
-        }
-
-        foreach ($num_of_external_users as $key => $ext_form_info) {
-            $num_of_form_users[$ext_form_info->id]['name'] = $ext_form_info->form_title;
-            $num_of_form_users[$ext_form_info->id]['external'] = $ext_form_info->user_count;
-            $num_of_form_users[$ext_form_info->id]['total'] = $ext_form_info->user_count + ((isset($num_of_form_users[$ext_form_info->id]['total'])) ? ($num_of_form_users[$ext_form_info->id]['total']) : (0));
-        }
-
-        /* BAR CHART */
+        /* Table Data*/
         // ================================================================================================================= //
 
-        // ================================================================================================================= //
-        /* STATS TABLE */
+        /* Reports*/
 
-        $int_user_forms = DB::table('forms')
-            ->join('sub_forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-            ->join('user_forms', 'sub_forms.id', '=', 'user_forms.sub_form_id')
-            ->where('user_forms.client_id', '=', $id)
-            ->select(DB::raw('forms.id, forms.title, forms.title_fr,
-                                              COUNT(sub_forms.id) AS subforms_count,
-                                              SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) AS completed,
-                                              SUM(CASE WHEN is_locked = 0 THEN 1 ELSE 0 END) AS not_completed'))
-            ->groupBy('forms.id')
-            ->orderBy('forms.title')
-            ->get();
-        // dd($int_user_forms->count());
+        $group_id = DB::table('forms')
+        ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+        ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+        ->where('forms.type', 'audit')
+        ->where('sub_forms.client_id', $client_id)
+        ->select('forms.group_id', 'audit_questions_groups.group_name',  'audit_questions_groups.group_name_fr')
+        ->groupby('sub_forms.parent_form_id')
+        ->orderby('date_created', 'desc')
+        ->get();
+        // ->pluck('forms.group_id');
+        // dd($group_id);
 
-        $ext_user_forms = DB::table('forms')
-            ->join('sub_forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-            ->join('external_users_forms', 'sub_forms.id', '=', 'external_users_forms.sub_form_id')
-            ->where('external_users_forms.client_id', '=', $id)
-            ->select(DB::raw('forms.id, forms.title, forms.title_fr,
-                                              COUNT(sub_forms.id) AS subforms_count,
-                                              SUM(CASE WHEN is_locked = 1 THEN 1 ELSE 0 END) AS completed,
-                                              SUM(CASE WHEN is_locked = 0 THEN 1 ELSE 0 END) AS not_completed'))
-            ->groupBy('forms.id')
-            ->orderBy('forms.title')
-            ->get();
+        $fav_id = DB::table('forms')
+        ->join('sub_forms', 'sub_forms.parent_form_id', 'forms.id')
+        ->join('audit_questions_groups', 'audit_questions_groups.id', 'forms.group_id')
+        ->where('forms.type', 'audit')
+        ->where('sub_forms.client_id', $client_id)
+        ->where('forms.is_fav', 1)
+        ->select('forms.group_id', 'audit_questions_groups.group_name',  'audit_questions_groups.group_name_fr')
+        ->groupby('sub_forms.parent_form_id')
+        ->orderby('date_created', 'desc')
+        ->get();
+        // ->pluck('forms.group_id');
+        // dd($fav_id);
 
-        $form_completion_stats = [];
-
-        foreach ($int_user_forms as $key => $int_user_form) {
-            if (session('locale') == 'fr') {
-                $form_completion_stats[$int_user_form->id]['form_name'] = $int_user_form->title_fr;
-            } else {
-                $form_completion_stats[$int_user_form->id]['form_name'] = $int_user_form->title;
-            }
-            //$form_completion_stats[$int_user_form->id]['subforms_count'] =  $int_user_form->subforms_count;
-            $form_completion_stats[$int_user_form->id]['internal'] = ['completed' => $int_user_form->completed, 'not_completed' => $int_user_form->not_completed];
-        }
-
-        // dd($form_completion_stats);
-
-        foreach ($ext_user_forms as $key => $ext_user_form) {
-            $form_completion_stats[$ext_user_form->id]['form_name'] = $ext_user_form->title;
-            //$form_completion_stats[$ext_user_form->id]['subforms_count'] =  $ext_user_form->subforms_count;
-            $form_completion_stats[$ext_user_form->id]['external'] = ['completed' => $ext_user_form->completed, 'not_completed' => $ext_user_form->not_completed];
-        }
-
-        $main_forms_count = DB::table('forms')
-            ->join('sub_forms', 'forms.id', '=', 'sub_forms.parent_form_id')
-            ->where('client_id', '=', $id)
-            ->select(DB::raw('forms.id, forms.title,
-                                              COUNT(sub_forms.id) AS subforms_count'))
-            ->groupBy('forms.id')
-            ->get();
-
-        foreach ($main_forms_count as $fcount) {
-            if (isset($form_completion_stats[$fcount->id])) {
-                $form_completion_stats[$fcount->id]['subforms_count'] = $fcount->subforms_count;
-            }
-        }
-
-        /* STATS TABLE */
         // ================================================================================================================= //
 
+       
+        
         $assigned_permissions = Helper::getUserPermissions(auth()->user()->id);
         return view('home', compact(
-            "total_audit_forms",
-            "total_users",
-            "org_users_count",
-            "ext_users_count",
-            "subforms_count",
-            "forms_count",
-            "total_shared_forms",
-            "total_completed_forms",
-            "total_incomplete_forms",
-            "num_of_form_users",
-            "form_completion_stats",
-            "total_activities",
-            "sar_subform_id",
-            "total_sar_completed_forms",
-            "total_sar_incomplete_forms",
-            "total_incident_register_forms",
-            "sar_pending_request_info",
-            "sar_completed_requests",
-            "sar_incomplete_requests",
+            "group_id",
+            "fav_id",
+            "client_id",
+            "forms",
+            "pen_forms",
+            "audits",
+            "pen_audits",
+            "remediation",
+            "assets",
             "lat_value",
             "lat_detail",
-            "total_data_types",
             "total_assets",
-            "total_organisational_users",
             "assigned_permissions"
         ));
     }
@@ -1389,17 +1361,13 @@ class UsersController extends Controller
             return abort('404');
         }
         //$users = User::where('role',4)->get();
-        $users = DB::table('users')->where('role', 4)->get()->toArray();
-        // dd($users);
+        $users = DB::table('users')->where('role', 4)->orderBy('created_at', 'desc')->get()->toArray();
         // get number of users against each company
-        $users_count = DB::select('SELECT c.id, c.company, u.role, COUNT(u.role) AS role_count
-                                FROM users u
-                                JOIN users c ON u.client_id = c.id
-                                GROUP BY c.id, c.company, u.role');
-                                //   dd($users_count);
+        $users_count = DB::select('SELECT   c.id, c.company, u.role, count(u.role) as role_count
+                                  FROM     users u JOIN users c ON u.client_id = c.id
+                                  GROUP BY company, role');
 
         $user_ids = array_column($users_count, 'id');
-        // dd($user_ids);
 
         $roles_count = ['Administrators' => 0, 'Users' => 0];
 
@@ -1470,6 +1438,7 @@ class UsersController extends Controller
         $record = array(
             "name" => $request->input('name'),
             "company" => $request->input('name'),
+			"rememberme_days" => $request->input('rememberme_days'),
             "phone" => $request->input('phone'),
             "website" => $request->input('website'),
             "image_name" => $imgname,

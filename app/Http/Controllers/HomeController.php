@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Auth;
 use Hash;
 use Session;
@@ -71,7 +72,7 @@ class HomeController extends Controller
 
     }
 
-    public function send_code( ){
+    public function send_code($rememberme){
         $random = rand(1111,9999);
         $subject = __('Consentio | E-mail Verification.');
         $client_info = DB::table('users')->where('id'  , auth()->user()->client_id)->first();
@@ -95,19 +96,27 @@ class HomeController extends Controller
         $name    = $user->name;
         $email   =  $user->email;
         /*from swift mailer*/
-        $transport = new Swift_SmtpTransport(env('MAIL_HOST'), env('MAIL_PORT'), env('MAIL_ENCRYPTION'));
-        $transport->setUsername(env('mail_username'));
-        $transport->setPassword(env('MAIL_PASSWORD'));
-        $swift_mailer = new Swift_Mailer($transport);
-        Mail::setSwiftMailer($swift_mailer);        
+        // $transport = new Swift_SmtpTransport(env('MAIL_HOST'), env('MAIL_PORT'), env('MAIL_ENCRYPTION'));
+        // $transport->setUsername(env('mail_username'));
+        // $transport->setPassword(env('MAIL_PASSWORD'));
+        // $swift_mailer = new Swift_Mailer($transport);
+        // Mail::setSwiftMailer($swift_mailer);        
         $reciever_email = $email;
-        $sender_email = env('MAIL_FROM_ADDRESS');        
+        $sender_email = 'noreply@consentio.cloud';  
+		
         Mail::send(['html'=>'varification_email'], $data, function($message) use($reciever_email , $sender_email, $subject ) {
             $message->to($reciever_email, 'Consentio Forms')->subject
             ($subject);
             $message->from($sender_email,$sender_email);
         });
-        DB::table('users')->where('email' , $user->email)->update(['email_varification_code' => $random]);                               
+		//echo 'kjalsdjf';
+	    // echo $user->id.'------';
+		// echo $user->is_email_varified.'------';exit;
+		// dd($user);
+        DB::table('users')->where('email' , $user->email)->update(['email_varification_code' => $random]);
+			//echo 'asdfsdf';exit;
+			//echo $rememberme.'------------';
+			//return view('admin.client.test');exit;
         return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
     }
 
@@ -128,40 +137,117 @@ class HomeController extends Controller
         $emailExists = DB::table('users')->where('email',$request->email)->first();
 
         if(!$emailExists){
-            return redirect()->back()->with('status', 'Login Failed Wrong User Credentials');
-            $errors['email_not_exist'] = 'Login Failed Wrong User Credentials';
+            return redirect()->back()->with('status', __('Login_Failed_Wrong_User_Credentials'));
+            $errors['email_not_exist'] = __('Login_Failed_Wrong_User_Credentials');
         }
+
+        $emailVerified = DB::table('users')->where('email',$request->email)->where('is_email_varified', 0)->first();
+        // if($emailVerified){
+        //     return redirect()->back()->with('status', 'You Email Address is not Verified. Please contact your customer care team for further support.');
+        //     $errors['account_blocked'] = 'You Email Address is not Verified. Please contact your customer care team for further support.';  
+        // }
 
         $emailBlocked = DB::table('users')->where('email',$request->email)->where('is_blocked','Yes')->first();
         if($emailBlocked){
-            return redirect()->back()->with('status', 'You account is currently blocked. Please contact your customer care team for further support.');
-            $errors['account_blocked'] = 'You account is currently blocked. Please contact your customer care team for further support.';  
+            return redirect()->back()->with('status', __('Your_account_is_currently_blocked'));
+            $errors['account_blocked'] = __('Your_account_is_currently_blocked');  
         }
         $login_attempts = $emailExists->login_attempts;
         if($login_attempts>5){
             Session::flush();    
-            return redirect()->back()->with('status', 'You account is currently blocked. Please contact your customer care team for further support.');
+            return redirect()->back()->with('status', __('Your_account_is_currently_blocked'));
         }
+		
         if (Auth::attempt($userdata)) {
+			
             // return Auth::user();
+			//echo '<pre>';print_r($emailExists);
             $rememberme = $emailExists->rememberme; 
             $rememberme_browser_name = $emailExists->rememberme_browser_name; 
             $rememberme_browser_type = $emailExists->rememberme_browser_type; 
-            if($rememberme=='No' || ($rememberme=='Yes' && $rememberme_browser_name!=$this->getBrowser())){
-                $this->send_code(); 
+            if($emailVerified){
+				//dd("emailverified");
+				//in case if user not verified, then always send code in email
+                $this->send_code($rememberme); 
+				return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
+				
             }else{
-                DB::table('users')->where('email' , $emailExists->email)->update([
+				//If email is verified already then check if he has rememberme=yes then if check if days diff. is more 
+				//than allowed number of days. Then ask for verification else do not ask
+				//if rememberme= no then take to take to verification screen
+				// if rememberme = '' then take to dashboard
+				//echo $rememberme;exit;
+				if($rememberme=='No'  && $emailExists->role!=1){
+					//$this->comman_model->update('users', array('id'=>$emailExists->id), array('is_email_varified'=>0));
+					
+					//echo $emailExists->id.'.....';exit;
+					DB::table('users')->where('id', $emailExists->id)->update(['is_email_varified' => 0]);
+					
+				    $this->send_code($rememberme); 
+					return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
+				}
+				//echo $rememberme.'----';
+				
+				if($rememberme=='Yes'){
+					//echo $rememberme.'=============';exit;
+					$loggeduser = DB::table('users')->where('id' , $emailExists->client_id)->first();
+					$days = $this->durationdifference($emailExists->rememberme_start_time); 
+					
+					$company_rememberme_days = $loggeduser->rememberme_days;
+					//echo $days. "-----" . $company_rememberme_days;exit;
+					if($days>$company_rememberme_days && $emailExists->role!=1){
+						//echo 'here insdie....';
+						DB::table('users')->where('id', $emailExists->id)->update(['is_email_varified' => 0]);
+					
+						$this->send_code($rememberme); 
+						return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
+					}
+					
+				}
+				if($rememberme=='' || $rememberme ==0){
+					//continue
+				DB::table('users')->where('email' , $emailExists->email)->update([
                     'email_varification_code' => '',
                     'is_email_varified' => 1
                 ]);
+				if(Auth::user()->role==1 && App::getLocale()=='fr'){
+                // dd('ok');
+                $lang = "en";
+                \Session::put('locale', $lang);
             }
             return redirect('/dashboard');
+					
+				}
+				DB::table('users')->where('email' , $emailExists->email)->update([
+                    'email_varification_code' => '',
+                    'is_email_varified' => 1
+                ]);
+				if(Auth::user()->role==1 && App::getLocale()=='fr'){
+                // dd('ok');
+                $lang = "en";
+                \Session::put('locale', $lang);
+            }
+            return redirect('/dashboard');
+				echo $rememberme."outside-------";exit;
+                
+				
+				
+            }
+            if(Auth::user()->role==1 && App::getLocale()=='fr'){
+                // dd('ok');
+                $lang = "en";
+                \Session::put('locale', $lang);
+            }
+            //return redirect('/dashboard');
 
         }else{
             $login_attempts = $this->checkUserBlockage($request->email);
-    	    return redirect()->back()->with('status', 'Please enter an accurate email and password. You account will be blocked after '.$login_attempts.' login attempts.');                           
+            if(App::getLocale()=='fr'){
+                return redirect()->back()->with('status', __('please_enter_accurate_email_password').$login_attempts.__('login_attempts')); 
+            }
+    	    return redirect()->back()->with('status', __('please_enter_accurate_email_password').$login_attempts.__('login_attempts'));                           
         } 
-        return redirect('/dashboard');
+        //return redirect('/dashboard');
     }
 
     public function index(){
@@ -181,6 +267,447 @@ class HomeController extends Controller
     }
 
     public function test(){
+        $varE = 'Afghanistan
+        Albania
+        Algeria
+        Andorra
+        Angola
+        Antigua and Barbuda
+        Argentina
+        Armenia
+        Australia
+        Austria
+        Azerbaijan
+        Bahamas
+        Bahrain
+        Bangladesh
+        Barbados
+        Belarus
+        Belgium
+        Belize
+        Benin
+        Bhutan 
+        Bolivia
+        Bosnia and Herzegovina
+        Botswana
+        Brazil
+        Brunei
+        Bulgaria
+        Burkina Faso
+        Burundi
+        Cabo Verde
+        Cambodia
+        Cameroon
+        Canada
+        Central African Republic
+        Chad
+        Chile
+        China
+        Colombia
+        Comoros
+        Democratic Republic of the Congo
+        Congo-Kinshasa
+        Costa Rica
+        Croatia
+        Cuba
+        Cyprus
+        Czech Republic
+        Denmark
+        Djibouti
+        Dominica
+        Dominican Republic
+        Timor-Leste
+        Ecuador
+        Egypt
+        El Salvador
+        Equatorial Guinea
+        Eritrea
+        Estonia
+        Eswatini
+        Ethiopia
+        Fiji
+        Finland
+        France
+        Gabon
+        Gambia
+        Georgia
+        Germany
+        Ghana
+        Greece
+        Grenada
+        Guatemala
+        Guernsey 
+        Guinea
+        Guinea-Bissau
+        Guyana
+        Haiti
+        Honduras
+        Hungary
+        Iceland
+        India
+        Indonesia
+        Iran
+        Iraq
+        Ireland
+        Israel
+        Italy
+        Ivory Coast
+        Jamaica
+        Japan
+        Jordan
+        Kazakhstan
+        Kenya
+        Kiribati
+        Kosovo
+        Kuwait
+        Kyrgyzstan
+        Laos
+        Latvia
+        Lebanon
+        Lesotho
+        Liberia
+        Libya
+        Liechtenstein
+        Lithuania
+        Luxembourg
+        Madagascar
+        Malawi
+        Malaysia
+        Maldives
+        Mali
+        Malta
+        Marshall Islands
+        Mauritania
+        Mauritius
+        Mexico
+        Micronesia
+        Moldova
+        Monaco
+        Mongolia
+        Montenegro
+        Morocco
+        Mozambique
+        Myanmar 
+        Namibia
+        Nauru
+        Nepal
+        Netherlands
+        New Zealand
+        Nicaragua
+        Niger
+        Nigeria
+        North Korea
+        North Macedonia 
+        Norway
+        Oman
+        Pakistan
+        Palau
+        Panama
+        Papua New Guinea
+        Paraguay
+        Peru
+        Philippines
+        Poland
+        Puerto Rico 
+        Portugal
+        Qatar
+        Republic of Artsakh
+        Romania
+        Russia
+        Rwanda
+        Saint Kitts and Nevis
+        Saint Lucia
+        Saint Vincent and the Grenadines
+        Samoa
+        San Marino
+        Sao Tome and Principe
+        Saudi Arabia
+        Senegal
+        Serbia
+        Seychelles
+        Sierra Leone
+        Singapore
+        Slovakia
+        Slovenia
+        Solomon Islands
+        Somalia
+        South Africa
+        South Korea
+        South Sudan
+        Spain
+        Sri Lanka
+        Palestine
+        Sudan
+        Suriname
+        Sweden
+        Switzerland
+        Syria
+        Taiwan
+        Tajikistan
+        Tanzania
+        Thailand
+        Timor-Leste
+        Togo
+        Tonga
+        Trinidad and Tobago
+        Tunisia
+        Turkey
+        Turkmenistan
+        Tuvalu
+        Uganda
+        Ukraine
+        United Arab Emirates
+        United Kingdom
+        United States of America
+        Uruguay
+        Uzbekistan
+        Vanuatu
+        Vatican City 
+        Venezuela
+        Vietnam
+        Yemen
+        Zambia
+        Zimbabwe';
+
+        $arrE = explode("\n",$varE);
+        echo '<pre>';print_r($arrE);
+
+        $varF = "Afghanistan
+        Albanie
+        Algérie
+        Andorre
+        Angola
+        Antigua
+        Argentine
+        Arménie
+        Australie
+        Autriche
+        Azerbaïdjan
+        Bahamas
+        Bahreïn
+        Bangladesh
+        Barbade
+        Biélorussie
+        Belgique
+        Belize
+        Bénin
+        Bhoutan
+        Bolivie
+        Bosnie et Herzégovine
+        Botswana
+        Brésil
+        Brunei
+        Bulgarie
+        Burkina Faso
+        Burundi
+        Cabo Verde
+        Cambodge
+        Cameroun
+        Canada
+        République Centrafricaine
+        Tchad
+        Chili
+        Chine
+        Colombie
+        Comores
+        République démocratique du Congo
+        Congo-Kinshasa
+        Costa Rica
+        Croatie
+        Cuba
+        Chypre
+        République Tchèque
+        Danemark
+        Djibouti
+        Dominique
+        République dominicaine
+        Timor-Leste
+        Equateur
+        Égypte
+        El Salvador
+        Guinée équatoriale
+        Erythrée
+        Estonie
+        Eswatini
+        Éthiopie
+        Fiji
+        Finlande
+        France
+        Gabon
+        Gambie
+        Géorgie
+        Allemagne
+        Ghana
+        Grèce
+        Grenade
+        Guatemala
+        Guernesey
+        Guinée
+        Guinée-Bissau
+        Guyane
+        Haïti
+        Honduras
+        Hongrie
+        Islande
+        Inde
+        Indonésie
+        Iran
+        Irak
+        Irlande
+        Israël
+        Italie
+        Cote d'Ivoire
+        Jamaïque
+        Japon
+        Jordanie
+        Kazakhstan
+        Kenya
+        Kiribati
+        Kosovo
+        Koweït
+        Kirghizistan
+        Laos
+        Lettonie
+        Liban
+        Lesotho
+        Libéria
+        Libye
+        Liechtenstein
+        Lituanie
+        Luxembourg
+        Madagascar
+        Malawi
+        Malaisie
+        Maldives
+        Mali
+        Malte
+        Îles Marshall
+        Mauritanie
+        Maurice
+        Mexique
+        Micronésie
+        Moldavie
+        Monaco
+        Mongolie
+        Monténégro
+        Maroc
+        Mozambique
+        Myanmar
+        Namibie
+        Nauru
+        Népal
+        Pays-Bas
+        Nouvelle-Zélande
+        Nicaragua
+        Niger
+        Nigéria
+        Corée du Nord
+        Macédoine du Nord
+        Norvège
+        Oman
+        Pakistan
+        Palau
+        Panama
+        Papouasie-Nouvelle-Guinée
+        Paraguay
+        Pérou
+        Philippines
+        Pologne
+        Puerto
+        Portugal
+        Qatar
+        République d'Artsakh
+        Roumanie
+        Russie
+        Rwanda
+        Saint-Christophe-et-Niévès
+        Sainte-Lucie
+        Saint-Vincent et les Grenadines
+        Samoa
+        Saint-Marin
+        Sao Tomé et Principe
+        Arabie Saoudite
+        Sénégal
+        Serbie
+        Seychelles
+        Sierra Leone
+        Singapour
+        Slovaquie
+        Slovénie
+        Salomon
+        Somalie
+        Afrique du Sud
+        Corée  du Sud
+        Soudan  du Sud
+        Espagne
+        Sri Lanka
+        Palestine
+        Soudan
+        Suriname
+        Suède
+        Suisse
+        Syrie
+        Taïwan
+        Tadjikistan
+        Tanzanie
+        Thaïlande
+        Timor-Leste
+        Togo
+        Tonga
+        Trinité
+        Tunisie
+        Turquie
+        Turkménistan
+        Tuvalu
+        Ouganda
+        Ukraine
+        Émirats arabes unis
+        Angleterre
+        États-Unis d'Amérique
+        Uruguay
+        Ouzbékistan
+        Vanuatu
+        Vatican
+        Venezuela
+        Vietnam
+        Yémen
+        Zambie
+        Zimbabwe";
+
+        $arrF = explode("\n",$varF);
+        echo '<pre>';print_r($arrF);
+
+        echo '------------';
+        echo "<br>".sizeof(($arrE));
+        echo "<br>".sizeof(($arrF));
+
+
+		foreach($arrE as $key=>$val){
+			//echo $val;exit;
+			echo $val.'<br>';
+			
+			DB::table('countries')->insert([
+
+                    "country_code" => 'cc',
+                    "country_name" => trim($val),
+                    "lang_code" => 'en'
+                ]);
+		}
+		echo 'English done<br>';
+        
+		
+		foreach($arrF as $key=>$val){
+			echo $val.'<br>';
+			
+			DB::table('countries')->insert([
+
+                    "country_code" => 'cc',
+                    "country_name" => trim($val),
+                    "lang_code" => 'fr'
+                ]);
+		}
+		echo 'French done<br>';exit;
+		echo 'DONE';exit;
         /*
             $users = DB::table('assets')->where('client_id','')->get();
             echo '<pre>';print_r($users);
@@ -189,7 +716,7 @@ class HomeController extends Controller
         //DB::table('form_questions')->where('fq_id', '641')->update(['sort_order' => '34']);
         //DB::table('questions')->where('question_section_id', '104')->update(['question_section_id' => '28','question_num' => '3.5']);
         //  DB::table('questions')->where('id', '640150')->update(['question' => 'To what extent has the risk to the data already been mitigated?','question_fr' => 'Dans quelle mesure le risque pour les données a-t-il déjà été atténué ?']);
-        DB::table('questions')->where('id', '640154')->update(['question_fr' => '']);
+        //DB::table('questions')->where('id', '640154')->update(['question_fr' => '']);
         exit;
 
         //exit;
@@ -453,7 +980,11 @@ class HomeController extends Controller
          if(auth()->user()->email_varification_code == $code){
                   DB::table('users')->where('id' , auth()->user()->id)->update([
                       'is_email_varified' => 1,
+					  'rememberme'=>$rememberme,
                   ]);
+				  
+				  //DB::table('users')->where('id', auth()->user()->id)->update('rememberme'=>$rememberme);
+				  
                   if($rememberme=='Yes'){
                         $this->updatewithbrowser($rememberme);
                   }
@@ -463,18 +994,32 @@ class HomeController extends Controller
                 }
     }
 
+	public function durationdifference($rememberme_start_time){
+		
+		//$rememberme_start_time = $rememberme_start_time -(60*60*24 * 5);
+	
+		$now = time(); // or your date as well
 
+$datediff = $now - $rememberme_start_time;
+
+return round($datediff / (60 * 60 * 24));
+		
+	}
     public function updatewithbrowser($rememberme){
 
-     
+     //return ["status" => $rememberme];exit;
+		//echo $rememberme.'-----';exit;
+		
         $updatedata = array();
         $useragent=$_SERVER['HTTP_USER_AGENT'];
-
+		$remember_duration = 1;
+		$rememberme_start_time = time();
         if(preg_match('/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i',$useragent)||preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i',substr($useragent,0,4)))
         {
         $rememberme_browser_type = 'mobile';
         $rememberme_browser_name = $this->getBrowser();
         $rememberme_start_date = date('Y-m-d');
+		
 
 
         //echo "Mobile browser: " . $this->getBrowser();
@@ -492,6 +1037,8 @@ class HomeController extends Controller
         $updatedata['rememberme_browser_name'] = $rememberme_browser_name;
         $updatedata['rememberme_start_date'] = $rememberme_start_date;
         $updatedata['rememberme'] = $rememberme;
+		$updatedata['remember_duration'] = $remember_duration;
+		$updatedata['rememberme_start_time'] = $rememberme_start_time;
         //echo '<pre>';print_r($updatedata);exit;
         DB::table('users')->where('id', auth()->user()->id)->update($updatedata);
         }

@@ -68,14 +68,14 @@ class ActivitiesController extends Controller
 
         $act = DB::table('questions')->where('question' , 'What activity are you assessing?')->pluck('form_key');
 
-        $filled_questions = DB::table('external_users_forms')->select('*' )->wherein('external_users_filled_response.question_key' , $act )
-          ->join('external_users_filled_response' , 'external_users_forms.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('external_users_forms.client_id' , $client_id)->get();
+        $filled_questions = DB::table('user_form_links')->select('*' )->wherein('external_users_filled_response.question_key' , $act )
+          ->join('external_users_filled_response' , 'user_form_links.id' , '=' ,'external_users_filled_response.external_user_form_id')->where('user_form_links.client_id' , $client_id)->orderBy('external_users_filled_response.updated', 'desc')->get();
          foreach ($filled_questions as $key => $value) {
               $value->form_type = 'external';
           } 
 
-           $filled_questions_internal = DB::table('user_forms')->select('*' )->wherein('internal_users_filled_response.question_key' , $act)
-          ->join('internal_users_filled_response' , 'user_forms.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_forms.client_id' , $client_id)->get();
+           $filled_questions_internal = DB::table('user_form_links')->select('*' )->wherein('internal_users_filled_response.question_key' , $act)
+          ->join('internal_users_filled_response' , 'user_form_links.id' , '=' ,'internal_users_filled_response.user_form_id')->where('user_form_links.client_id' , $client_id)->orderBy('internal_users_filled_response.updated', 'desc')->get();
           foreach ($filled_questions_internal as $key => $value) {
               $value->form_type = __('internal');
           } 

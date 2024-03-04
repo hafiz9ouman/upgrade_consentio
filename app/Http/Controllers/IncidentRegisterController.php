@@ -50,12 +50,12 @@ class IncidentRegisterController extends Controller
     	$currentuserid = Auth::user()->id;
     	if ($user_type == 2 || Auth::user()->user_type == 1 || Auth::user()->role == 3){
     		$incident_front = Incident::where('organization_id',Auth::user()->client_id)
-    		->orderBy('date_discovered', 'DESC')
+    		->orderBy('created_at', 'DESC')
     		->get();
     	}
     	else {
     		$incident_front = Incident::where('created_by',$currentuserid)
-    		->orderBy('date_discovered', 'DESC')
+    		->orderBy('created_at', 'DESC')
     		->get();
 
     	}
@@ -80,12 +80,8 @@ class IncidentRegisterController extends Controller
             'incident_type' => 'required',
             'name' => 'required',
             'assignee' => 'required',
-			// 'description' => 'required',
-			'date_occurred' => 'required',
+			'description' => 'required',
 			'date_discovered' => 'required',
-			'deadline_date' => 'required',
-			'root_cause' => 'required',
-			// 'resolution' => 'required',
 			'incident_status' => 'required',
 			'incident_severity' => 'required',
         ],
@@ -93,18 +89,39 @@ class IncidentRegisterController extends Controller
             'incident_type.required' => __('Please provide Incident Type to proceed.'),
             'name.required' => __('Please provide proper Name to proceed.'),
             'assignee.required' => __('Please provide Assignee to proceed.'),
-            // 'description.required' => 'Please provide Description to proceed.',
-            'date_occurred.required' => __('Please provide Date Occurred to proceed.'),
+            'description.required' => 'Please provide Description to proceed.',
             'date_discovered.required' => __('Please provide Date Discovred to proceed.'),
-            'deadline_date.required' => __('Please provide Deadline Date to proceed.'),
-            'root_cause.required' => __('Please provide Root Cause to proceed.'),
-            // 'resolution.required' => 'Please provide Resolution to proceed.',
             'incident_status.required' => __('Please provide Incident Status to proceed.'),
             'incident_severity.required' => __('Please provide Incident Severity to proceed.'),
         ],
     );
 
-		    // dd($request);
+	$dateOccurred = date('Y-m-d', strtotime($request->date_occurred));
+	$dateDiscovered = date('Y-m-d', strtotime($request->date_discovered));
+	$deadlineDate = date('Y-m-d', strtotime($request->deadline_date));
+
+	$timeOccurred = strtotime($request->time_occurred);
+	$timeDiscovered = strtotime($request->time_discovered);
+	$deadlinetime = strtotime($request->time_deadline);
+	// dd($deadlinetime);
+
+	if (!($dateOccurred <= $dateDiscovered) && !($dateDiscovered <= $deadlineDate)){
+		return redirect()->back()->withErrors(['error' => "Dates are not in the correct order."])->withInput();
+	}
+	// dd($request->all());
+	if ($dateOccurred == $dateDiscovered){
+		if (!($timeOccurred <= $timeDiscovered)){
+			return redirect()->back()->withErrors(['error' => "Time is not in the correct order."])->withInput();
+		}
+	}
+	if ($dateDiscovered == $deadlineDate){
+		if (!($timeDiscovered <= $deadlinetime)){
+			return redirect()->back()->withErrors(['error' => "Time is not in the correct order."])->withInput();
+		}
+	}
+
+		    // // dd($request);
+		    // dd("ok");
         $update = 0;
         if($request->id){
     		$incident = Incident::find($request->id);

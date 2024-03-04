@@ -38,6 +38,35 @@ class Admin extends Controller
         $validatedData = $request->validate([
                 'name' => 'required',
         ]); 
+
+        $form_type=DB::table('forms')->where('id', $id)->pluck('type');
+        // dd($form_type);
+        if($form_type[0]=="audit"){
+            // dd('ok');
+            $check = DB::table('forms')->where(function ($query) use ($title, $title_fr) {
+                $query->where('title', $title)
+                      ->orWhere('title_fr', $title_fr);
+            })
+            ->whereIn('type', ['audit'])
+            ->whereNotIn('id', [$id])
+            ->get();
+            // dd($check);
+            if($check->isNotEmpty()){
+                return redirect()->back()->with('alert', 'Audit with this Name Already Exist');
+            }
+        }
+        if($form_type[0]=="assessment"){
+            $check = DB::table('forms')->where(function ($query) use ($title, $title_fr) {
+                $query->where('title', $title)
+                      ->orWhere('title_fr', $title_fr);
+            })
+            ->whereIn('type', ['assessment'])
+            ->whereNotIn('id', [$id])
+            ->get();
+            if($check->isNotEmpty()){
+                return redirect()->back()->with('alert', 'Assessment with this Name Already Exist');
+            }
+        }
         
         DB::table('forms')
             ->where('id', $id)
@@ -49,6 +78,13 @@ class Admin extends Controller
         return redirect('Forms/AdminFormsList');
         
     }  
+    ///Delete Form
+    public function delete_form($form_id)
+    {
+        $form = DB::table('forms')->where('id', $form_id)->delete();
+      //  echo "<pre>";print_r($form);exit;
+        return redirect()->back()->with('alert', 'Form Successfully Deleted');
+    }
      // classification data edit form
 
      public function edit_classification ($id)
@@ -158,7 +194,7 @@ class Admin extends Controller
         }
         if (Auth::user()->role == 1)
         {
-            $users = User::where('role',1)->get();
+            $users = User::where('role',1)->orderBy('created_at', 'desc')->get();
             
             return view('admin.users.site_admins', compact('users'));
         }
@@ -299,6 +335,7 @@ class Admin extends Controller
             $record = array(
            "name" => $request->input('name'),
            "image_name" => $imgname,
+           "is_blocked" => $request->input('is_blocked'),
         );
         if($request->input('password')) { 
             $record['password'] = bcrypt($request->input('password'));
@@ -362,6 +399,7 @@ class Admin extends Controller
             $record = array(
                "name" => $request->input('name'),
                "image_name" => $imgname,
+               "is_blocked" => $request->input('is_blocked'),
                "tfa" => 0,           
             );
 

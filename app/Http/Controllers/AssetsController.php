@@ -207,7 +207,7 @@ class AssetsController extends Controller
             $asset_list = DB::table('assets')
                             ->join('data_classifications', 'data_classifications.id', 'assets.data_classification_id')
                             ->join('impact', 'impact.id', 'assets.impact_id')
-                            ->whereNotNull('name')->where('client_id', $client_id)->orderBy('assets.asset_number','ASC')
+                            ->whereNotNull('name')->where('client_id', $client_id)->orderBy('assets.id','DESC')
                             ->select(
                                 'assets.id',
                                 'assets.client_id',
@@ -223,16 +223,53 @@ class AssetsController extends Controller
                                 'data_classifications.classification_name_fr',
                                 'impact.impact_name_en',
                                 'impact.impact_name_fr',
-                                'assets.tier'
+                                'assets.tier',
+                                'assets.it_owner',
+                                'assets.business_owner',
+                                'assets.business_unit',
+                                'assets.internal_3rd_party',
+                                'assets.data_subject_volume'
                                 )
                             ->get();
 
             $countries = DB::table('countries')->get();
             $impact = DB::table("impact")->get();
             $dt_classification = DB::table("data_classifications")->where('organization_id', Auth::user()->client_id)->get();
+
+            // =============================================== //
+        /* MAP LAT LNG */
+
+        $user_type = Auth::user()->role;
+        $user_id = Auth::user()->id;
+        $client_id = Auth::user()->client_id;
+        
+        $lat_value[] = '';
+        $lat_detail[] = '';
+
+        $lat_lng = DB::table('assets')->where('lat', '!=', '')
+            ->where('client_id', $client_id)
+            ->get();
+        $total_assets = count($lat_lng);
+
+        if ($lat_lng != '') {
+            foreach ($lat_lng as $lat_val) {
+                $lang = $lat_val->lng;
+                $lng = number_format((float) $lang, 6, '.', '');
+                $lng = floatval($lng);
+                $late = $lat_val->lat;
+                $lat = number_format((float) $late, 6, '.', '');
+                $lat = floatval($lat);
+                $lat_value[] = [$lat_val->country, $lat, $lng];
+                $lat_detail[] = [$lat_val->country, $lat_val->city, $lat_val->state, $lat_val->name, $lat_val->hosting_provider, $lat_val->asset_type];
+            }
+        }
+
+        /* MAP LAT LNG */
+        // ================================================================================================================= //
+
                 
             // print("<pre>");print_r($asset_list);exit;
-            return view('assets.assets', ["asset_data_element"=>$asset_data_element,"impact"=>$impact,"dt_classification"=>$dt_classification,'asset_list' => $asset_list, 'countries' => $countries, 'user_type' => (Auth::user()->role == 1)?('admin'):('client')]);
+            return view('assets.assets', ["asset_data_element"=>$asset_data_element,"impact"=>$impact,"dt_classification"=>$dt_classification,"lat_value"=>$lat_value,"lat_detail"=>$lat_detail,'asset_list' => $asset_list, 'countries' => $countries, 'user_type' => (Auth::user()->role == 1)?('admin'):('client')]);
         }
     }
 
@@ -336,6 +373,12 @@ class AssetsController extends Controller
             'business_unit'         => $request->business_unit,
             'internal_3rd_party'    => $request->internal_3rd_party,
             'data_subject_volume'   => $request->data_subject_volume,
+            'supplier'              => $request->supplier,
+            'list_data_type'        => $request->data_type,
+            'data_retention'        => $request->data_retention,
+            'no_of_user'            => $request->no_users,
+            'notes'                 => $request->notes,
+            'description'           => $request->description,
             'asset_number'          => $latest_assigned_number + 1
             ]
         );
@@ -395,6 +438,12 @@ class AssetsController extends Controller
                 'it_owner'              => $request->it_owner,
                 'business_owner'        => $request->business_owner,
                 'internal_3rd_party'    => $request->internal_3rd_party,
+                'supplier'              => $request->supplier,
+                'list_data_type'        => $request->data_type,
+                'data_retention'        => $request->data_retention,
+                'no_of_user'            => $request->no_users,
+                'notes'                 => $request->notes,
+                'description'           => $request->description,
                 'data_subject_volume'   => $request->data_subject_volume
 
             ]))
@@ -456,6 +505,12 @@ class AssetsController extends Controller
             'business_unit' => $request->business_unit,
             'business_owner' => $request->business_owner,
             'internal_3rd_party' => $request->internal_3rd_party,
+            'supplier'              => $request->supplier,
+            'list_data_type'        => $request->data_type,
+            'data_retention'        => $request->data_retention,
+            'no_of_user'            => $request->no_users,
+            'notes'                 => $request->notes,
+            'description'           => $request->description,
             'data_subject_volume' => $request->data_subject_volume
         ]);
         $status = 'success';
