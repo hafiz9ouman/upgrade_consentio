@@ -1,0 +1,133 @@
+@extends (($user_type == 'admin')?('admin.layouts.admin_app'):('admin.client.client_app'))
+
+@section('content')
+<?php if ($user_type == 'admin'): ?>
+<div class="app-title">
+	<ul class="app-breadcrumb breadcrumb">
+		<li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i>
+		</li>
+		<li class="breadcrumb-item"><a href="{{route('asset_list')}}">Assets</a>
+		</li>
+	</ul>
+</div>
+<?php endif; ?>
+<div class="row" style="margin-left:10px;">
+  <div class="col-md-12">
+    <div class="tile">
+        <div class="table-responsive cust-table-width">
+            <h3 class="tile-title">Assets</h3>
+            <div class="d-flex justify-content-end mb-2">
+                <div class="col col-md-4">
+                    <input type="text" id="asset" class="form form-control"></input>
+                </div>
+                <button id="add" class="btn btn-primary">Add</button>
+            </div>                
+
+            <table class="table" id="assets-table">
+                <thead class="back_blue">
+                <tr>
+                    <th scope="col">No.</th>
+                    <th scope="col">Asset Name</th>
+                    <?php if (Auth::user()->role == '1'): ?>
+                    <th scope="col">Actions</th>
+                    <?php endif; ?>
+                </tr>
+                </thead>
+                <tbody>
+  	            <?php foreach ($asset_list as $key => $asset): ?>
+                <tr>
+                    <td>{{ $key + 1 }}</td>
+                    <td>{{ $asset->name }}</td>
+                    <?php if (Auth::user()->role == '1'): ?>
+                    <td><a class="delete-asset" href=""  asset-id="{{$asset->id}}"><i class="fas fa-trash-alt"></i> Delete</a></td>
+                    <?php endif; ?>                    
+                </tr>
+	            <?php endforeach; ?>
+                </tbody>
+            </table>
+       </div>
+    </div>
+  </div>
+</div>
+<script>
+    $(document).ready(() => {
+        
+        $('#assets-table').DataTable();
+
+        <?php if (Auth::user()->role == '1'): ?>
+        $('.delete-asset').click(function(event) {
+            event.preventDefault();
+            
+            var asset = $(this).attr('asset-id');
+
+            $.ajax({
+                data:    {'asset':asset},
+                url:    '{{route('delete_asset')}}',
+                method: 'GET',
+                success: (response) => {
+                    if (response.status)
+                    {
+                        swal({
+                          title:               response.title,
+                          text:                response.msg,
+                          type:                response.status,
+                          showCancelButton:    false,
+                          confirmButtonClass: "btn-primary",
+                          confirmButtonText:  "OK",
+                          closeOnConfirm:      true
+                        },
+                        function(){
+                            if (response.status == 'success') {
+                                location.reload();
+                            }
+                        });   
+                    }
+                    
+                }
+            });
+        });
+        <?php endif; ?>                    
+        
+        $('#add').click(()=>{
+            var asset = $('#asset').val();
+            
+            $.ajax({
+                data:    {'asset':asset},
+                url:    '{{route('add_asset')}}',
+                method: 'GET',
+                success: (response) => {
+                    $('#asset').val('');
+                    console.log(response.status);
+                    if (response.status)
+                    {
+                        swal({
+                          title:               response.title,
+                          text:                response.msg,
+                          type:                response.status,
+                          showCancelButton:    false,
+                          confirmButtonClass: "btn-primary",
+                          confirmButtonText:  "OK",
+                          closeOnConfirm:      true
+                        },
+                        function(){
+                            if (response.status == 'success') {
+                                location.reload();
+                            }
+                        });                        
+                    }
+                    else
+                    {
+                        swal('Something went wrong', 'The asset could not be added due to some error', 'error');
+                    }
+                    
+                }
+                
+            });            
+      
+        });
+        
+
+    })
+</script>
+
+@endsection
