@@ -9,7 +9,7 @@ class GroupSection extends Model{
     protected $table = "group_section";
     public function questions(){
 
-        return $this->hasMany(Question::class, 'section_id');
+        return $this->hasMany(Question::class, 'section_id')->orderBy('question_num', 'asc');
         
     }
 }
