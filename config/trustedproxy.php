@@ -35,10 +35,10 @@ return [
 
     'headers' => [
         (defined('Request::HEADER_FORWARDED') ? Request::HEADER_FORWARDED : 'forwarded') => 'FORWARDED',
-        Request::HEADER_CLIENT_IP    => 'X_FORWARDED_FOR',
-        Request::HEADER_CLIENT_HOST  => 'X_FORWARDED_HOST',
-        Request::HEADER_CLIENT_PROTO => 'X_FORWARDED_PROTO',
-        Request::HEADER_CLIENT_PORT  => 'X_FORWARDED_PORT',
+        Request::HEADER_X_FORWARDED_FOR    => 'X_FORWARDED_FOR',
+        Request::HEADER_X_FORWARDED_HOST   => 'X_FORWARDED_HOST',
+        Request::HEADER_X_FORWARDED_PROTO  => 'X_FORWARDED_PROTO',
+        Request::HEADER_X_FORWARDED_PORT  => 'X_FORWARDED_PORT',
     ]
 
 ];
