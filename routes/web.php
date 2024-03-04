@@ -6,18 +6,34 @@ use Illuminate\Support\Facades\Session;
 Auth::routes();
 
 // -------------------------------------------------------------------
+Route::get('/dash/asset/{id}', 'Reports@get_asset_report')->name('dash.asset');
+Route::get('/dash/remediation/{id}', 'Reports@get_remediation_report')->name('dash.onerem');
+Route::get('/dash/global', 'Reports@remediation_report')->name('dash.global');
 
 Route::get('/dummy', 'Reports@Dummywork')->name('dummy');
-// ----------------Reportssss----------------------
+// ----------------Dashboard Reports----------------------
 Route::get('/report/audit/{id}', 'Reports@get_report')->name('report.audit');
 Route::get('/report/rem/{id}', 'Reports@get_reme_report')->name('report.reme');
 Route::get('/report/postrem', 'Reports@get_postreme_report')->name('postreport.reme');
 
 Route::get('/report/asset/{id}', 'Reports@get_asset_report')->name('report.asset');
+Route::post('/your-ajax-endpoints/{id}', 'Reports@getAssetsByFilters');
+
+Route::get('/report/remediation/{id}', 'Reports@get_remediation_report')->name('report.onerem');
+Route::post('/your-ajax-endpointz', 'Reports@getoneRemediationByBusinessUnits');
+
 Route::get('/report/remediation', 'Reports@remediation_report')->name('report.remediation');
 Route::post('/your-ajax-endpoint', 'Reports@getRemediationByBusinessUnits');
 
-Route::post('/your-ajax-endpoints/{id}', 'Reports@getAssetsByFilters');
+// Report Make Favorite
+Route::post('/make-favorite', 'Reports@make_favorite');
+Route::post('/remove-favorite', 'Reports@remove_favorite');
+
+// Report in Dashboard
+Route::get('/favor-reports', 'Reports@favor_report');
+
+
+
 
 
 // -------------------------------------------------------------------
@@ -42,6 +58,7 @@ Route::redirect('/', 'login');
 Route::post('/login_post', 'HomeController@login_post')->name('login_post');
 Route::get('/reload-captcha', 'HomeController@reloadCaptcha');
 Route::get('send_code', 'UsersController@send_code')->middleware(['auth', '2fa']);
+Route::post('verify_code', 'HomeController@verify_code');
 Route::get('/logout', 'Auth\LoginController@logout');
 
 Route::get('/2fa', 'PasswordSecurityController@show2faform');
@@ -94,9 +111,10 @@ Route::middleware(['auth', '2fa', 'is_email_varified'])->group(function () {
     Route::get('SAR/SubFormAssignees/{id}', 'Forms@subform_assignees')->name('sar_subform_assignees');
     Route::get('SAR/OrgSubFormsList/{id}', 'Forms@organization_all_forms_list')->name('sar_org_all_forms_list');
     Route::get('SAR/CompanyUserForm/{link_id}', 'Forms@in_users_show_form')->name('sar_user_form_link');
-    Route::get('SAR/ShowSARAssignees/{form_id}', 'SARForm@assignee_list')->name('show_SAR_assignee_list');
+    Route::get('SAR/ShowSARAssignees', 'SARForm@assignee_list')->name('show_SAR_assignee_list');
     Route::get('SAR/SARCompletedFormsList', 'SARForm@sar_completed_forms_list');
     Route::get('SAR/SARInCompletedFormsList', 'SARForm@sar_incompleted_forms_list');
+    Route::get('SAR/SubFormsList/{id}', 'SARForm@subforms_list')->name('sar_subforms_list');
     Route::get('FormSettings/SARExpirySettings', 'SARForm@sar_expiry_settings_get');
     Route::post('FormSettings/SARExpirySettings', 'SARForm@sar_expiry_settings_post');
     Route::post('SAR/ChangeRequestStatus', 'SARForm@change_sar_request_status_post');
@@ -136,6 +154,8 @@ Route::middleware(['auth', '2fa', 'is_email_varified'])->group(function () {
     Route::get('FormSettings/SubFormsExpirySettings', 'Forms@show_subforms_expiry_settings')->name('subforms_expiry_settings');
     Route::post('FormSettings/SubFormsExpirySettings', 'Forms@save_subforms_expiry_settings')->name('subforms_expiry_settings');
     Route::post('/formsettings/unlock_form', 'Forms@unlock_form')->name('unlock_form');
+    Route::post('/formsettings/temp_lock', 'Forms@temp_lock')->name('temp_lock');
+    Route::post('/formsettings/extend_expire', 'Forms@extend_expire')->name('extend_expire');
     Route::post('/formsettings/change_form_access', 'Forms@change_form_access')->name('change_form_access');
 
     Route::get('users_management', 'UserManagementController@users_management');
@@ -184,6 +204,7 @@ Route::post('audit/ajaxsubmitexternalaudit', 'AuditFormsController@ajax_ext_user
 Route::get('audit/count/{group}/{sub_form}', 'AuditFormsController@get_question_count')->name('get_question_count');
 Route::post('audit/add/attachment/ex', 'AuditFormsController@ex_add_attachment_to_question')->name('ex_add_attachment_to_question');
 Route::post('audit/lock', 'AuditFormsController@ajax_lock_user_audit_form')->name('ajax_lock_user_audit_form');
+Route::post('audit/rate', 'AuditFormsController@ajax_lock_rating_audit_form')->name('ajax_lock_rating_audit_form');
 Route::get('audit/success', 'AuditFormsController@show_success_msg')->name('show_audit_success_msg');
 Route::get('SAR/ExtUserForm/{client_id}/{user_id}/{client_email}/{subform_id}/{user_email}/{date_time}', 'Forms@ex_users_show_form')->name('sar_ext_user_form_link');
 Route::get('Forms/UserForm/{client_id}/{user_id}/{client_email}/{subform_id}/{user_email}/{date_time}', 'Forms@show_form')->name('user_form_link');
@@ -202,6 +223,7 @@ Route::middleware(['auth', '2fa', 'is_email_varified'])->group(function () {
     Route::get('/Forms/SecCategory/{id}', 'Forms@section_category');
     Route::post('/Forms/UpdateFormSection/', 'Forms@ajax_update_form_section_heading')->name('update_form_section_heading');
     Route::post('/updateSorting', 'Forms@updateSorting')->name('updateSorting');
+    Route::post('/auditupdateSorting', 'AuditFormsController@updateSorting')->name('updateSorting');
     Route::post('/Forms/AsgnSecCategory/', 'Forms@assign_section_category');
     Route::post('/Forms/AsgnSecCategory/', 'Forms@assign_section_category')->name('asgn_sec_ctgry');
 });
@@ -235,6 +257,7 @@ Route::get("assets_data_elements", "AssetsController@asset_data_elements")->name
 Route::post("data-element-group", "AssetsController@dataElementGroup");
 Route::get('elements-data', "AssetsController@element_data");
 Route::get("edit-data-element/{id}", "AssetsController@edit_data_element");
+Route::post("save_assets_data_elements", "AssetsController@save_asset_data_elements");
 Route::post("update_data_element", "AssetsController@update_data_element");
 Route::get('import-element-data', "AssetsController@import_data_element")->name("import-data-element");
 Route::post('import-element-data', "AssetsController@import_data_element")->name("import-data-element");
@@ -272,6 +295,8 @@ Route::group(["middleware" => 'admin'], function () {
     Route::post('/edit_admin/{id}', 'Admin@edit_admin_act')->name('edit_admin_act');
     Route::get('edit_form/{id}', 'Admin@edit_form')->name('edit_form_info');
     Route::post('edit_form/{id}', 'Admin@edit_form_act')->name('edit_form_info_act');
+    Route::get('Forms/delete_form/{id}', 'Admin@delete_form')->name('delete_form_info_act');
+    Route::get('Forms/AdminFormsList/delete_form/{id}', 'Admin@delete_form')->name('delete_form_info_act');
     Route::get("evaluation_rating", "Admin@evaluation_rating")->name('evaluation_rating');
     Route::get("edit-evaluation/{id}", "Admin@edit_evaluation")->name('edit_evaluation');
     Route::post("update_evaluation", "Admin@update_evaluation");
@@ -287,6 +312,7 @@ Route::group(["middleware" => 'admin'], function () {
     Route::get("data_element", "UsersController@data_element");
     Route::post('admin-data-element-group', 'UsersController@data_element_group');
     Route::get('edit-data-element-group/{id}', "UsersController@edit_data_element_group");
+    Route::get('delete-data-element-group/{id}', "UsersController@delete_data_element_group");
     Route::post('update_data_element_group', "UsersController@update_data_element_group");
     Route::get('/company', 'UsersController@company')->middleware(['auth']);
 
@@ -310,6 +336,7 @@ Route::group(["middleware" => 'admin'], function () {
     Route::get('Forms/AdminFormsList/{type?}', 'Forms@all_forms_list')->name('admin_forms_list')->middleware(['auth']);
 
     Route::get('Forms/Add-new-form', 'Forms@add_new_form')->name('add_new_form')->middleware(['auth']);
+    Route::get('Forms/Add-audit-form', 'Forms@add_new_form')->name('add_audit_form')->middleware(['auth']);
     Route::post('Forms/Add-new-form', 'Forms@store_new_form')->name('store_new_form')->middleware(['auth']);
     Route::get('Forms/{form_id}/add/questions', 'Forms@add_form_questions')->name('add_form_questions')->middleware(['auth']);
 
@@ -325,6 +352,7 @@ Route::group(["middleware" => 'admin'], function () {
 
     Route::post('change_question_comment', 'Forms@change_question_comment')->name('change_question_comment')->middleware(['auth']);
     Route::post('delete_question', 'Forms@delete_question')->name('delete_question')->middleware(['auth']);
+    Route::get('duplicate/{id}', 'Forms@duplicate')->name('form_duplicate')->middleware(['auth']);
 
     // ------------------------------------------ Users -----------------------------------------------
     Route::get('/users/edit/{id}', 'UsersController@edit');
@@ -332,7 +360,7 @@ Route::group(["middleware" => 'admin'], function () {
     Route::get('/users/add', 'UsersController@addUser');
     Route::post('/users/store', 'UsersController@store');
     Route::post('/users/delete', 'UsersController@destroy');
-    Route::post('verify_code', 'HomeController@verify_code');
+    
     Route::post('/users/edit_store/{id}', 'UsersController@edit_store');
     Route::post('/client/store', 'UsersController@clientStore');
     Route::get('/client/add', 'UsersController@addClient');
@@ -406,7 +434,7 @@ Route::post('/2faverify', function () {
 //          return "check email";
 //      });
 // });
-// Route::get('/test',                     'HomeController@test')->name('test');
+Route::get('/test',                     'HomeController@test')->name('test');
 // Route::get('/myredirect',               'HomeController@my_redirect')->name('myredirect');
 // Route::get('/login',                    'Auth/LoginController@login')->name('login');
 
@@ -436,200 +464,210 @@ Route::get('export', function () {
     }
 });
 
-// Tables
-
-Route::get('zest/add/tables', function () {
+Route::get('login_attempt', function () {
     try {
-
-        Schema::dropIfExists('audit_questions_groups');
-        Schema::create('audit_questions_groups', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('group_name')->nullable();
-            $table->string('group_name_fr')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::dropIfExists('group_section');
-        Schema::create('group_section', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('section_title')->nullable();
-            $table->string('section_title_fr')->nullable();
-            $table->unsignedBigInteger('group_id')->nullable();
-            $table->unsignedBigInteger('number')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::dropIfExists('group_questions');
-        Schema::create('group_questions', function (Blueprint $table) {
-            $table->increments('id');
-            $table->text('question', 500)->nullable();
-            $table->text('question_fr', 500)->nullable();
-            $table->text('question_short', 500)->nullable();
-            $table->text('question_short_fr', 500)->nullable();
-            $table->string('question_num')->nullable();
-            $table->text('question_comment', 500)->nullable();
-            $table->text('question_comment_fr', 500)->nullable();
-            $table->text('additional_comments', 500)->nullable();
-            $table->text('question_assoc_type', 500)->nullable();
-            $table->Integer('parent_question')->nullable();
-            $table->boolean('is_parent')->nullable();
-            $table->Integer('parent_q_id')->nullable();
-            $table->string('form_key')->nullable();
-            $table->string('type')->nullable();
-            $table->text('options', 500)->nullable();
-            $table->text('options_fr', 500)->nullable();
-            $table->boolean('is_data_inventory_question')->nullable();
-            $table->string('accepted_formates')->default(0);
-            $table->Integer('dropdown_value_from')->nullable();
-            $table->Integer('attachment_allow')->default(0);
-            $table->string('not_sure_option', 50)->nullable();
-            $table->string('control_id', 50)->nullable();
-            $table->Integer('section_id')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::dropIfExists('user_form_links');
-        Schema::create('user_form_links', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedBigInteger('sub_form_id')->nullable();
-            $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->unsignedInteger('percent_completed')->nullable();
-            $table->text('form_link')->nullable();
-            $table->text('form_link_id')->nullable();
-            $table->integer('is_locked')->default(0);
-            $table->integer('is_accessible')->default(1);
-            $table->integer('curr_sec')->default(1);
-            $table->integer('email_sent')->default(0);
-            $table->string('user_email')->nullable();
-            $table->dateTime('expiry_time')->nullable();
-            $table->boolean('is_internal')->default(0);
-            $table->dateTime('created')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->dateTime('updated')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->dateTime('updated_at')->nullable();
-        });
-
-        Schema::dropIfExists('user_responses');
-        Schema::create('user_responses', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedBigInteger('user_form_id')->nullable();
-            $table->unsignedBigInteger('form_id')->nullable();
-            $table->unsignedBigInteger('sub_form_id')->nullable();
-            $table->unsignedBigInteger('question_id')->nullable();
-            $table->unsignedBigInteger('rating')->default(0);
-            $table->integer('custom_case')->nullable();
-            $table->string('question_key')->nullable();
-            $table->boolean('is_internal')->default(0);
-            $table->string('user_email')->default(0);
-            $table->string('user_id')->default(0);
-            $table->text('q_type', 50)->nullable();
-            $table->string('type')->nullable();
-            $table->string('question_response')->nullable();
-            $table->string('additional_comment')->nullable();
-            $table->string('additional_info')->nullable();
-            $table->string('admin_comment')->nullable();
-            $table->string('attachment')->nullable();
-            $table->dateTime('created')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->dateTime('updated')->default(DB::raw('CURRENT_TIMESTAMP'));
-        });
-
-        Schema::dropIfExists('remediation_plans');
-        Schema::create('remediation_plans', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedBigInteger('sub_form_id')->nullable();
-            $table->unsignedBigInteger('control_id')->nullable();
-            $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('person_in_charge')->nullable();
-            $table->unsignedBigInteger('post_remediation_rating')->nullable();
-            $table->text('proposed_remediation')->nullable();
-            $table->text('completed_actions')->nullable();
-            $table->date('eta')->nullable();
-            $table->string('status')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::dropIfExists('assets');
-        Schema::create('assets', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('name')->nullable();
-            $table->string('asset_type')->nullable();
-            $table->string('hosting_type')->nullable();
-            $table->string('hosting_provider')->nullable();
-            $table->string('country')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->string('lat')->nullable();
-            $table->string('lng')->nullable();
-            $table->unsignedBigInteger('impact_id')->nullable();
-            $table->unsignedBigInteger('data_classification_id')->nullable();
-            $table->string('tier')->nullable();
-            $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('asset_number')->nullable()->comment("This will use for uniquely identification of organization asset with (org_id-this_number)");
-            $table->string('it_owner')->nullable();
-            $table->string('business_owner')->nullable();
-            $table->string('internal_3rd_party')->nullable();
-            $table->string('data_subject_volume')->nullable();
-            $table->string('business_unit')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::dropIfExists('asset_tier_matrix');
-        Schema::create('asset_tier_matrix', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('impact_id')->nullable();
-            $table->string('data_classification_id')->nullable();
-            $table->string('tier_value')->nullable();
-            $table->timestamps();
-        });
-
-        $create_asset_tier_matrix = [
-            ['impact_id' => 1, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
-            ['impact_id' => 1, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
-            ['impact_id' => 1, 'data_classification_id' => 3, 'tier_value' => 'tier 3'],
-            ['impact_id' => 1, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
-            ['impact_id' => 1, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
-            ['impact_id' => 2, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
-            ['impact_id' => 2, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
-            ['impact_id' => 2, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
-            ['impact_id' => 2, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
-            ['impact_id' => 2, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
-            ['impact_id' => 3, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
-            ['impact_id' => 3, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
-            ['impact_id' => 3, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
-            ['impact_id' => 3, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
-            ['impact_id' => 3, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
-            ['impact_id' => 4, 'data_classification_id' => 1, 'tier_value' => 'tier 2'],
-            ['impact_id' => 4, 'data_classification_id' => 2, 'tier_value' => 'tier 2'],
-            ['impact_id' => 4, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
-            ['impact_id' => 4, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
-            ['impact_id' => 4, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
-            ['impact_id' => 5, 'data_classification_id' => 1, 'tier_value' => 'tier 1'],
-            ['impact_id' => 5, 'data_classification_id' => 2, 'tier_value' => 'tier 1'],
-            ['impact_id' => 5, 'data_classification_id' => 3, 'tier_value' => 'tier 1'],
-            ['impact_id' => 5, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
-            ['impact_id' => 5, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
-        ];
-        DB::table('asset_tier_matrix')->insert($create_asset_tier_matrix);
-
-        Schema::dropIfExists('sub_forms');
-        Schema::create('sub_forms', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('title')->nullable();
-            $table->string('title_fr')->nullable();
-            $table->integer('parent_form_id')->nullable();
-            $table->integer('client_id')->nullable();
-            $table->string('item_type')->nullable();
-            $table->integer('other_number')->nullable();
-            $table->string('other_id')->nullable();
-            $table->integer('asset_id')->nullable();
-            $table->datetime('expiry_time')->nullable();
-            $table->timestamps();
-        });
-
-        return "<b>All Table</b> Successfully Created";
+        $check = DB::table('users')->update(['login_attempts' => 0]);
+        print_r($check);
+        exit;
     } catch (\Exception $th) {
         return $th->getMessage();
     }
 });
+
+// Tables
+
+// Route::get('zest/add/tables', function () {
+//     try {
+
+//         Schema::dropIfExists('audit_questions_groups');
+//         Schema::create('audit_questions_groups', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->string('group_name')->nullable();
+//             $table->string('group_name_fr')->nullable();
+//             $table->timestamps();
+//         });
+
+//         Schema::dropIfExists('group_section');
+//         Schema::create('group_section', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->string('section_title')->nullable();
+//             $table->string('section_title_fr')->nullable();
+//             $table->unsignedBigInteger('group_id')->nullable();
+//             $table->unsignedBigInteger('number')->nullable();
+//             $table->timestamps();
+//         });
+
+//         Schema::dropIfExists('group_questions');
+//         Schema::create('group_questions', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->text('question', 500)->nullable();
+//             $table->text('question_fr', 500)->nullable();
+//             $table->text('question_short', 500)->nullable();
+//             $table->text('question_short_fr', 500)->nullable();
+//             $table->string('question_num')->nullable();
+//             $table->text('question_comment', 500)->nullable();
+//             $table->text('question_comment_fr', 500)->nullable();
+//             $table->text('additional_comments', 500)->nullable();
+//             $table->text('question_assoc_type', 500)->nullable();
+//             $table->Integer('parent_question')->nullable();
+//             $table->boolean('is_parent')->nullable();
+//             $table->Integer('parent_q_id')->nullable();
+//             $table->string('form_key')->nullable();
+//             $table->string('type')->nullable();
+//             $table->text('options', 500)->nullable();
+//             $table->text('options_fr', 500)->nullable();
+//             $table->boolean('is_data_inventory_question')->nullable();
+//             $table->string('accepted_formates')->default(0);
+//             $table->Integer('dropdown_value_from')->nullable();
+//             $table->Integer('attachment_allow')->default(0);
+//             $table->string('not_sure_option', 50)->nullable();
+//             $table->string('control_id', 50)->nullable();
+//             $table->Integer('section_id')->nullable();
+//             $table->timestamps();
+//         });
+
+//         Schema::dropIfExists('user_form_links');
+//         Schema::create('user_form_links', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->unsignedBigInteger('sub_form_id')->nullable();
+//             $table->unsignedBigInteger('client_id')->nullable();
+//             $table->unsignedBigInteger('user_id')->nullable();
+//             $table->unsignedInteger('percent_completed')->nullable();
+//             $table->text('form_link')->nullable();
+//             $table->text('form_link_id')->nullable();
+//             $table->integer('is_locked')->default(0);
+//             $table->integer('is_accessible')->default(1);
+//             $table->integer('curr_sec')->default(1);
+//             $table->integer('email_sent')->default(0);
+//             $table->string('user_email')->nullable();
+//             $table->dateTime('expiry_time')->nullable();
+//             $table->boolean('is_internal')->default(0);
+//             $table->dateTime('created')->default(DB::raw('CURRENT_TIMESTAMP'));
+//             $table->dateTime('updated')->default(DB::raw('CURRENT_TIMESTAMP'));
+//             $table->dateTime('updated_at')->nullable();
+//         });
+
+//         Schema::dropIfExists('user_responses');
+//         Schema::create('user_responses', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->unsignedBigInteger('user_form_id')->nullable();
+//             $table->unsignedBigInteger('form_id')->nullable();
+//             $table->unsignedBigInteger('sub_form_id')->nullable();
+//             $table->unsignedBigInteger('question_id')->nullable();
+//             $table->unsignedBigInteger('rating')->default(0);
+//             $table->integer('custom_case')->nullable();
+//             $table->string('question_key')->nullable();
+//             $table->boolean('is_internal')->default(0);
+//             $table->string('user_email')->default(0);
+//             $table->string('user_id')->default(0);
+//             $table->text('q_type', 50)->nullable();
+//             $table->string('type')->nullable();
+//             $table->string('question_response')->nullable();
+//             $table->string('additional_comment')->nullable();
+//             $table->string('additional_info')->nullable();
+//             $table->string('admin_comment')->nullable();
+//             $table->string('attachment')->nullable();
+//             $table->dateTime('created')->default(DB::raw('CURRENT_TIMESTAMP'));
+//             $table->dateTime('updated')->default(DB::raw('CURRENT_TIMESTAMP'));
+//         });
+
+//         Schema::dropIfExists('remediation_plans');
+//         Schema::create('remediation_plans', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->unsignedBigInteger('sub_form_id')->nullable();
+//             $table->unsignedBigInteger('control_id')->nullable();
+//             $table->unsignedBigInteger('client_id')->nullable();
+//             $table->unsignedBigInteger('person_in_charge')->nullable();
+//             $table->unsignedBigInteger('post_remediation_rating')->nullable();
+//             $table->text('proposed_remediation')->nullable();
+//             $table->text('completed_actions')->nullable();
+//             $table->date('eta')->nullable();
+//             $table->string('status')->default(0);
+//             $table->timestamps();
+//         });
+
+//         Schema::dropIfExists('assets');
+//         Schema::create('assets', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->string('name')->nullable();
+//             $table->string('asset_type')->nullable();
+//             $table->string('hosting_type')->nullable();
+//             $table->string('hosting_provider')->nullable();
+//             $table->string('country')->nullable();
+//             $table->string('city')->nullable();
+//             $table->string('state')->nullable();
+//             $table->string('lat')->nullable();
+//             $table->string('lng')->nullable();
+//             $table->unsignedBigInteger('impact_id')->nullable();
+//             $table->unsignedBigInteger('data_classification_id')->nullable();
+//             $table->string('tier')->nullable();
+//             $table->unsignedBigInteger('client_id')->nullable();
+//             $table->unsignedBigInteger('asset_number')->nullable()->comment("This will use for uniquely identification of organization asset with (org_id-this_number)");
+//             $table->string('it_owner')->nullable();
+//             $table->string('business_owner')->nullable();
+//             $table->string('internal_3rd_party')->nullable();
+//             $table->string('data_subject_volume')->nullable();
+//             $table->string('business_unit')->nullable();
+//             $table->timestamps();
+//         });
+
+//         Schema::dropIfExists('asset_tier_matrix');
+//         Schema::create('asset_tier_matrix', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->string('impact_id')->nullable();
+//             $table->string('data_classification_id')->nullable();
+//             $table->string('tier_value')->nullable();
+//             $table->timestamps();
+//         });
+
+//         $create_asset_tier_matrix = [
+//             ['impact_id' => 1, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 1, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 1, 'data_classification_id' => 3, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 1, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 1, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 2, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 2, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 2, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
+//             ['impact_id' => 2, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 2, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 3, 'data_classification_id' => 1, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 3, 'data_classification_id' => 2, 'tier_value' => 'tier 3'],
+//             ['impact_id' => 3, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
+//             ['impact_id' => 3, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 3, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 4, 'data_classification_id' => 1, 'tier_value' => 'tier 2'],
+//             ['impact_id' => 4, 'data_classification_id' => 2, 'tier_value' => 'tier 2'],
+//             ['impact_id' => 4, 'data_classification_id' => 3, 'tier_value' => 'tier 2'],
+//             ['impact_id' => 4, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 4, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 5, 'data_classification_id' => 1, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 5, 'data_classification_id' => 2, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 5, 'data_classification_id' => 3, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 5, 'data_classification_id' => 4, 'tier_value' => 'tier 1'],
+//             ['impact_id' => 5, 'data_classification_id' => 5, 'tier_value' => 'tier 1'],
+//         ];
+//         DB::table('asset_tier_matrix')->insert($create_asset_tier_matrix);
+
+//         Schema::dropIfExists('sub_forms');
+//         Schema::create('sub_forms', function (Blueprint $table) {
+//             $table->increments('id');
+//             $table->string('title')->nullable();
+//             $table->string('title_fr')->nullable();
+//             $table->integer('parent_form_id')->nullable();
+//             $table->integer('client_id')->nullable();
+//             $table->string('item_type')->nullable();
+//             $table->integer('other_number')->nullable();
+//             $table->string('other_id')->nullable();
+//             $table->integer('asset_id')->nullable();
+//             $table->datetime('expiry_time')->nullable();
+//             $table->timestamps();
+//         });
+
+//         return "<b>All Table</b> Successfully Created";
+//     } catch (\Exception $th) {
+//         return $th->getMessage();
+//     }
+// });
 
 
