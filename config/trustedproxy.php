@@ -17,8 +17,7 @@ return [
 
     'proxies' => [
         // Example IP addresses
-        '192.168.1.1',
-        '192.168.1.2',
+        '192.168.1.10',
     ],
 
     /*
@@ -34,6 +33,12 @@ return [
     |
     */
 
-    'headers' => Request::HEADER_X_FORWARDED_FOR,
+    'headers' => [
+        (defined('Request::HEADER_FORWARDED') ? Request::HEADER_FORWARDED : 'forwarded') => 'FORWARDED',
+        Request::HEADER_CLIENT_IP    => 'X_FORWARDED_FOR',
+        Request::HEADER_CLIENT_HOST  => 'X_FORWARDED_HOST',
+        Request::HEADER_CLIENT_PROTO => 'X_FORWARDED_PROTO',
+        Request::HEADER_CLIENT_PORT  => 'X_FORWARDED_PORT',
+    ]
 
 ];

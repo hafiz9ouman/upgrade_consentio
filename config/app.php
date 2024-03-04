@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'D3GDPR'),
 
     /*
     |--------------------------------------------------------------------------
@@ -163,7 +163,9 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Mews\Captcha\CaptchaServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
-
+        
+        // pdf package
+        //Barryvdh\DomPDF\ServiceProvider::class,
         /*
          * Package Service Providers...
          */
