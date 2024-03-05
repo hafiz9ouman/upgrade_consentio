@@ -13,7 +13,7 @@ use App\User;
 use App\Country;
 use Lang;
 
-class FormSettings extends Controller
+class FormsAssignment extends Controller
 {
     
     public function change_lock_status (Request $request)
