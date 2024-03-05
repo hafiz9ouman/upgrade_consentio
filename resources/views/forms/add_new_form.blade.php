@@ -230,14 +230,28 @@
                     <label class="form-control-label">Form Name French</label>
                     <input id="title_fr" type="text" class="form-control" name="title_fr" value="{{ old('title_fr') }}" autocomplete="off" autocomplete="nope" required>
                   </div>
+                  @if(Request::segment(2)=='Add-new-form')
+                  <input type="hidden" name="type" value="assessment">
                   <div class="col-md-6  py-2">
                     <label class="form-control-label">Type</label>
-                    <select class="form-control" name="type" onchange="getquestiongroups(this.value)">
+                    <select class="form-control" onchange="getquestiongroups(this.value)" disabled>
                       <option value="assessment">Assessment</option>
                       <option value="sar">SAR</option>
                       <option value="audit">Audit</option>
                     </select>
                   </div>
+                  @endif
+                  @if(Request::segment(2)=='Add-audit-form')
+                  <input type="hidden" name="type" value="audit">
+                  <div class="col-md-6  py-2">
+                    <label class="form-control-label">Type</label>
+                    <select class="form-control" onchange="getquestiongroups(this.value)" disabled>
+                      <option value="assessment">Assessment</option>
+                      <option value="sar">SAR</option>
+                      <option value="audit" selected>Audit</option>
+                    </select>
+                  </div>
+                  @endif
                   <div class="col-md-6  py-2" id="question_groups"></div>
                 </div>
                 <div class="card-footer" style="">
@@ -259,6 +273,12 @@
 
 @push('scripts')
 <script>
+  window.onload = function() {
+        // Get the selected value initially
+        var selectedValue = document.querySelector('[name="type"]').value;
+        // Call the getquestiongroups function with the selected value
+        getquestiongroups(selectedValue);
+    };
   function getquestiongroups(val) {
     if (val == "audit") {
       $.ajax({
@@ -266,7 +286,7 @@
           method: 'GET',
           success: function(response) {
               console.log(response);
-              let html = '<label class="form-control-label">Question Group</label> <select class="form-control" name="group_id" >';
+              let html = '<label class="form-control-label">Question Group</label> <select class="form-control" name="group_id" ><option value="">---Select Question Group---</option>';
               $.each(response, function(i, data) {
                   html += `<option value="${data.id}">${data.group_name}</option>`;
               });

@@ -1,15 +1,6 @@
 
 @extends (($user_type == 'admin')?('admin.layouts.admin_app'):('admin.client.client_app'))
 @section('content')
-  <style>
-    @media screen and (max-width: 580px){
-      .add_responsive {
-        overflow: scroll;
-        display: block;
-      }
-    }
-
-  </style>
   @if ($user_type == 'admin')
     <div class="app-title">
       <ul class="app-breadcrumb breadcrumb">
@@ -26,60 +17,50 @@
   @endif
 
   @if(auth()->user()->role != 1)
-    <section class="assets_list">
-      <div class="main_custom_table">
-        <div class="table_filter_section">
-          <div class="select_tbl_filter">
-          </div>
-        </div>
-        <div class="main_table_redisign">
-          @section('page_title')
-            {{ __('Manage Forms') }}
-          @endsection
-          <div class="over_main_div no_scroll">
-            <table class="table table-striped text-center add_responsive">
-              <thead>
-                <tr>
-                    <th scope="col">{{ __('Form Name') }}</th>
-                    <th scope="col">{{ __('Show Form') }}</th>
-                    <?php if (Auth::user()->role != 1): ?>
-                    <th scope="col">{{ __('Sub Forms List') }}</th>
-                    <?php endif; ?>
-                    <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
-                    <th scope="col">{{ __('Number Of Subforms') }}</th>
-                    <?php endif; ?>
-                </tr>
-              </thead>
-              <tbody>
+    <section class="section dashboard">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            @section('page_title')
+              {{ __('Manage Forms') }}
+            @endsection
+            <div class="card-table">
+              <table id="datatable" class="table fixed_header manage-assessments-table">
+                <thead>
+                  <tr>
+                      <th style="vertical-align: middle " scope="col">{{ __('Form Name') }}</th>
+                      <th style="vertical-align: middle" scope="col">{{ __('Show Form') }}</th>
+                      <?php if (Auth::user()->role != 1): ?>
+                      <th style="vertical-align: middle;" scope="col">{{ __('Sub Forms List') }}</th>
+                      <?php endif; ?>
+                      <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
+                      <th style="vertical-align: middle;" scope="col">{{ __('Number Of Subforms') }}</th>
+                      <?php endif; ?>
+                  </tr>
+                </thead>
+                <tbody>
                 @foreach($forms_list as $form_info)
-                  <tr>
-                    <td>{{ $form_info->title }}</td>
-                    <td>
-                      <div class="vie_form">
-                        <a href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> 
-                          <p><i class='bx bx-show-alt'></i>{{ __('View Form') }}</p> 
-                        </a>
-                      </div>
-                    </td>
-                    @if (Auth::user()->role != 1)
-                      <td>
-                        <div class="add_plus_form">
-                          <div class="add_forms">
-                            <a href="{{ route('subforms_list', ['id' => $form_info->form_id]) }}"><i class='bx bx-plus' ></i> {{ __("Add") }}</a>
-                          </div>
-                          <div class="show_sub_forms">
-                            <a href="{{ route('subforms_list', ['id' => $form_info->form_id]) }}"><i class='bx bx-list-ul' ></i> {{ __('Show Sub Forms') }}</a>
-                          </div>
-                        </div>
-                      </td>
-                    @endif
-                    @if (Auth::user()->role == 2 || Auth::user()->user_type == 1)
-                      <td>{{ $form_info->subforms_count }}</td>
-                    @endif
-                  <tr>
+                <tr>
+                  <td>{{ $form_info->title }}</td>
+                  <td class="table-sssf ">
+                    <a href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> 
+                          <img src="{{url('assets-new/img/solar_eye-bold.png')}}"> {{ __('View Form') }}
+                    </a>
+                  </td>
+                  <?php if (Auth::user()->role != 1): ?>
+                  <td>
+                    <!-- <a href="{{ route('subforms_list', ['id' => $form_info->form_id]) }}"><span>+ ADD</span></a>         -->
+                    <a href="{{ route('subforms_list', ['id' => $form_info->form_id]) }}"><span class="table-sssf "><img src="{{url('assets-new/img/sub-forms.png')}}"> {{ __('Show Sub Forms') }} </span></a>  
+                  </td>
+                  <?php endif; ?>
+                  <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
+                  <td>{{ $form_info->subforms_count }}</td>
+                  <?php endif; ?>
+                </tr>
                 @endforeach
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -87,16 +68,19 @@
   @endif
 
   @if(auth()->user()->role == 1) 
-    <div class="row" style="margin-left:10px;">
+    <div class="row">
       <div class="col-md-12">
         <div class="tile">
-          <div class="table-responsive cust-table-width">
+          <div class="table-responsive">
             @if(Session::has('message'))
               <p class="alert alert-info">{{ Session::get('message') }}</p>
             @endif
+            @if(Session::has('alert'))
+              <p class="alert alert-danger">{{ Session::get('alert') }}</p>
+            @endif
 
             @if(Request::is('Forms/AdminFormsList/audit'))
-              <h3 class="tile-title">Audit Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
+              <h3 class="tile-title">Audit Forms <a href="{{ route('add_audit_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @else
               <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @endif
@@ -117,6 +101,7 @@
                   <?php endif; ?>
                   <th scope="col">Show Form</th>
                   @if(Request::is('Forms/AdminFormsList'))
+                    <th scope="col">Dublicate</th>
                     <th scope="col">Add Questions</th>
                   @endif
                   <?php if (Auth::user()->role != 1): ?>
@@ -140,20 +125,40 @@
                   @endif
                   @if(Request::is('Forms/AdminFormsList/audit'))
                     <?php if (Auth::user()->role == 1): ?>
-                    <td><a href="{{ url('Audit/Assignees/'.$form_info->form_id) }}"> <i class="fas fa-tasks"></i> Form Assignees</a></td></td>
+                      @php
+                      $check = DB::table('forms')
+                      ->join('group_section', 'group_section.group_id', 'forms.group_id')
+                      ->join('group_questions', 'group_questions.section_id', 'group_section.id')
+                      ->where('forms.id', $form_info->form_id)
+                      ->count();
+                      @endphp
+                    <td><a href="{{ url('Audit/Assignees/'.$form_info->form_id) }}" @if($check <= 0) style="pointer-events: none;cursor: default;color:grey;" @endif> <i class="fas fa-tasks"></i> Form Assignees</a></td></td>
                     <?php endif; ?>
                   @else
                     <?php if (Auth::user()->role == 1): ?>
-                    <td><a href="{{ url('Forms/FormAssignees/'.$form_info->form_id) }}"> <i class="fas fa-tasks"></i> Form Assignees</a></td></td>
+                      @php
+                      $check = DB::table('questions')->where('form_id', $form_info->form_id)->count();
+                      @endphp
+                    <td><a href="{{ url('Forms/FormAssignees/'.$form_info->form_id) }}" @if($check <= 0) style="pointer-events: none;cursor: default;color:grey;" @endif> <i class="fas fa-tasks"></i> Form Assignees</a></td></td>
                     <?php endif; ?>
                   @endif
+                  @php
+                     $check=DB::table('sub_forms')->where('parent_form_id', $form_info->form_id)->count();
+                     
+                    @endphp
                   @if(Request::is('Forms/AdminFormsList'))
-                    <td><a href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
+                    <td ><a  href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
+                    <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate Form</a></td></td>
                     <td>
-                      <a href="{{ url('Forms/'.$form_info->form_id.'/add/questions') }}" class="btn btn-sm btn-success pull-right " style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add Questions</a>
+                    @if($check > 0 || $form_info->form_id < 14)
+                      <a href="{{ url('Forms/'.$form_info->form_id.'/add/questions') }}" class="btn btn-sm btn-success disabled" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add Questions</a>
+                    @else
+                      <a href="{{ url('Forms/'.$form_info->form_id.'/add/questions') }}" class="btn btn-sm btn-success" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add Questions</a>
+                    @endif
                     </td>
                   @else
-                    <td><a href={{ url('audit/form/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
+                    <td><a href={{ url('audit/form/'.$form_info->form_id) }}>
+                       <i class="far fa-eye"></i> View Form</a></td></td>
                   @endif
                   <?php if (Auth::user()->role != 1): ?>
                   <td><a href="{{ route('subforms_list', ['id' => $form_info->form_id]) }}"> <i class="fas fa-plus-circle"></i> Add / <i class="fas fa-list"></i> Show Sub Forms</a></td>
@@ -162,7 +167,17 @@
                   <td>{{ $form_info->subforms_count }}</td>
                   <?php endif; ?>
                   <?php if (Auth::user()->role == 1): ?>
-                  <td><a href="{{ url('edit_form/'.$form_info->form_id) }}"> <i class="fas fa-pencil-alt"></i> Edit Name</a></td>
+                  @if($check > 0 || $form_info->form_id < 14)
+                  <td class="text-center d-flex justify-content-around">
+                    <a href="" style="pointer-events: none;color:grey;"> <i class="fas fa-pencil-alt"></i></a>
+                    <a href="" style="pointer-events: none;color:grey;"><i class="fas fa-trash"></i></a>
+                  </td>
+                  @else
+                  <td class="text-center d-flex justify-content-around">
+                    <a href="{{ url('edit_form/'.$form_info->form_id) }}"> <i class="fas fa-pencil-alt"></i></a>
+                    <a href="javascript:" id="delete_item" onclick="submitDelete('delete_form/{{$form_info->form_id}}')"> <i class="fas fa-trash"></i></a>
+                  </td>
+                  @endif
                   <?php endif; ?>
                   
                 </tr>
@@ -176,13 +191,33 @@
     <script>
       $(document).ready(function(){
           $('#forms-table').DataTable({
-                  "order": [[ 0, "desc" ]]
+                  "order": [],
+                  "scrollX": true,
+			            "autoWidth": false
           });
 
           $(function () {
           $('[data-toggle="tooltip"]').tooltip()
         })
       })
+
+      function submitDelete(url){
+            swal({
+                title:"Are you sure?",
+                type: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#05DD6B",
+                confirmButtonText: "YES",
+                cancelButtonText: "NO",
+                closeOnConfirm: false
+            }, function(val){
+                if (val){
+                    $('#delete_item').attr('href', url);
+                    document.getElementById('delete_item').click();
+                }
+                swal.close();
+            })
+        }
     </script> 
   @endif
 

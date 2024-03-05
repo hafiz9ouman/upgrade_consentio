@@ -3,241 +3,146 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-        rel="stylesheet">
+    
     <title>Consentio | {{ __('We Manage Compliance') }}</title>
-    <link rel="icon" href=" {{ url('newfavicon.png') }}" type="image/png">
+    <!-- Custom -->
+    <link href="{{ url('public/assets-new/img/favicon.png')}}" rel="icon">
+    <!-- Vendor CSS Files -->
+    <link href="{{ url('public/assets-new/css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{ url('public/assets-new/vendor/bootstrap-icons/bootstrap-icons.css')}}" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <!-- Template Main CSS File -->
+    <link href="{{ url('public/assets-new/css/style.css')}}" rel="stylesheet">
+    <style>
+      body{
+            display: flex;
+            flex-direction: column;
+        }
+        footer{
+            margin-top: auto;
+        }
+        .login-option-page section.section.dashboard {
+            height: 90vh;
+        }
+        body.dashboard section.section.dashboard {
+            /* position: initial; */
+        }
+        body.dashboard {
+            padding-top: 0px;
+            padding-right: 0px;
+        }
+        .input-group-append{
+            position: absolute;
+            right: 15px;
+            top: 20px;
+            font-size: 20px;
+        }
+        @media (max-width: 800px){
+            .login-option-page .form-login {
+                background: none;
+                border-radius: 0px;
+                background: none;
+                box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.15);
+            }
+            .login-option-page .form-login button {
+                width: 50%;
+            }
+            .input-group-append{
+            top: 10px;
+        }
+        }
+        @media (max-width: 568px){
+            footer{
+                font-size:10px;
+            }
+        }
+        
+        
+    </style>
 </head>
-<style>
-    body {
-        font-family: 'Montserrat', sans-serif;
-        background: #fff;
-    }
 
-    .login_image img {
-        height: 530px !important;
-        margin-left: -11px;
-        margin-top: 22px;
-    }
+<body class="dashboard login-option-page" style="background:#fbfbfd;">
+    <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center"  style="background:transparent;">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="{{ url('/') }}" class="logo d-flex align-items-center" style="background: transparent;">
+        <img src="{{url('public/assets-new/img/logo.webp')}}" style="height:40px;" alt="">
+      </a>
+    </div><!-- End Logo -->
+  </header><!-- End Header -->
 
-    .logo_login img {
-        width: 300px;
-    }
-
-    .login_fields h3 {
-        text-align: center;
-        font-weight: 700;
-        font-size: 25px;
-        margin: 2rem 0;
-    }
-
-    .filed_log label {
-        margin: 0;
-        color: #7D7D7D;
-        padding-left: 6px;
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .filed_log input {
-        background: #EFEFEF;
-        border-radius: 10px;
-        border: none;
-        height: 44px;
-        outline: none;
-        font-size: 14px;
-    }
-
-    .filed_log input:focus {
-        box-shadow: 0px 2px 0 1px rgb(0 123 255 / 25%);
-    }
-
-    .forgot_link a {
-        font-size: 12px;
-        color: #0f75bd;
-        text-decoration: underline;
-        font-weight: 500;
-    }
-
-    .add_zi {
-        z-index: 99999;
-    }
-
-    .filed_log {
-        margin-bottom: .8rem;
-    }
-
-    .sign_in_btn button {
-        background: #73b84d;
-        font-size: 16px;
-        font-weight: 600;
-        color: #fff !important;
-        padding: 8px 6rem;
-        border-radius: 10px;
-        transition: .3s;
-        margin-top: 1.3rem;
-    }
-
-    .sign_in_btn button:hover {
-        transform: scale(.9);
-    }
-
-    .sign_in_btn button:active {
-        transform: scale(.8);
-    }
-
-    .login_box {
-        filter: drop-shadow(6.364px -6.364px 43px rgba(177, 177, 177, 0.549));
-        background: #fff;
-        padding: 4rem 2rem 1rem;
-        border-radius: 14px;
-        border-top: 6px solid #0f75bd;
-    }
-
-    .login_section {
-        padding: 3rem 2rem 2rem;
-    }
-
-    .add_custom_width {
-        max-width: 37.5%;
-    }
-
-    .login_image {
-        position: relative;
-    }
-
-    .login_image p {
-        position: absolute;
-        top: 54px;
-        left: 18px;
-        color: #fff;
-        font-weight: 500;
-        font-size: 16px;
-    }
-
-    .main_change_language_login a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #0f75bd;
-        color: #fff !important;
-        border-radius: 6px;
-        padding: 7px;
-        /*width: fit-content;*/
-        margin: 0 auto;
-    }
-
-    .language_dropdown {
-        margin-top: 3rem;
-    }
-
-    @media screen and (max-width: 991px) {
-        .add_custom_width {
-            display: none;
-        }
-
-        .login_fields h3 {
-            margin: 2rem 0 1rem;
-        }
-
-        .login_fields p {
-            font-size: 14px;
-        }
-
-        .sign_in_btn button {
-            width: 100%;
-            padding: 8px 0rem;
-        }
-
-        .add_zi {
-            padding-right: 15px !important;
-        }
-
-        .login_section {
-            padding: 2rem 1rem 1rem;
-        }
-    }
-</style>
-<body>
-    <!-- <img src="./new_images/login_side_img.png" alt="" class="img-fluid"> -->
-    <section class="login_section">
-        <div class="container">
-            <div class="row d-flex justify-content-center">
-                <div class="col-md-12 col-lg-5 pr-0 add_zi">
-                    @if (Session::has('status'))
-                    <div class="alert alert-danger">
-                        {{ session()->get('status') }}
-                    </div>
-                    @endif
-                    <div class="login_box">
-                        <form class="login-form" method="POST" action="{{ route('login_post') }}" id="admin_login">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <div class="logo_login text-center">
-                                <img src="new_images/blue_logo.png" alt="" class="img-fluid">
-                            </div>
-                            <div class="login_fields">
-                                <h3>{{ __('Compliance Management') }}</h3>
-                                <p class="d-lg-none d-md-block" style="text-align: center;">
-                                    {{ __('Consentio is an innovative one-stop platform that simplifies data protection processes and compliance management activities for organisations.') }}
-                                </p>
-                                <div class="filed_log">
-                                    <label>{{ __('Email') }}</label>
-                                    <input id="email" type="email" class="form-control" name="email"
-                                        value="{{ old('email') }}" required autofocus>
-                                    @if ($errors->has('email'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('email') }}</strong>
-                                    </span>
-                                    @endif
-                                </div>
-                                <div class="filed_log">
-                                    <label>{{ __('Password') }}</label>
-                                    <input id="password" type="password" class="form-control" name="password" required>
-                                    @if ($errors->has('password'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password') }}</strong>
-                                    </span>
-                                    @endif
-                                </div>
-                                <div class="sign_in_btn text-center" style="margin-bottom: 17px;">
-                                    <button type="submit" class="btn">{{ __('SIGN IN') }}</button>
-                                </div>
-                                
-                            </div>
-                        </form>
-                        <!-- {{-- main_change_language_login --}} -->
-                        <div class="language_dropdown">
-                            @if(session('locale')=='fr')
-                            <a class="  btn-sm" style=" display:flex; align-items:center;"
-                                href="{{ url('language/en') }}"><img src="{{url('public/img/eng.png')}}"
-                                    style=" width: 23px; margin-right: 5px;">EN</a>
-                            @elseif(session('locale')=='en')
-                            <a class=" btn-sm" style=" display:flex; align-items:center;"
-                                href="{{ url('language/fr') }}"><img src="{{url('public/img/fr.png')}}"
-                                    style=" width: 23px; margin-right: 5px;">FR</a>
-                            @endif
+  <section class="section dashboard">
+      <div class="row">
+        <div class="col-12">
+          <div class="form-login">
+            <img src="{{url('public/assets-new/img/login-logo.webp')}}" class="login-logo">
+            <h1>{{ __('Compliance Management') }}</h1>
+            @if (Session::has('status'))
+            <div class="alert alert-danger fw-bolder" style="color: red;">
+                {{ __(session()->get('status')) }}
+            </div>
+            @endif
+          <form class="login-form" method="POST" action="{{ route('login_post') }}" id="admin_login">
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+              <div class="form-group row">
+                  <div class="col-sm-12"> 
+                      <input id="email" type="email" class="form-control" name="email" value="{{ old('email') }}" placeholder="{{ __('Email') }}" required autofocus>
+                      @if ($errors->has('email'))
+                        <span class="help-block">
+                            <strong>{{ $errors->first('email') }}</strong>
+                        </span>
+                        @endif
+                  </div>
+                  <div class="col-sm-12">
+                    <div class="input-group" style="position:relative;">
+                        <input id="password" type="password" class="form-control" name="password" placeholder="{{ __('Password') }}" required>
+                        <div class="input-group-append">
+                            <span class="input-group-text" id="toggle-password">
+                                <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                            </span>
                         </div>
                     </div>
+                    @if ($errors->has('password'))
+                    <span class="help-block">
+                        <strong>{{ $errors->first('password') }}</strong>
+                    </span>
+                    @endif
                 </div>
-                <!-- <div class="col-lg-7 pl-0 add_custom_width">
-                    <div class="login_image">
-                        <img src="./new_images/login_image2.png" alt="" class="img-fluid" style="height: 523px;    ">
-                        <p style="right: 21px; text-align: center;">
-                            {{ __('Consentio is an innovative one-stop platform that simplifies data protection processes and compliance management activities for organisations.') }}
-                        </p>
-                    </div>
-                </div> -->
+                  <div class="col-sm-12">
+                      <button type="submit" class="btn btn-primary add-btn" id="sign-in">{{ __('SIGN IN') }}</button>
+                  </div>
+              </div>  
+          </form> 
+          <div class="form-flag">
+            @if(session('locale')=='fr')
+            <a href="{{ url('language/en') }}">EN</a>
+            @elseif(session('locale')=='en')
+            <a href="{{ url('language/fr') }}">FR</a>
+            @endif</div>
+        </div>
+        </div>
+      </div>
+    </section>
+    <footer style="background:#ced4da;padding:20px;color:#424245;opacity:0.6;position: fixed;bottom: 0;width:100%" class="fixed-bottom">
+        <div class="container">
+            <div class="row">
+                <div class="col-6">
+                    <a href="#" style="color:#424245;opacity:1;">{{__('Privacy Policy')}}</a> | <a href="#" style="color:#424245;">{{__('Terms & Conditions')}}</a>
+                </div>
+                <div class="col-6 text-right" style="color:#424245;opacity:1;">
+                    {{__('Copyright © 2023 Consentio Inc. All rights reserved.')}}
+                </div>
             </div>
         </div>
-    </section>
+    </footer>
 
+
+    <script src="{{url('public/assets-new/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.3.1/tinymce.min.js"></script>  
+    <script src="{{url('public/assets-new/js/main.js')}}"></script>
     
     <script type="text/javascript">
         $('#reload').click(function(e) {
@@ -249,6 +154,22 @@
                     $(".captcha span").html(data.captcha);
                 }
             });
+        });
+    </script>
+    <script>
+        document.getElementById('toggle-password').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
         });
     </script>
 </body>

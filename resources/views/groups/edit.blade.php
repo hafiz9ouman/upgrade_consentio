@@ -10,6 +10,14 @@
         <li class="breadcrumb-item"><a href="{{route('groups_list')}}">{{ __('Update Existing Groups') }}</a></li>
         </ul>
     </div>
+    @if (Session::has('msg'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>{{ Session::get('msg') }}</strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
 
     <form class="w-100" method="POST" action="{{ route('group_update', $group->id) }}">
         <div class="row bg-white p-3">  

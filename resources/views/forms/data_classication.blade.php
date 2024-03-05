@@ -3,17 +3,18 @@
 @section('content')
     <div class="container">
         <div class="row">
-            <div class="col-lg-12">
+            <div class="col-12">
             @section('page_title')
                 {{ __('DATA CLASSIFICATION') }}
             @endsection
-                <div class="over_main_div">
-                    <table class="table table-striped text-center" id="table_for_data_elements" >
+            <div class="card">
+                <div class="card-table">
+                    <table class="table fixed_header manage-assessments-table" id="datatable">
                         <thead>
                             <tr>
-                                <th scope="col" col-span="2">Data Classification Name English </th>
-                                <th scope="col" col-span="2">Data Classification Name French </th>
-                                <th scope="col">Actions</th>
+                                <th style="vertical-align: middle;" scope="col" col-span="2">{{__('Data Classification')}} En</th>
+                                <th style="vertical-align: middle;" scope="col" col-span="2">{{__('Data Classification')}} Fr</th>
+                                <th style="vertical-align: middle;" scope="col">{{__('Action')}}</th>
                             </tr>
                         </thead>
                         <tbody class="btn-table">
@@ -22,8 +23,7 @@
                                 <td>{{ $class->classification_name_en }}</td>
                                 <td>{{ $class->classification_name_fr }}</td>
 
-                                <td><a href="{{ url('front/edit-classification/' . $class->id) }}"> <i
-                                            class="fas fa-pencil-alt"></i> Edit</a></td>
+                                <td><a href="{{ url('front/edit-classification/' . $class->id) }}"> <img src="{{url('assets-new/img/action-edit.png')}}" alt=""> </a></td>
 
 
                             </tr>
@@ -32,6 +32,7 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -55,7 +56,9 @@
             })
         }
         $(document).ready(function() {
-            $('#table_for_data_elements').DataTable();
+            $('#table_for_data_elements').DataTable({
+                order: []
+            });
         });
     </script>
 @endsection

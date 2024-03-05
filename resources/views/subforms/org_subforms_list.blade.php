@@ -1,79 +1,55 @@
 @extends(($user_type=='admin')?('admin.layouts.admin_app'):('admin.client.client_app'))
 @section('content')
-<style>
-    .row-btn {
-        margin-bottom:10px;
-        display:flex;
-        flex-direction:row;
-        justify-content: flex-end;
-    }
-    .expired {
-        color:#d73b3b;
-    }
-    #forms-list_wrapper {
-        white-space: nowrap;
-        padding-top: 15px;
-    }
-    .align_button {
-        display: flex;
-        justify-content: space-between;
-    }
-    .table {
-    margin-bottom: 3rem;
-  }
-</style>
+@if(!isset($all))
 @section('page_title')
-  {{ __('GENERATED FORMS') }}
+  {{ __('ASSESSMENT FORM ASSIGNEES') }}
 @endsection
+@else
+@section('page_title')
+  {{ __('PENDING FORMS') }}
+@endsection
+@endif
   <link href="{{ url('frontend/css/jquery.mswitch.css')}}"  rel="stylesheet" type="text/css">
-  <div class="container-fluid">
-  <div class="align_button">    
+  
+  <section class="assets_list">
+    <div class="row">
+      <div class="col-12">
+      <div class="align_button">    
     @if(!isset($all))
-      <div class="row-btn float-right">
-          <button class="btn btn-primary ight" data-toggle="modal" data-target="#myModal">{{ __('Send Link to External Users') }}</button>
+      <div class="row-btn">
+          <button class="buton mb-2" data-toggle="modal" data-target="#myModal">{{ __('Send Link to External Users') }}</button>
       </div>
     @endif
-    @if(!isset($all))
-    @endif
   </div>
-  </div>
-  <section class="assets_list">
-
-  <div class="main_custom_table">
-    <div class="table_filter_section">
-      <div class="select_tbl_filter">
-        <div class="main_filter_tbl">
-          <p>{{ __('Show') }}</p>
-          <select>
-            <option>10</option>
-            <option>20</option>
-            <option>30</option>
-          </select>
-          <p>{{ __('Entries') }}</p>
-        </div>
       </div>
     </div>
-    <div class="main_table_redisign">
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
       @if(!isset($all))
         <div class="table_breadcrumb">
           <h3 class="tile-title">{{ __('User Forms') }} {{app('request')->input('ext_user_only')? __('(External Users Only)'): __('(Internal and External Users)')}}</h3>
         </div> 
       @endif
-      <div class="over_main_div">
-        <table class="table table-striped text-center paginated" >
+      <div class="card-table">
+        <table id="datatable" class="table fixed_header manage-assessments-table" >
           <thead>
-            <tr>
-              <th scope="col">{{ __('FORM LINKS') }}</th>
-              <th scope="col">{{ __('EMAIL') }}</th>
-              <th scope="col">{{ __('USER TYPE') }}</th>
-              <th scope="col">{{ __('FORM NAME') }}</th>
-              <th scope="col">{{ __('SENT DATE') }}</th>
-              <th scope="col">{{ __('TOTAL DAYS') }}</th>
-              <th scope="col">{{ __('REMAINING DAYS') }}</th>
-              <th scope="col">{{ __('EXPIRY DATE') }}</th>
-              <th scope="col">{{ __('SUBMISSION STATUS') }}</th>
-              <th scope="col">{{ __('LOCK/UNLOCK') }}</th>
-              <th scope="col">{{ __('CHANGE ACCESS') }}</th>
+            <tr style = "text-transform:uppercase !important;">
+              <th style="vertical-align: middle;" scope="col">{{ __('FORM LINKS') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('EMAIL') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('USER TYPE') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('SUBFORM NAME') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('FORM NAME') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('SENT DATE') }}</th>
+              <!-- <th style="vertical-align: middle;" scope="col">{{ __('TOTAL DAYS') }}</th> -->
+              <th style="vertical-align: middle;" scope="col">{{ __('REMAINING DAYS') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('EXPIRY DATE') }}</th>
+              <th style="vertical-align: middle;" scope="col">{{ __('SUBMISSION STATUS') }}</th>
+              @if(auth()->user()->role == 2)
+              <th style="vertical-align: middle;" scope="col">{{ __('LOCK/UNLOCK') }}</th>
+              @endif
+              <!-- <th style="vertical-align: middle;" scope="col">{{ __('CHANGE ACCESS') }}</th> -->
             </tr>
           </thead>
           <tbody>
@@ -92,14 +68,14 @@
                     $form_link = $form_info->form_link_id;
                     $url = $forms.'/CompanyUserForm/'.$form_link;
                     $int_user = __('Organization User');
-                    $user_type = '<span style="color:#5bc858">'.$int_user.'</span>';
+                    $user_type = '<span style="margin-right: 0px !important;color:#5bc858">'.$int_user.'</span>';
                     $lu_utype  = 'in';
                   }
                   if(isset($form_info->external)){
                     $form_link = $form_info->form_link;
                     $url = $forms.'/ExtUserForm/'.$form_link;
                     $ex_user = __('External User');
-                    $user_type = '<span style="color:#f88160">'.$ex_user.'</span>';
+                    $user_type = '<span style="margin-right: 0px !important;color:#f88160">'.$ex_user.'</span>';
                     $lu_utype  = 'ex';
                       
                   }
@@ -112,12 +88,30 @@
                   if ($rem_days < 0)
                     $expired = 'expired';
                 ?>   
+                @if(strtotime(date('Y-m-d')) > strtotime($form_info->uf_expiry_time))
+                  @php
+                    $exp = "btn-secondary";
+                  @endphp
+                @else
+                  @php
+                    $exp  = 'btn-primary';
+                  @endphp
+                @endif
                 <tr>
                   <td style="color:#<?php echo ($form_info->is_locked)?('7bca94'):('f26924'); ?>">
-                    <a type="button" class="btn rounded_button td_round_btn" href="{{ url($url) }}" target="_blank">{{ __('Open') }}</a>
+                    <a type="button" class="btn {{$exp}} td_round_btn" href="{{ url($url) }}" target="_blank">{{ __('Open') }}</a>
                   </td>
                   <td>{{ isset($form_info->email)?($form_info->email):($form_info->user_email) }}</td>
                   <td>{!! $user_type !!}</td>
+                  @php
+                   $subform = DB::table('sub_forms')->where('id', $form_info->sub_form_id)->select('title', 'title_fr')->get();
+                  @endphp
+                  <td>  @if(session('locale') == 'fr' && $subform[0]->title_fr != null)
+                    <?php echo $subform[0]->title_fr; ?>
+                    @else
+                    <?php echo $subform[0]->title; ?>
+                    @endif
+                  </td>
                   <td>
                     @if($form_info->title_fr != null && session('locale')=='fr')
                       {{ $form_info->title_fr }}
@@ -134,21 +128,37 @@
                     $datediff = $expiry - $created;
                     $total_days  = round($datediff / (60 * 60 * 24));
                   ?>      
-                  <td>{{ $total_days }}</td>
-                  <td><span class="{{$expired}}">{{$rem_days }}</span></td>
-                  <td>{{ date('Y-m-d', strtotime($form_info->uf_expiry_time)) }}</td> 
+                  <!-- <td>{{ $total_days }}</td> -->
+                  <td><span style="margin-right: 0px !important;" class="{{$expired}}">{{$rem_days }}</span></td>
                   <td>
-                    <span style="color:#<?php echo ($form_info->is_locked)?('7bca94'):('f26924'); ?>">{{($form_info->is_locked)? __('Submitted'): __('Not Submitted') }}</span>
+                    @if(auth()->user()->role == 2)
+                      @if(strtotime(date('Y-m-d')) > strtotime($form_info->uf_expiry_time))
+                        <input type="button" class="btn btn-sm btn-primary"  onclick="extend_expire('{{$form_info->form_link}}','{{$form_info->form_link_id}}')" value="{{__('Extend Expiry')}}">
+                      @else
+                        {{ date('Y-m-d', strtotime($form_info->uf_expiry_time)) }}
+                      @endif
+                    @else
+                      {{ date('Y-m-d', strtotime($form_info->uf_expiry_time)) }}
+                    @endif
+                  </td> 
+                  <td>
+                    <span style="margin-right: 0px !important;color:#<?php echo ($form_info->is_locked)?('7bca94'):('f26924'); ?>">@if(strtotime(date('Y-m-d')) > strtotime($form_info->uf_expiry_time)) {{__('Expired')}} @elseif($form_info->is_locked) {{__('Submitted')}} @elseif($form_info->is_temp_lock) {{__('Locked')}} @else {{__('Not Submitted')}} @endif</span>
                   </td>
+                  @if(auth()->user()->role == 2)
                   <td>
+                    <input type="button" class="btn btn-sm btn-<?php echo ($form_info->is_temp_lock == 1)?("success"):("danger") ?>"  onclick="temp_lock('{{$form_info->form_link}}','{{$form_info->form_link_id}}')" value="{{($form_info->is_temp_lock == 1)? __('Unlocked'): __('Locked')}}">
+                  </td> 
+                  @endif
+                  <!-- <td>
                     <label class="switch switch-green">
-                      <input type="checkbox"   class="switch-input"  onclick="lock_unlock('the_toggle_button-{{$key}}')"  @if(!$form_info->is_locked) checked="" @endif>
-                      <span class="switch-label" data-toggle="tooltip" title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}" data-on="{{ __('on') }}" data-off="{{ __('Off') }}"></span>
-                      <span class="switch-handle" data-toggle="tooltip" title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}"></span>
+                    <input type="button" class="btn btn-sm btn-<?php echo ($form_info->is_locked)?("danger"):("success") ?>"  onclick="lock_unlock('the_toggle_button-{{$key}}')" value="{{($form_info->is_locked)? __('Unlocked'): __('Locked')}}">
+                      <span style="margin-right: 0px !important;" class="switch-label" data-toggle="tooltip" title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}" data-on="{{ __('on') }}" data-off="{{ __('Off') }}"></span>
+                      <span style="margin-right: 0px !important;" class="switch-handle" data-toggle="tooltip" title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}"></span>
                     </label>
                   </td>
-                  <div class="d-none"> <input style="display: none !important;" id="the_toggle_button-{{$key}}" type="checkbox"  title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}" class="unlock-form " value="{{!$form_info->is_locked}}" u-type="{{$lu_utype}}" link="{{$form_link}}"></div>
-                  <td><button class="change-access btn-sm btn btn-<?php echo ($form_info->is_accessible)?("danger"):("success") ?>" type="{{$lu_utype}}" link="{{$form_link}}" action="<?php echo ($form_info->is_accessible)?(0):(1) ?>" ><?php echo ($form_info->is_accessible)? __("Remove"): __("Allow") ?></button></td>
+                  <div class="d-none"> <input style="display: none !important;" id="the_toggle_button-{{$key}}" type="checkbox"  title="{{($form_info->is_locked)? __('Locked'): __('Unlocked')}}" class="unlock-form " value="{{!$form_info->is_locked}}" u-type="{{$lu_utype}}" link="{{$form_link}}"></div> -->
+                  
+                  <!-- <td><button class="change-access btn-sm btn btn-<?php echo ($form_info->is_accessible)?("danger"):("success") ?>" type="{{$lu_utype}}" link="{{$form_link}}" action="<?php echo ($form_info->is_accessible)?(0):(1) ?>" ><?php echo ($form_info->is_accessible)? __("Remove"): __("Allow") ?></button></td> -->
                 </tr>
                 <?php $i++; ?>
               <?php endforeach; ?>
@@ -156,13 +166,14 @@
           </tbody>
         </table>
       </div>
+      </div>
     </div>
   </div>
   </section>
 
 
   <!-- Modal -->
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="padding:10% 10%;">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -186,10 +197,113 @@
   </div><!-- /.modal -->
   <!-- </div> -->
   <script src="{{url('frontend/js/jquery.mswitch.js')}}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    $(document).ready(function() {
+      $('#datatable').DataTable({
+        "order": []
+      });
+    });
+</script>
   <script>
     function lock_unlock(val){
-          $('#'+val).click();
+      console.log(val);
+      Swal.fire({
+            title: "{{__('Are you sure you want to Unlocked this Form?')}}",
+            icon: "warning",
+            showCancelButton: true, // This will automatically generate "Yes" and "No" buttons
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "{{__('Yes')}}",
+            cancelButtonText: "{{__('No')}}"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("confirmed")
+                $('#'+val).click();
+            } else {
+                console.log("not confirmed");
+            }
+        });
     }
+    function extend_expire(ex_from, in_form) {
+        console.log(ex_from);
+        console.log(in_form);
+        var post_data = {};
+
+        post_data['_token'] = '{{csrf_token()}}';
+        post_data['in_link'] = in_form;
+        post_data['ex_link'] = ex_from;
+
+        Swal.fire({
+            title: "{{__('Are you sure you want to extend the expiration date?')}}",
+            icon: "warning",
+            showCancelButton: true, // This will automatically generate "Yes" and "No" buttons
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "{{__('Yes')}}",
+            cancelButtonText: "{{__('No')}}"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("confirmed")
+                $.ajax({
+                    url: '{{ route('extend_expire') }}',
+                    method: 'post',
+                    data: post_data,
+                    beforeSend: function () {
+
+                    },
+                    success: function (response) {
+                        Swal.fire("{!! __('Expire Date Extended') !!}", response.msg, response.status);
+                        setTimeout(function () {
+                            location.reload();
+                        }, 3000);
+                    }
+                });
+            } else {
+                console.log("not confirmed");
+            }
+        });
+    }
+    function temp_lock(ex_from, in_form) {
+        console.log(ex_from);
+        console.log(in_form);
+        var post_data = {};
+
+        post_data['_token'] = '{{csrf_token()}}';
+        post_data['in_link'] = in_form;
+        post_data['ex_link'] = ex_from;
+
+        Swal.fire({
+            title: "{{__('Are you sure you want to change Lock Status?')}}",
+            icon: "warning",
+            showCancelButton: true, // This will automatically generate "Yes" and "No" buttons
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "{{__('Yes')}}",
+            cancelButtonText: "{{__('No')}}"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("confirmed")
+                $.ajax({
+                    url: '{{ route('temp_lock') }}',
+                    method: 'post',
+                    data: post_data,
+                    beforeSend: function () {
+
+                    },
+                    success: function (response) {
+                        Swal.fire("{!! __('Lock Status') !!}", response.msg, response.status);
+                        setTimeout(function () {
+                            location.reload();
+                        }, 3000);
+                    }
+                });
+            } else {
+                console.log("not confirmed");
+            }
+        });
+    }
+
     $(document).ready(function (){
       <?php
           $search_filter = '';
@@ -210,7 +324,8 @@
         post_data['action']           = elem.attr('action');
         post_data['user_type']        = elem.attr('u-type');
         post_data['link']             = elem.attr('link');
-        post_data['lock_status']      = lockStatus;    
+        post_data['lock_status']      = lockStatus;   
+        console.log(post_data);
         $.ajax({
           url:'{{ route('unlock_form') }}',
           method:'post',
@@ -220,7 +335,8 @@
           },
           data:post_data,
           success: function (response) {
-              swal("{!! __('Lock Status') !!}", response.msg, response.status);
+            console.log(response);
+              swal.fire("{!! __('Lock Status') !!}", response.msg, response.status);
               var color;
               var status;
               if (lockStatus) {
@@ -310,17 +426,17 @@
             
             $('#act-msg').hide();
                     if (response.status == 'success') {
-            swal("{!! __('Sub-Form(s) Sent') !!}",  response.msg, response.status);
+            swal.fire("{!! __('Sub-Form(s) Sent') !!}",  response.msg, response.status);
                 setTimeout( function () {
                       location.reload();
                     }, 4000 );            
             }
             else if (response.status == 'fail') {
                 response.status = 'error';
-                swal('Error', response.msg, response.status);
+                swal.fire('Error', response.msg, response.status);
             }
             else {
-                swal('Error', "{!! __('Something went wrong. Please try again later') !!}", 'error');
+                swal.fire('Error', "{!! __('Something went wrong. Please try again later') !!}", 'error');
             }
             
 
@@ -347,7 +463,7 @@
           data:post_data,
           success: function (response) {
               
-                    swal({
+                    swal.fire({
                       title: "{!! __('Form Access Status Updated') !!}",
                       text: "{!! __('Form Access Changed!') !!}",
                       type: "info",

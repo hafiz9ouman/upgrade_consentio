@@ -346,12 +346,16 @@
 					$total_questions      = 0;
 					$question_count       = 0;
 					$date_picker_count    = 0;
+					$time_picker_count    = 0;
 					$display_body_sec_div = 0;
 					$close_body_sec_div   = 0;	
 					$parent_section='';
 					foreach ($questions as $key => $question): 
 						if($question->question_num)
 							$parent_section=$question->question_num;
+							if($question->parent_q_id != null){
+								$parent_section = number_format($question->question_num, 2);    //// Fix Assessment Multi Level Question Counts afftecting Sorting
+							}
 						//echo $parent_section.'=========<br>';
 						if($parent_section=='1.8'){
 							//echo '<pre>';print_r($question);
@@ -424,7 +428,9 @@
 					<?php endif; ?>			
 					<div class="content">
 						<p></p>
-						<h6 id="{{'ques-'.$question->form_key.'_'.$question->q_id}}">{{ $question->question_num}}
+						@if($question->parent_q_id == null)
+							<h6 id="{{'ques-'.$question->form_key.'_'.$question->q_id}}">{{ $question->question_num}}
+						@endif
 						@if(session('locale')=='fr')		
 							{{ $question->question_fr?$question->question_fr:$question->question }}
 						@else
@@ -450,6 +456,7 @@
 									$options = explode(', ', $question->options); 
 									if (!empty($options)):
 									?>
+									
 									<select {{ $attr }} class="form " name="{{ $question->form_key.'_'.$question->q_id}}" q-id="{{$question->q_id}}" style="margin-bottom:20px">
 										<?php
 											foreach ($options as $option):
@@ -473,7 +480,6 @@
 									$total_questions++;
 									break;?>
 									<?php
-								case('sc'):
 								case ('dc'):
 									$total_questions++;
 									$value_from = $question->dropdown_value_from;
@@ -486,7 +492,13 @@
 											$dynmc_values_dropdown = DB::table("assets")->where('client_id', $client_id)->select('id', 'name')->get();
 											break;
 										case '3':
-											$dynmc_values_dropdown = DB::table("countries")->select('id', 'country_name AS name')->get();
+											if(session('locale')=='fr'){
+												$lang="fr";
+											}
+											else{
+												$lang="en";
+											}
+											$dynmc_values_dropdown = DB::table("countries")->where('lang_code', $lang)->select('id', 'country_name AS name')->orderBy('country_name')->get();
 											break;
 										case '4':
 											$dynmc_values_dropdown = DB::table("data_classifications")->where('organization_id', $client_id)->select('confidentiality_level as id', 'classification_name_en AS name', 'classification_name_fr AS name_fr')->get();
@@ -497,16 +509,29 @@
 										case '6':
 											$dynmc_values_dropdown = DB::table("asset_tier_matrix")->select('id', 'tier_value AS name')->get();
 											break;
-									} ?>
-									<select  class="form form-control select_for_js" name="{{ $question->form_key.'_'.$question->q_id}}" q-id="{{$question->q_id}}" style="margin-bottom:20px">
+									}
+									//French issue resolved
+									if(session('locale') == 'fr'){
+										if (isset($filled[$question->form_key]) && $filled[$question->form_key]['question_response'] < 201){
+											$filled[$question->form_key]['question_response'] = $filled[$question->form_key]['question_response'] + 201;
+										}
+									}	
+									else{
+										if (isset($filled[$question->form_key]) && $filled[$question->form_key]['question_response'] > 201){
+											$filled[$question->form_key]['question_response'] = $filled[$question->form_key]['question_response'] - 201;
+										}
+									}
+									 ?>
+									
+									<select {{ $attr }} class="form form-control select_for_js" name="{{ $question->form_key.'_'.$question->q_id}}" q-id="{{$question->q_id}}" style="margin-bottom:20px">
 
 										@if(session('locale')=='fr') 
-											<option value="">-- SELECT --</option>
+											<option>-- SELECT --</option>
 											@if($question->not_sure_option)
 												<option value="0">Not Sure</option>
 											@endif
 										@else
-											<option value="">-- SELECT --</option>
+											<option>-- SELECT --</option>
 											@if($question->not_sure_option)
 												<option value="0"
 												@if (isset($filled[$question->form_key]) && $filled[$question->form_key]['question_response'] == 0){
@@ -539,6 +564,7 @@
 									<?php
 									break;
 								
+								case('sc'):
 								case('mc'):
 									$total_questions++;
 									$options = explode(', ', $question->options); 
@@ -566,9 +592,13 @@
 													}
 												}
 												if (strtolower($option) == 'date picker option'):?>
-												<li {{ $attr }} class="es-selectable {{ $selected_class }}" pickr-num-li="{{++$date_picker_count}}" name="li-{{ $question->q_id }}" id="date-picker-li-{{$date_picker_count}}" >
-													<input id="date-picker-{{$date_picker_count}}" onclick="validate_date()"  class="date-picker" pickr-num="{{$date_picker_count}}" name="d-{{ $question->q_id }}" q-id="{{$question->q_id}}" placeholder="@if(session('locale')=='fr')Sélectionner une date @else Date Picker Option @endif" value="<?php if (isset($filled[$question->form_key]) && !empty($filled[$question->form_key]['additional_resp'])) echo $filled[$question->form_key]['additional_resp']; else 'Date Picker Option'; ?>" type="{{ $type }}">
-												</li>
+													<li {{ $attr }} class="es-selectable {{ $selected_class }}" pickr-num-li="{{++$date_picker_count}}" name="li-{{ $question->q_id }}" id="date-picker-li-{{$date_picker_count}}">
+														<input id="date-picker-{{$date_picker_count}}" onclick="validate_date()" class="date-picker" pickr-num="{{$date_picker_count}}" name="d-{{ $question->q_id }}" q-id="{{$question->q_id}}" placeholder="@if(session('locale')=='fr')Sélectionner une date @else Date Picker Option @endif" value="<?php if (isset($filled[$question->form_key]) && !empty($filled[$question->form_key]['additional_resp']) && strtolower($filled[$question->form_key]['question_response']) == 'date picker option') echo $filled[$question->form_key]['additional_resp']; else 'Date Picker Option'; ?>" type="{{ $type }}">
+													</li>
+												@elseif(strtolower($option) == 'time picker option')
+													<li {{ $attr }} class="es-selectable {{ $selected_class }}" pickr-num-li="{{++$time_picker_count}}" name="li-{{ $question->q_id }}" id="time-picker-li-{{$time_picker_count}}">
+														<input id="time-picker-{{$time_picker_count}}" onclick="validate_time()" class="time-picker" pickr-num="{{$time_picker_count}}" name="t-{{ $question->q_id }}" q-id="{{$question->q_id}}" placeholder="@if(session('locale')=='fr')Sélectionner une heure @else Time Picker Option @endif" value="<?php if (isset($filled[$question->form_key]) && !empty($filled[$question->form_key]['additional_resp']) && strtolower($filled[$question->form_key]['question_response']) == 'time picker option') echo $filled[$question->form_key]['additional_resp']; else 'Time Picker Option'; ?>" type="{{ $type }}">
+													</li>
 												<?php else: ?>
 												<li {{ $attr }} class="es-selectable {{ $selected_class }}" name="{{ $question->form_key.'_'.$question->q_id.(($type=='mc')?('[]'):('')) }}" q-id="{{$question->q_id}}" value="{{ $option }}" type="{{ $type }}" {{($question->question_assoc_type == 2 && $question->form_id == '2')?("assoc=1"):('')}}>{{ ucfirst(strtolower(trim($option))) }}</li>
 												<?php
@@ -613,6 +643,19 @@
 									<?php
 									break;
 								case('im'): ?>
+									@php
+										$total_questions++;
+										$formate =json_decode($question->attachments);
+									@endphp 
+									@if($formate)
+											<p style="font-size:14px;">
+												@foreach($formate as $format)
+													@if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+												@endforeach
+												{{__('Allowed Format')}}
+											</p>
+											<p>{{__('Max 15 MB')}}</p>
+                                    @endif
 									<form {{ $attr }} id="upload_form-{{ $question->q_id }}" enctype="multipart/form-data" method="POST">
 										<input type="hidden" name="_token" value="{{ csrf_token()}}">
 										<input type="hidden" name="form-id"      id="form-id"      value="{{ $questions[0]->form_id }}"> 
@@ -625,7 +668,18 @@
 										<input type="hidden" name="email"        id="email"        value="{{ $accoc_info['user_email'] }}">
 										<input type="hidden" name="question-id" value="{{ $question->q_id }}">
 										<input type="hidden" name="question-key" value="{{ $question->form_key }}">
-										<input {{ $attr }} type="file" name="img-{{ $question->q_id }}" id="file-upload" class="dropify" {{(isset($filled[$question->form_key]['question_response']) && !empty($filled[$question->form_key]['question_response']))?("data-default-file=".URL::to('public/'.$filled[$question->form_key]['question_response'])):('') }}>                                                            
+										<input type="hidden"  name="accepted_types" id="accepted_types_{{ $question->q_id }}" value="{{ $question->attachments }}">
+
+										<textarea {{ $attr }} style="position: absolute; top: -50%" name="{{ $question->form_key.'_'.$question->q_id }}" id="{{'attachment-'.$question->q_id}}" q-id="{{$question->q_id}}"  rows="4" cols="50"><?php echo (isset($filled[$question->form_key]))?($filled[$question->form_key]['question_response']):('') ?></textarea>
+
+										<div class="mandatory-att">
+											@if($question->is_locked==1)
+											<input {{ $attr }} type="file" name="img-{{ $question->q_id }}" id="file-upload" class="dropify" {{(isset($filled[$question->form_key]['question_response']) && !empty($filled[$question->form_key]['question_response']))?("data-default-file=".URL::to('public/'.$filled[$question->form_key]['question_response'])):('') }} disabled>                                                            
+											@else
+											<input {{ $attr }} type="file" name="img-{{ $question->q_id }}" id="file-upload" class="dropify" {{(isset($filled[$question->form_key]['question_response']) && !empty($filled[$question->form_key]['question_response']))?("data-default-file=".URL::to('public/'.$filled[$question->form_key]['question_response'])):('') }}> 
+											@endif 
+										</div> 
+										<span id="image_error_{{ $question->q_id }}" style="color:red;"></span>                                                         
 									</form>
 									<?php break;?>
 									<div id="{{"perc-bar-".$question->q_id}}" class="barfiller hidden">
@@ -646,6 +700,40 @@
 							</div>
 							<?php endif; 
 						?>
+						@if($question->attachment_allow==1)
+								@php
+									$formats =json_decode($question->attachments);
+								@endphp 
+								@if($formats)
+										<p style="font-size:14px;">
+											@foreach($formats as $format)
+												@if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+											@endforeach
+											{{__('Allowed Format')}}
+										</p>
+										<p>{{__('Max 15 MB')}}</p>
+								@endif
+								<form id="upload_form-{{ $question->q_id }}" enctype="multipart/form-data" method="POST">
+									<input type="hidden" name="_token" value="{{ csrf_token()}}">
+									<input type="hidden" name="user-form-id" value="{{ $questions[0]->uf_id }}">
+									<input type="hidden" name="form-id" value="{{ $questions[0]->form_id }}">
+									<input type="hidden" name="form-link-id" value="{{ $questions[0]->form_link }}">
+									<input type="hidden" name="user-id" value="{{ $accoc_info['user_id'] }}">
+									<input type="hidden" name="email" value="{{ $accoc_info['user_email'] }}">
+									<input type="hidden" name="subform-id" value="{{ $questions[0]->sub_form_id }}">
+									<input type="hidden" name="attachment" value="1">
+									<input type="hidden" name="question-id" value={{ $question->q_id }}>
+									<input type="hidden" name="question-key" value="{{ $question->form_key }}">
+									<!-- dev -->
+									<input type="hidden"  name="accepted_types" id="accepted_types_{{ $question->q_id }}" value="{{ $question->attachments }}">
+									@if($question->is_locked==1)
+									<input type="file" name="img-{{ $question->q_id }}" id="file-upload-{{$question->q_id}}" class="dropify" {{(isset($filled[$question->form_key]['attachment']) && !empty($filled[$question->form_key]['attachment']))?("data-default-file=".URL::to('public/'.$filled[$question->form_key]['attachment'])):('') }} disabled>
+									@else
+									<input type="file" name="img-{{ $question->q_id }}" id="file-upload-{{$question->q_id}}" class="dropify" {{(isset($filled[$question->form_key]['attachment']) && !empty($filled[$question->form_key]['attachment']))?("data-default-file=".URL::to('public/'.$filled[$question->form_key]['attachment'])):('') }}>
+									@endif
+									<span id="image_error_{{ $question->q_id }}" style="color:red;"></span>
+								</form> 
+						@endif
 					</div>	<!--</div>-->
 					<?php endforeach; ?>
 					<div class="alert alert-success hidden submit-msg" id="submit-msg" style="margin-top:20px;margin-bottom:10px">	 
@@ -731,6 +819,33 @@
 			}
 		</script>
 
+		@if(session('locale')=='fr')
+		<script>
+			$(document).ready(function(){
+				$('.dropify').dropify();
+
+				$('.dropify-message p').text('Glissez-déposez un fichier ou cliquez pour sélectionner');
+				$('.dropify-infos-replace').text('Glissez-déposez un fichier ou cliquez pour remplacer');
+				$('.dropify-infos-message').text('Glissez-déposez un fichier ou cliquez pour remplacer');
+				$('.dropify-infos-remove').text('Supprimer le fichier');
+				$('.dropify-errors').text('Oups! Une erreur s\'est produite.');
+
+			})
+    	</script>
+		@endif
+
+		<script>
+			window.onload = function() {
+				// Get the dropify message paragraph
+				var clearButton = document.querySelector('.mandatory-att .dropify-clear');
+				
+				if (clearButton) {
+					// Set its display property to none
+					clearButton.style.display = 'none';
+				}
+			};
+		</script>
+
 		<script>
 			$(document).ready(function(){
 				var input1 = $('#qa_name');
@@ -783,9 +898,17 @@
 							break;
 						case 'select':
 							if (key.indexOf('q-') != -1 && key_list.indexOf(key) == -1) {
+								if ($(this).val() != '-- SELECT --' && $(this).val() != '') {
+											//-- SELECT --
+											
+											console.log('Pusing '+key+' due to select'+"----  if ($(this).val() != 'Select Country') {");
+											key_list.push(key)
+;
+											// update_filled_sections(ques_section_id);
+										}
 								if ($(this).attr('case-name')) {
 									if ($(this).attr('case-name') == 'asset-country') {
-										if ($(this).val() != 'Select Country') {
+										if ($(this).val() != '-- SELECT --' && $(this).val() != '') {
 											//console.log('Pusing '+key+' due to select');
 											key_list.push(key);
 											// update_filled_sections(ques_section_id);
@@ -813,7 +936,7 @@
 									}
 								}
 								else {
-									key_list.push(key);
+									//key_list.push(key);
 									// update_filled_sections(ques_section_id);							
 								}
 							}                    
@@ -904,6 +1027,9 @@
 						break;
 						case 'select':
 						if (key.indexOf('q-') != -1 && key_list.indexOf(key) == -1) {
+							if ($(this).val() != '-- SELECT --' && $(this).val() != '') {
+											is_section_filled = true;
+										}
 							if ($(this).attr('case-name')) {
 								if ($(this).attr('case-name') == 'asset-country') {
 									if ($(this).val() != 'Select Country') {
@@ -1065,6 +1191,10 @@
 							}
 							break;
 							case 'select':
+								if ($(this).val() != '-- SELECT --' && $(this).val() != '') {
+											
+											is_filled = true;
+										}
 						// 		if (key.indexOf('q-') != -1 && key_list.indexOf(key) == -1) {
 							if ($(this).attr('case-name')) {
 								if ($(this).attr('case-name') == 'asset-country') {
@@ -1204,9 +1334,38 @@
 				$('.dropify').dropify();
 				$('input.dropify').change(function(){
 					var q_id = this.name;
-							q_id =q_id.split("-");
-							q_id = q_id[1];
-							console.log(q_id);
+					q_id =q_id.split("-");
+					q_id = q_id[1];
+					console.log(q_id);
+					// file types which will accepted o this question pecified by admin 
+
+					let accepted_file_types = JSON.parse($(`#accepted_types_${q_id}`).val()).map(function(str) { return parseInt(str)});
+					// console.log(accepted_file_types);
+					// All possible Extention for these file types 
+					const all_extentions = ["", ["jpg", "png", "jpeg", "gif", "JPG", "PNG", "JPEG", "GIF"], ['docx', 'doc'], ['pdf'] , ['xlsx' ,'csv'], ['zip']];
+					// Extentions for Current Question
+					let accepted_extentions  = [];
+
+					for (let i =0; i < all_extentions.length; i++) {
+						if (accepted_file_types.indexOf(i) != -1) {
+							for (let j = 0; j < all_extentions[i].length; j++) {
+								accepted_extentions.push(all_extentions[i][j]);
+							}
+						}
+					}
+					console.log(accepted_extentions);
+					// Uploaded file whose we have to check extention upported or not 
+					var uploaded_file_extention = event.target.files[0].name.split('.').pop();
+					// var uploaded_file_extension = event.target.files[0].name.split('.')[1];
+					console.log(uploaded_file_extention);
+
+					if (accepted_extentions.indexOf(uploaded_file_extention) == -1) {
+						let error_id = `#image_error_${q_id}`;
+						$(error_id).html("Please choose a valid file format");
+						return;
+					}
+					$('#image_error_'+q_id).text("");
+
 					$.ajax({
 						url:'{{route('ajax_ext_user_submit_form')}}',
 						data:new FormData($("#upload_form-"+q_id)[0]),
@@ -1216,7 +1375,9 @@
 						processData: false,
 						contentType: false,
 						success:function(response){
-									// console.log(response);
+									console.log(response);
+									$(`#attachment-${response.result}`).val(response.result);
+									$(`#attachment-${response.result}`).focus();
 								},
 							});
 				});
@@ -1466,6 +1627,8 @@
 
 					update_form_data_request(post_data);
 
+					completed_questions = key_list.length;
+
 					if (question_key.indexOf('q-') > -1 && post_data[question_key] != '' && key_list.indexOf(question_key) == -1) {
 						key_list.push(question_key);
 						completed_questions++;
@@ -1498,7 +1661,7 @@
 					var num = $(this).attr('num');
 					var up   = $(this).find($('i.fa-chevron-up')).length;
 					var down = $(this).find($('i.fa-chevron-down')).length;
-					if (tag == 'div' || tag == 'span' || tag == 'h3') {
+					if (tag == 'div' || tag == 'span' || tag == 'h3' || tag == 'i') {
 						$("#section-"+num+"-body").slideToggle("slow");	
 						if (up) {
 							$("i.fa-chevron-up", this).toggleClass("fa-chevron-up fa-chevron-down");
@@ -1583,6 +1746,9 @@
 					jQuery('#date-picker-<?php echo $dp_num; ?>').datetimepicker({
 						timepicker:false,
 						format:'Y-m-d',
+						@if(session('locale')=='fr')
+						lang: 'fr',
+						@endif
 						onSelectDate: function (ct) {
 							$('#date-picker-li-<?php echo $dp_num; ?>').siblings().each(function(i, li){
 								$(li).removeClass('es-selected');
@@ -1629,6 +1795,64 @@
 
 						$('#date-picker-<?php echo $dp_num; ?>').datetimepicker('show');
 					});	
+				<?php endfor; ?>
+
+				<?php for ($tp_num = 1; $tp_num <= $time_picker_count; $tp_num++): ?>
+					jQuery('#time-picker-<?php echo $tp_num; ?>').datetimepicker({
+						datepicker:false,
+					timeFormat: 'h:m', // Adjust the time format as needed
+					interval: 15, // Interval between times in minutes
+					// Additional configurations for the time picker plugin
+					onSelectTime: function (ti) {
+						console.log('ok');
+						// console.log(time);
+						$('#time-picker-li-<?php echo $tp_num; ?>').siblings().each(function (i, li) {
+							$(li).removeClass('es-selected');
+						});
+						$('#time-picker-li-<?php echo $tp_num; ?>').addClass('es-selected');
+
+						var selectedTime = ti.getHours() + ':' + (ti.getMinutes() < 10 ? '0' : '') + ti.getMinutes(); // Adjust the format based on the time picker API
+						console.log("tttttiiiiiiiiimmmmmeeeeee=",selectedTime);
+						$('#time-picker-<?php echo $tp_num; ?>').val(selectedTime?.split(':')[0]).text(selectedTime?.split(':')[1]);
+						// $('#time-picker-<?php echo $tp_num; ?>').val("").text("");
+
+						var type = $('#time-picker-<?php echo $tp_num; ?>').attr('type');
+						var id = $('#time-picker-<?php echo $tp_num; ?>').attr('q-id');
+						var question_key = 't-' + id;
+
+						// ... (remaining logic for post_data and form updates)
+						post_data[question_key] = selectedTime;
+						question_key 			= 'q-'+id;
+							
+						post_data['curr-form-sec'] = curr_sec;
+
+						console.log(post_data);
+						console.log('data post');
+
+						update_form_data_request(post_data);
+
+						if (post_data[question_key] != '' && key_list.indexOf(question_key) == -1) {
+							key_list.push(question_key);
+							completed_questions++;
+						}
+						update_progress_bar(completed_questions, id, locked);
+						delete post_data[question_key];
+					}
+				});
+
+				$('#time-picker-li-<?php echo $tp_num; ?>').click(function (event) {
+					event.preventDefault();
+					if ($('#time-picker-<?php echo $tp_num; ?>').val() != '') {
+						if (!$(this).hasClass('es-selected')) {
+							$(this).addClass('es-selected');
+						}
+					} else {
+						$(this).removeClass('es-selected');
+					}
+
+					$('#time-picker-<?php echo $tp_num; ?>').datetimepicker('show');
+				});
+
 				<?php endfor; ?>
 			});
 

@@ -64,9 +64,13 @@
   .zdd {
      width: 100% !important; 
   }
+  @media screen and (max-width: 516px) {
+        .modaldialogResponsive {
+            margin-top: 40px !important;
+        }}
 </style>
 <div class="modal" id="edit-modal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modaldialogResponsive">
       <div class="modal-content">
       
         <!-- Modal Header -->

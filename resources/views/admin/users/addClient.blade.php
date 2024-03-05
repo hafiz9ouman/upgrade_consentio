@@ -213,7 +213,7 @@ input:checked + .slider:before {
                                                         <div class="form-group row">
 								<label class="form-control-label">Phone<span style="color:red;">*</span></label>
 								<div class="">
-									<input id="phone_" type="number" class="form-control" name="phone" value="{{ old('phone') }}" required autofocus> 
+									<input id="phone_" type="text" class="form-control" name="phone" maxlength="13" onkeyup="this.value = this.value.replace(/[^0-9+]/g, '')" value="{{ old('phone') }}" required autofocus> 
 								</div>
 							</div>
 							<div class="line"></div>
@@ -228,6 +228,22 @@ input:checked + .slider:before {
 								</div>
 
 							</div>
+							
+							
+							<div class="form-group row">
+								<label class="form-control-label change_color">Remember Me Days</label>
+								<div class="">
+									<input id="website_" type="number" class="form-control website_error" name="rememberme_days"  value="{{ old('rememberme_days') }}" autofocus> 
+									<div class="show_error">
+										<small></small>
+									</div>
+										
+								</div>
+
+							</div>
+							
+							
+							
 
 							<!--<div class="form-group row">-->
 							<!--	<label class="form-control-label">Email</label>-->
@@ -277,7 +293,7 @@ input:checked + .slider:before {
   										   UPLOADCARE_PUBLIC_KEY = "demopublickey";
 										</script>
 										<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-										<input type="hidden" role="uploadcare-uploader" data-crop="free, 5:1 ,16:9, 4:3, 5:4, 1:1" data-images-only >
+										<input type="hidden" role="uploadcare-uploader" data-crop="free, 5:1" data-images-only >
 
 										<!-- Your preview will be put here -->
 										<div class="main_croppir_img"  style="width: fit-content;" >
@@ -286,7 +302,8 @@ input:checked + .slider:before {
 						                        <i class="fa fa-circle-o-notch fa-spin fa-5x fa-fw"></i>
 						                      </div>
 
-										  <img src="<?php  echo  URL::to('_organisation.png');  ?>" alt="" id="preview" class="gambar img-responsive img-thumbnail"  />
+										  <!-- <img src="<?php  echo  URL::to('_organisation.png');  ?>" alt="" id="preview" class="gambar img-responsive img-thumbnail"  /> -->
+										  <img src="" alt="" id="preview" class="gambar img-responsive img-thumbnail d-none"  />
 										</div>
 
 										<input type="hidden" name="base_string" value="" id="destination"> 
@@ -348,7 +365,10 @@ input:checked + .slider:before {
 
 <script>
 	// Getting an instance of the widget.
-const widget = uploadcare.Widget('[role=uploadcare-uploader]');
+// const widget = uploadcare.Widget('[role=uploadcare-uploader]');
+const widget = uploadcare.Widget('[role=uploadcare-uploader]', {
+  tabs: 'file url',
+});
 // Selecting an image to be replaced with the uploaded one.
 const preview = document.getElementById('preview');
 // "onUploadComplete" lets you get file info once it has been uploaded.
@@ -365,6 +385,7 @@ widget.onUploadComplete(fileInfo => {
   .then(blob => new Promise((resolve, reject) => {
   	//alert('2');
   	$('#sub_button').hide();
+  	$('#preview').removeClass("d-none");
     $('#loader').show();
     const reader = new FileReader()
     reader.onloadend = () => resolve(reader.result)

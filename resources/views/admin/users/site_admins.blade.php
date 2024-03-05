@@ -62,7 +62,11 @@
 <script type="text/javascript">
     $(document).ready(function() {
         
-       $('#org-users').DataTable();
+       $('#org-users').DataTable({
+			order: [],
+			"scrollX": true,
+			"autoWidth": false
+	   });
 
 
     	$( "body" ).on( "click", ".removePartner", function () {

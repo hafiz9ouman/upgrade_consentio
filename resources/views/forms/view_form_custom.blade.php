@@ -1,6 +1,7 @@
 @extends ((($user_type == 'admin')?('admin.layouts.admin_app'):('admin.client.client_app')), ['load_admin_css' => true])
 @section('content')
     <link rel="stylesheet" type="text/css" href="{{ url('public/custom_form/css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
     <style>
         .section-heading-edit {
             display: none;
@@ -239,24 +240,69 @@
             <div class="margin" id="section-{{ $section }}-body" num="{{ $section }}"
                 class="sec-heading-detail" style="margin: 20px 30px; display: block;">
                 <?php endif;?>
+                @if(Auth::user()->role != 1)
                 <div class="content">
                     {{-- BARI START --}}
+                    @if($question->parent_q_id == null)
                     <h6>
                         @if (session('locale') == 'fr')
-                            {{ $question->question_num . ' ' . $question->question_fr }}
+                            {{ $question->question_num . ' - ' . $question->question_fr }}
                         @else
-                            {{ $question->question_num . ' ' . $question->question }}
+                            {{ $question->question_num . ' - ' . $question->question }}
                         @endif
                     </h6>
+                    @else
+                    <h6>
+                        @if (session('locale') == 'fr')
+                            {{ $question->question_fr }}
+                        @else
+                            {{ $question->question }}
+                        @endif
+                    </h6>
+                    @endif
+                    {{-- BARI END --}}
+                    @if (session('locale') == 'fr')
+                    <?php if ($question->question_comment_fr != null && $question->question_comment_fr != ''): ?>
+                        <h6 class="question-comment"><?php echo $question->question_comment_fr; ?></h6>
+                    <?php endif; ?>
+                    @else
+                    <?php if ($question->question_comment != null && $question->question_comment != ''): ?>
+                        <h6 class="question-comment"><?php echo $question->question_comment; ?></h6>
+                    <?php endif; ?>
+                    @endif
+                </div>
+                @else
+                <div class="content">
+                    {{-- BARI START --}}
+                    <h6 class="font-weight-bold">
+                            {{ $question->question_num }}
+                    </h6>
+                    <h6>
+                    <span class="font-weight-bold">En</span> - {{ $question->question }}
+                    </h6>
+                    <h6>
+                    <span class="font-weight-bold">Fr</span> - {{ $question->question_fr }}
+                    </h6>
+                    @if($question->question_short)
+                    <h6>
+                    <span class="font-weight-bold">En</span> - {{ $question->question_short }}
+                    </h6>
+                    @endif
+                    @if($question->question_short_fr)
+                    <h6>
+                    <span class="font-weight-bold">Fr</span> - {{ $question->question_short_fr }}
+                    </h6>
+                    @endif
                     {{-- BARI END --}}
                     <?php if ($question->question_comment != null && $question->question_comment != ''): ?>
-                    <small>{{-- $question->question_comment --}}</small>
+                        <h6 class="question-comment"><?php echo $question->question_comment; ?></h6>
+                    <?php endif; ?>
+                    <?php if ($question->question_comment_fr != null && $question->question_comment_fr != ''): ?>
+                        <h6 class="question-comment"><?php echo $question->question_comment_fr; ?></h6>
                     <?php endif; ?>
                 </div>
+                @endif
                 <div id="wrap" class="wrap-content">
-                    <?php if ($question->question_comment != null && $question->question_comment != ''): ?>
-                    <h6 class="question-comment"><?php echo $question->question_comment; ?></h6>
-                    <?php endif; ?>
                     <?php
 						$type = $question->type;	
 						switch ($type): 
@@ -274,7 +320,14 @@
 
                             <?php
 										$pia_form_check = false;
-										if( ($question->question  == 'What assets are used to process the data for this activity?' || $question->question  ==  'What assets are used to collect store and process the data'  || $question->question  ==  'What assets are used to process the data for this activity?' ||    $question->question  == 'What is the name of the asset you are assessing?') && ($question->question_num == '6.1' || $question->question_num == '4.1' || $question->question_num == '2.1' || $question->question_num == '1.1'))
+										if( ($question->question  == 'What assets are used to process the data for this activity?' || $question->question  ==  'What assets are used to collect store and process the data'  || $question->question  ==  'What assets are used to process the data for this activity?' ||    $question->question  == 'What is the name of the asset you are assessing?' || $question->question  == 'What assets are used to store and process data for this activity?') && ($question->question_num == '6.1' || $question->question_num == '4.1' || $question->question_num == '2.1' || $question->question_num == '1.1'))
+											{    
+												$client_id = Auth::user()->client_id;
+												$options =  DB::table('assets')->where('client_id' , $client_id)->get();
+												$pia_form_check = true;
+												$selected_class = 'es-selected';
+											}
+                                            if( ($question->question  == 'What assets are used to process the data for this activity?' || $question->question  ==  'What assets are used to collect store and process the data'  || $question->question  ==  'What assets are used to process the data for this activity?' ||    $question->question  == 'What is the name of the asset you are assessing?') && ($question->dropdown_value_from==2))
 											{    
 												$client_id = Auth::user()->client_id;
 												$options =  DB::table('assets')->where('client_id' , $client_id)->get();
@@ -315,6 +368,65 @@
 									?>
                         </ul>
                     </section>
+                    @if(Auth::user()->role == 1)
+                    @php
+                    $options = explode(', ', $question->options_fr);
+                    @endphp
+                    <section class="options">
+                        <ul id="easySelectable" class="easySelectable">
+
+                            <?php
+										$pia_form_check = false;
+										if( ($question->question  == 'What assets are used to process the data for this activity?' || $question->question  ==  'What assets are used to collect store and process the data'  || $question->question  ==  'What assets are used to process the data for this activity?' ||    $question->question  == 'What is the name of the asset you are assessing?' || $question->question  == 'What assets are used to store and process data for this activity?') && ($question->question_num == '6.1' || $question->question_num == '4.1' || $question->question_num == '2.1' || $question->question_num == '1.1'))
+											{    
+												$client_id = Auth::user()->client_id;
+												$options =  DB::table('assets')->where('client_id' , $client_id)->get();
+												$pia_form_check = true;
+												$selected_class = 'es-selected';
+											}
+                                            if( ($question->question  == 'What assets are used to process the data for this activity?' || $question->question  ==  'What assets are used to collect store and process the data'  || $question->question  ==  'What assets are used to process the data for this activity?' ||    $question->question  == 'What is the name of the asset you are assessing?') && ($question->dropdown_value_from==2))
+											{    
+												$client_id = Auth::user()->client_id;
+												$options =  DB::table('assets')->where('client_id' , $client_id)->get();
+												$pia_form_check = true;
+												$selected_class = 'es-selected';
+											}
+											//echo request()->segment(3).'--------------';
+											foreach ($options as $option):
+												$selected_class = '';
+
+												if(request()->segment(3)==10 || request()->segment(3)==8 || request()->segment(3)==14)
+												$option = str_replace('.',',',$option);
+												
+												if (isset($filled[$question->form_key]))
+												{
+													if ($type == 'sc' && trim($filled[$question->form_key]['question_response']) == trim($option))
+													{
+														$selected_class = 'es-selected';
+													}
+													if ($type == 'mc' && in_array(trim($option), $filled[$question->form_key]['question_response']))
+													{
+														$selected_class = 'es-selected';			
+													}
+												}
+																
+									
+										?>
+                            @if ($pia_form_check == 'true')
+                                <li class="es-selectable {{ $selected_class }}" name=""
+                                    value="{{ $option->name }}" type="{{ $type }}">{{ $option->name }}</li>
+                            @elseif($pia_form_check == 'false' || isset($pia_form_check) == 'false')
+                                <li class="es-selectable {{ $selected_class }}" name=""
+                                    value="{{ $option }}" type="{{ $type }}">{{ $option }}</li>
+                            @endif
+
+                            <?php
+													endforeach;
+									?>
+                        </ul>
+                    </section>
+                    @endif
+
                     <?php endif;	
 								break;
 							case ('bl'):
@@ -372,7 +484,9 @@
                     @elseif($question->dropdown_value_from == 3)
                         @php
                             $countries = DB::table('countries')
+                                ->where('lang_code', session('locale'))
                                 ->select('id', 'country_name')
+                                ->orderBy('country_name')
                                 ->get();
                         @endphp
                         <select class="form-control w-75" name="dc" id="dc">
@@ -445,19 +559,42 @@
 								break;									
 							case ('im'):
 								$attachments =json_decode($question->attachments);?>
-                    <label><b>{{ __('Attachment Message') }}</b></label>
+                    <!-- <label><b>{{ __('Attachment Message') }}</b></label> -->
 
                     @if ($attachments != '')
-                        @for ($i = 1; $i <= 5; $i++)
+                            <p style="font-size:14px;">
+                                @foreach($attachments as $format)
+                                    @if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+                                @endforeach
+                                {{__('Allowed Format')}}
+                            </p>
+                            <input type="file" class="dropify" disabled>
+                        <!-- @for ($i = 1; $i <= 5; $i++)
                             @if (in_array($i, $attachments))
                                 <span>{{ $att[$i - 1] }} &nbsp;&nbsp;</span>
                             @endif
-                        @endfor
+                        @endfor -->
                     @endif
                     <?php	
 									break;									
 						endswitch; 
 					?>
+                                            @if($question->attachment_allow==1)
+                                                @php 
+                                                    $accepted_formates = ['Images', '.docs', '.pdf', '.xlxs , .csv', '.zip'];
+                                                    $attachment = DB::table('questions')->where('id',$question->question_id)->first();
+                                                    $formats =json_decode($attachment->attachments);
+                                                @endphp 
+                                                @if($formats)
+                                                        <p style="font-size:14px;">
+															@foreach($formats as $format)
+																@if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+															@endforeach
+															{{__('Allowed Format')}}
+														</p>
+                                                <input type="file" class="dropify" disabled>
+                                                @endif
+                                            @endif
                 </div>
                 <!--</div>-->
                 <?php endforeach; ?>
@@ -470,6 +607,40 @@
     <script type="text/javascript" src="{{ url('public/custom_form/js/popper.min.js') }}"></script>
     <script src="{{ url('public/custom_form/js/easySelectable.js') }}"></script>
     <script type="text/javascript" src="{{ url('public/custom_form/js/cust_js.js') }}"></script>
+    <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
+
+    <script>
+        $(document).ready(function(){
+            $('.dropify').dropify();
+            
+            @if(session('locale') == 'fr')
+            $('.dropify-message p').text('Glissez-déposez un fichier ou cliquez pour sélectionner');
+            $('.dropify-infos-replace').text('Glissez-déposez un fichier ou cliquez pour remplacer');
+            $('.dropify-infos-remove').text('Supprimer le fichier');
+            $('.dropify-errors').text('Oups! Une erreur s\'est produite.');
+            @endif
+
+            $('.sec-heading').click(function(e) {
+
+                var tag = e.target.tagName.toLowerCase();
+                console.log(tag);
+                var num = $(this).attr('num');
+
+                var up = $(this).find($('i.fa-chevron-up')).length;
+                var down = $(this).find($('i.fa-chevron-down')).length;
+
+                if (tag == 'div' || tag == 'span' || tag == 'h3' || tag == 'i') {
+                    $("#section-" + num + "-body").slideToggle("slow");
+                    if (up) {
+                        $("i.fa-chevron-up", this).toggleClass("fa-chevron-up fa-chevron-down");
+                    }
+                    if (down) {
+                        $("i.fa-chevron-down", this).toggleClass("fa-chevron-down fa-chevron-up");
+                    }
+                }
+            });
+        })
+    </script>
 
     <script>
         $(document).ready(function() {
@@ -580,25 +751,25 @@
 
             <?php endif; ?>
 
-            $('.sec-heading').click(function(e) {
+            // $('.sec-heading').click(function(e) {
 
-                var tag = e.target.tagName.toLowerCase();
-                console.log(tag);
-                var num = $(this).attr('num');
+            //     var tag = e.target.tagName.toLowerCase();
+            //     console.log(tag);
+            //     var num = $(this).attr('num');
 
-                var up = $(this).find($('i.fa-chevron-up')).length;
-                var down = $(this).find($('i.fa-chevron-down')).length;
+            //     var up = $(this).find($('i.fa-chevron-up')).length;
+            //     var down = $(this).find($('i.fa-chevron-down')).length;
 
-                if (tag == 'div' || tag == 'span' || tag == 'h3') {
-                    $("#section-" + num + "-body").slideToggle("slow");
-                    if (up) {
-                        $("i.fa-chevron-up", this).toggleClass("fa-chevron-up fa-chevron-down");
-                    }
-                    if (down) {
-                        $("i.fa-chevron-down", this).toggleClass("fa-chevron-down fa-chevron-up");
-                    }
-                }
-            });
+            //     if (tag == 'div' || tag == 'span' || tag == 'h3') {
+            //         $("#section-" + num + "-body").slideToggle("slow");
+            //         if (up) {
+            //             $("i.fa-chevron-up", this).toggleClass("fa-chevron-up fa-chevron-down");
+            //         }
+            //         if (down) {
+            //             $("i.fa-chevron-down", this).toggleClass("fa-chevron-down fa-chevron-up");
+            //         }
+            //     }
+            // });
 
         });
     </script>

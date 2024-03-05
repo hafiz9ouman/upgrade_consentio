@@ -437,7 +437,7 @@ class Forms extends Controller
                 {
                     if ($form_info[0]->is_locked != '1')
                     {
-                        $expiry_note = 'The user failed to submit form before expiry time.';               
+                        $expiry_note = __('The user failed to submit form before expiry time.');               
                     }
                 }
                 else
@@ -2069,7 +2069,7 @@ class Forms extends Controller
                 {
                     if ($form_info[0]->is_locked != '1')
                     {
-                        $expiry_note = 'The user failed to submit form before expiry time.';               
+                        $expiry_note = __('The user failed to submit form before expiry time.');               
                     }                
                 }
                 else

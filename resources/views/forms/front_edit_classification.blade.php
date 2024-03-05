@@ -70,7 +70,7 @@
       }
   </style>
   @section('page_title')
-  {{ __(' Edit Data Classification ') }}
+  {{ __('Edit Data Classification') }}
   @endsection
   @if (session('alert'))
   <div class="alert alert-danger">
@@ -92,7 +92,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-control-label">Classification Name French </label>
+            <label class="form-control-label">Nom de la classification French </label>
             <input id="name_fr" type="text" class="form-control" name="classification_name_fr" value="{{ $form->classification_name_fr }}" required autofocus>
           </div>
         </div>
@@ -100,7 +100,8 @@
 
       <div class="row">
         <div class="tile-footer col-sm-12 text-right">
-          <button type="submit" class="btn btn-primary">Update</button>
+          <a href="{{ url('front/data-classification') }}" class="btn btn-secondary bg-dark p-2 px-5" style="border-radius:35px;"><b>{{__('Cancel')}}</b></a>					
+          <button type="submit" class="btn btn-info p-2 px-5 ml-1" style="border-radius:35px;background:#0f75bd;">{{__('Update')}}</button>
         </div>
       </div>
 

@@ -112,7 +112,7 @@ EDIT PROFILE
                   <label for="" class="col-sm-3 col-form-label">{{ __('Repeat Password')}}</label>
                   <div class="col-sm-8">
                     <input type="password" class="form-control" name="rpassword" id="rpassword" >
-                    <a href="{{url('dashboard')}}" class="btn btn-default" style="color: #4e73df; border: solid 1px;">{{ __('Cancel') }}</a>
+                    <a href="{{url('dashboard')}}" class="btn btn-secondary bg-dark" style="padding: 12px 30px;border-radius:30px;font-size:18px;">{{ __('Cancel') }}</a>
                     <button class="btn btn-primary" id ="sub_button"  type="submit" style="margin: 20px 0;">{{ __('Update')}}</button>
                     <span id='message'></span>
                   </div>
@@ -133,7 +133,7 @@ EDIT PROFILE
                          UPLOADCARE_PUBLIC_KEY = "demopublickey";
                     </script>
                     <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-                    <input type="hidden" role="uploadcare-uploader" data-crop="5:4" data-images-only >
+                    <input type="hidden" role="uploadcare-uploader" data-crop="1:1" data-images-only >
 
                     <!-- Your preview will be put here -->
                     <div class="main_croppir_img">

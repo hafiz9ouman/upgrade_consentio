@@ -259,7 +259,7 @@
 						<div class="col-sm-6 col-md-4">
 							<div class="form-group">
 								<label class="form-control-label">Password</label>
-								<input id="password" type="password" class="form-control" name="password">
+								<input id="upassword" type="password" value="" class="form-control" name="upassword">
 							</div>
 						</div>
 
@@ -282,7 +282,9 @@
 									<option <?php if($user->is_blocked=='Yes'){ echo 'selected';  } ?> value="Yes">Yes</option>
 									<option <?php if($user->is_blocked=='No'){ echo 'selected';  } ?> value="No">No</option>
 									@endif
+									
 								</select>
+								
 								<span id='message'></span>
 							</div>
 						</div>
@@ -292,7 +294,7 @@
 								<div class="form-group">
 									<label class="form-control-label">{{ __('Enable Email Verification')}}</label><br>
 										<label class="switch">
-											<input name="mail_verification" type="checkbox" @if($value['mail_verification'] == 'on')) 'checked' @endif >
+											<input name="mail_verification" type="checkbox" <?php if($value['mail_verification']=='on'){ echo 'checked';  } ?> >
 										<span class="slider round"></span>
 										</label>
 									<span id='message'></span>
@@ -353,7 +355,7 @@
   										   UPLOADCARE_PUBLIC_KEY = "demopublickey";
 										</script>
 										<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-										<input type="hidden" role="uploadcare-uploader" data-crop="5:4" data-images-only >
+										<input type="hidden" role="uploadcare-uploader" data-crop="1:1" data-images-only >
 
 										<!-- Your preview will be put here -->
 										<div class="main_croppir_img"  style="width: fit-content;">
@@ -621,11 +623,15 @@ $( "body" ).on( "click", ".removePartner", function () {
 
 
 
-$('#password, #rpassword').on('keyup', function () {
+$('#upassword, #rpassword').on('keyup', function () {
 
-  if ($('#password').val() == $('#rpassword').val()) {
+  if ($('#upassword').val() == $('#rpassword').val()) {
 
     $('#message').html('<h5>Password is Matched</h5>').css('color', 'green');
+
+	if ($('#upassword').val() == '' && $('#rpassword').val() == ''){
+		$('#message').html('').css('color', 'green');
+	}
 
   } else 
 
@@ -633,6 +639,9 @@ $('#password, #rpassword').on('keyup', function () {
 
 });
 
+$( document ).ready(function() {
+    $( "#upassword" ).val('');
+});
 
 
 </script>

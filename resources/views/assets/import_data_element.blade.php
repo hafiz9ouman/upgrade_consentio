@@ -20,14 +20,22 @@
     </div>
 @endif
 
-<form action="{{ url('import-element-data') }}" method="post" enctype="multipart/form-data">
-    {{ csrf_field() }}
-    <div class="form-group">
-        <input type="file" name="import_file" id="import_file" class="form-control">
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ url('import-element-data') }}" method="post" enctype="multipart/form-data">
+                    {{ csrf_field() }}
+                    <div class="form-group">
+                        <input type="file" name="import_file" id="import_file" class="form-control" style="padding: 6px 15px;font-size: 22px;">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Import Data</button>
+                        <a href="{{ url('data-element-sample') }}" class="button float-right">Sample Data</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Import Data</button>
-        <a href="{{ url('data-element-sample') }}" class="btn btn-success float-right">Sample Data</a>
-    </div>
-</form>
+</div>
 @endsection

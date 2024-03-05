@@ -28,6 +28,11 @@
         .handle_hover:hover .edit_enable{
             display:block;
         }
+        .selected {
+            background-color: #28a745; 
+            border-color: #28a745;
+            color: #FFFFFF; 
+        }
     </style>
     <div class="app-title">
         <ul class="app-breadcrumb breadcrumb">
@@ -85,14 +90,30 @@
                                     <div class="content p-3 py-4">
                                         <div class="d-flex justify-content-between">
                                             <span>
-                                                Sort Order: <input type="text" id="" style="width:50px;height:20px;1px solid #000;color:#000" value="{{ $question->question_num }}"><a href="javascript:;" class="updatesorting">Update Sorting</a>
+                                                Sort Order: <input type="text" id="sort_order_{{ $question->id }}" style="width:50px;height:20px;1px solid #000;color:#000" value="{{ $question->question_num }}"><a href="javascript:;" class="updatesorting" id="{{ $question->id }}">Update Sorting</a>
                                             </span>
                                             <!-- <span>
                                                 <i class=" edit_enable">
                                                     <span class="fa fa-edit"></span>
                                                 </i>
                                             </span> -->
+                                            <p data-toggle="tooltip" data-placement="left" title="Delete Question"
+                                                id="delete-normal-{{ $question->id }}"
+                                                data-title="This operation cannot be undone"
+                                                onclick="delete_question(this.id , 'This operation cannot be undone')"
+                                                class="pull-right btn btn-sm btn-danger "
+                                                style="color: #FFF !important;">
+                                                <i class="fa fa-trash"
+                                                    style="font-size: 18px;margin-right: 1px;vertical-align: initial;"
+                                                    aria-hidden="true"></i>
+                                            </p>
                                         </div>
+
+                                        <h6 id="display_control_id_{{$question->id}}">
+                                            <strong class="mr-3">Control ID: </strong>
+                                            <span class="edit_control_id" onclick="edit_question_ajax(event)" id="edit_con_id_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->control_id}}" value="{{$question->control_id}}" type="control">{{$question->control_id}}</span> 
+                                        </h6>
+                                        <div class="d-flex align-items-end" id="append_div_to_edit_control_{{$question->id}}"></div>
 
                                         <h6 id="display_english_question_{{$question->id}}">
                                             <strong class="mr-3">En Q: </strong>
@@ -100,12 +121,12 @@
                                         </h6>
                                         <div class="d-flex align-items-end" id="append_div_to_edit_english_{{$question->id}}"></div>
 
-                                        @if($question->question_comment)
+                                        
                                             <h6 class="question-comment" data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit English Question Comment">
-                                                <small class="d-flex" id="display_english_comment_{{$question->id}}"> En Comment:&nbsp;&nbsp;<span class="edit_english_comment" onclick="edit_question_ajax(event)" id="edit_en_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment}}" type="en_comment" value="{{$question->question_comment}}">{{ $question->question_comment }}</span></small>
+                                                <small class="d-flex" id="display_english_comment_{{$question->id}}"> En Comment:&nbsp;&nbsp;<span class="edit_english_comment" onclick="edit_question_ajax(event)" id="edit_en_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment}}" type="en_comment" value="{{$question->question_comment}}">{{$question->question_comment ? $question->question_comment : '#'}}</span></small>
                                             </h6>
                                             <div class="d-flex align-items-end" id="append_div_to_edit_en_comment_{{$question->id}}"></div>
-                                        @endif
+                                        
 
                                         <h6 id="display_fr_question{{$question->id}}" data-toggle="tooltip" data-placement="left" title="" data-original-title="Question Title French">
                                             <strong class="mr-3">Fr Q: </strong>
@@ -113,14 +134,14 @@
                                         </h6>
                                         <div class="d-flex align-items-end" id="append_div_to_edit_fr_{{$question->id}}"></div>
 
-                                        @if($question->question_comment_fr)
+                                        
                                             <h6 class="question-comment " data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit French Question Comment">
                                                 <small class="mr-3" id="display_fr_comment{{$question->id}}">Fr Comment: 
-                                                    <span class="edit_fr_comment" onclick="edit_question_ajax(event)" id="edit_fr_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment_fr}}" type="fr_comment" value="{{$question->question_comment_fr}}">{{ $question->question_comment_fr }}</span>
+                                                    <span class="edit_fr_comment" onclick="edit_question_ajax(event)" id="edit_fr_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment_fr}}" type="fr_comment" value="{{$question->question_comment_fr}}">{{$question->question_comment_fr ? $question->question_comment_fr : '#'}}</span>
                                                 </small>
                                             </h6>
                                             <div class="d-flex align-items-end" id="append_div_to_edit_fr_comment_{{$question->id}}"></div>
-                                        @endif
+                                        
 
                                         @switch($question->type)
                                             @case('qa')
@@ -136,21 +157,42 @@
                                             @case('mc')
                                                 <section class="options" id="">
                                                     @php 
-                                                        $options    = explode(',', $question->options);
-                                                        $options_fr = explode(',', $question->options_fr);
+                                                        $options    = explode(', ', $question->options);
+                                                        $options_fr = explode(', ', $question->options_fr);
+                                                        $question->options=str_replace(', ', ',', $question->options);
+                                                        $question->options_fr=str_replace(', ', ',', $question->options_fr);
                                                     @endphp
-                                                    <label for="easySelectable">Englih Options</label>
-                                                    <ul id="easySelectable" class="easySelectable">
-                                                        @foreach($options as $option)
-                                                        <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-                                                        @endforeach
-                                                    </ul>
+                                                    <label for="easySelectable">English Options</label>
+                                                        <p data-toggle="tooltip" data-placement="top"
+                                                        title="Click here to edit english question options"
+                                                        class="pull-right btn btn-sm btn-warning"
+                                                        id="edit_en_o_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->options}}" type="en_option"
+                                                        onclick="edit_question_ajax(event)">
+                                                        Edit English Options</p>
+                                                    <div class="mr-3" id="display_en_option_{{$question->id}}">
+                                                        <ul id="easySelectable" class="easySelectable">
+                                                            @foreach($options as $option)
+                                                            <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="d-flex align-items-end" id="append_div_to_edit_en_option_{{$question->id}}"></div>
+
                                                     <label for="easySelectable">French Options</label>
-                                                    <ul id="easySelectable" class="easySelectable">
-                                                        @foreach($options_fr as $option)
-                                                        <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-                                                        @endforeach
-                                                    </ul>
+                                                    <p data-toggle="tooltip" data-placement="top"
+                                                        title="Click here to edit French question options"
+                                                        class="pull-right btn btn-sm btn-warning"
+                                                        id="edit_fr_o_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->options_fr}}" type="fr_option"
+                                                        onclick="edit_question_ajax(event)">
+                                                        Edit French Options</p>
+                                                    <div class="mr-3" id="display_fr_option_{{$question->id}}">
+                                                        <ul id="easySelectable" class="easySelectable">
+                                                            @foreach($options_fr as $option)
+                                                            <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="d-flex align-items-end" id="append_div_to_edit_fr_option_{{$question->id}}"></div>
                                                 </section>
                                                 @break
                                             @case('sc')
@@ -159,18 +201,38 @@
                                                         $options    = explode(',', $question->options);
                                                         $options_fr = explode(',', $question->options_fr);
                                                     @endphp
-                                                    <label for="easySelectable">Englih Options</label>
-                                                    <ul id="easySelectable" class="easySelectable">
-                                                        @foreach($options as $option)
-                                                        <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-                                                        @endforeach
-                                                    </ul>
+                                                    <label for="easySelectable">English Options</label>
+                                                    <p data-toggle="tooltip" data-placement="top"
+                                                        title="Click here to edit english question options"
+                                                        class="pull-right btn btn-sm btn-warning"
+                                                        id="edit_en_o_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->options}}" type="en_option"
+                                                        onclick="edit_question_ajax(event)">
+                                                        Edit English Options</p>
+                                                    <div class="mr-3" id="display_en_option_{{$question->id}}">
+                                                        <ul id="easySelectable" class="easySelectable">
+                                                            @foreach($options as $option)
+                                                            <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="d-flex align-items-end" id="append_div_to_edit_en_option_{{$question->id}}"></div>
+                                                    
                                                     <label for="easySelectable">French Options</label>
-                                                    <ul id="easySelectable" class="easySelectable">
-                                                        @foreach($options_fr as $option)
-                                                        <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-                                                        @endforeach
-                                                    </ul>
+                                                    <p data-toggle="tooltip" data-placement="top"
+                                                        title="Click here to edit French question options"
+                                                        class="pull-right btn btn-sm btn-warning"
+                                                        id="edit_fr_o_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->options_fr}}" type="fr_option"
+                                                        onclick="edit_question_ajax(event)">
+                                                        Edit French Options</p>
+                                                    <div class="mr-3" id="display_fr_option_{{$question->id}}">
+                                                        <ul id="easySelectable" class="easySelectable">
+                                                            @foreach($options_fr as $option)
+                                                            <li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="d-flex align-items-end" id="append_div_to_edit_fr_option_{{$question->id}}"></div>
+                                                    
                                                 </section>
                                                 @break
                                             @case('im')
@@ -188,6 +250,19 @@
                                                 @break
                                             @default
                                         @endswitch
+                                                @php 
+                                                    $accepted_formates = ['Images', '.docs', '.pdf', '.xlxs , .csv', '.zip'];
+                                                    $formats =json_decode($question->accepted_formates);
+                                                @endphp 
+                                                @if($formats)
+                                                        <p style="font-size:14px;">
+															@foreach($formats as $format)
+																@if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+															@endforeach
+															Allowed Format
+														</p>
+                                                <input type="file" class="dropify" disabled>
+                                                @endif
                                     </div>
                                 </div>
                             </div>
@@ -217,16 +292,16 @@
                             </div>
 
                             <div class="row pb-2">
-                                <a onclick="get_html('mc')" id="mc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Multiple Choice Question</a>
-                                <a onclick="get_html('sc')" id="sc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Single Choice Question</a>
-                                <a onclick="get_html('qa')" id="qa" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Text Question</a>
+                                <a onclick="get_html('mc')" id="mc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1 question-button">Multiple Choice Question</a>
+                                <a onclick="get_html('sc')" id="sc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1 question-button">Single Choice Question</a>
+                                <a onclick="get_html('qa')" id="qa" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1 question-button">Text Question</a>
                                 <!-- <a onclick="get_html('im')" id="im" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Attachment Upload Option</a>
                                 <a onclick="get_html('sp')" id="sp" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Design Multi Level Question</a>
-                                <a onclick="get_html('da')" id="da" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Data Inventory Questions</a> -->
-                                <a onclick="get_html('dc')" id="dc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Dynamic Control Question</a>
+                                <a onclick="get_html('da')" id="da" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1">Data Inventory Questions</a>
+                                <a onclick="get_html('dc')" id="dc" class="btn btn-warning btn-sm ml-1 mb-1 mr-1 mt-1 question-button">Dynamic Control Question</a> -->
                             </div>
 
-                            <div class="form-check py-2">
+                            <div class="form-check py-2 d-none">
                                 <input class="form-check-input d_cehckbox" onclick="disable_fr_options(this)" id="qmodel-same" type="checkbox" value="" id="flexCheckChecked">
                                 <label class="form-check-label" for="flexCheckChecked">English Only Form</label>
                                 <!-- <div class="not_same_for_fr" style="color: red;">You have to explicitly write all french data </div> -->
@@ -235,29 +310,41 @@
                                 </div>
                             </div>
 
+                            <div class="form-check py-2">
+                                <input class="form-check-input d_cehckbox" onclick="enable_french()" id="qmodel-same-d" type="checkbox" value="" id="flexCheckChecked-d">
+                                <label class="form-check-label" for="flexCheckChecked">Enable French</label>
+                                <!-- <div class="not_same_for_fr" style="color: red;">You have to explicitly write all french data </div> -->
+                                <div class="same_for_fr" style="color: green; display: none;">
+                                    All french data will be the same as english
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="question_title" class="col-form-label">Add English Question <strong style="color: red">*</strong></label>
-                                <textarea rows="4" name="question_title" class="form-control" onkeyup="$('#qmodel_main_q').val($(this).val())"></textarea>
+                                <textarea rows="4" name="question_title" class="form-control" id="qmodel_main_q_en" onkeyup="$('#qmodel_main_q').val($(this).val())"></textarea>
                             </div>
 
                             <div class="form-group">
                                 <label for="question_title_fr" class="col-form-label">Add French Question<strong style="color: red">*</strong></label>
-                                <textarea rows="4" name="question_title_fr" class="form-control fr_field" id="qmodel_main_q"></textarea>
+                                <textarea rows="4" name="question_title_fr" class="form-control fr_field" id="qmodel_main_q" onkeyup="document.getElementById('qmodel_main_q_en').onkeyup=null"></textarea>
                             </div>
 
                             <div class="form-group">
                                 <label for="question_title" class="col-form-label">Add Question English Short Title  <strong style="color: red">*</strong></label>
-                                <input type="text" name="question_title_short" class="form-control" onkeyup="$('#q_simple_model_main_fr').val($(this).val())">
+                                <input type="text" name="question_title_short" class="form-control" id="q_simple_model_main_en" maxlength="30" onkeyup="$('#q_simple_model_main_fr').val($(this).val())">
+                                <span style="color:red;">Maximum 30 Characters</span>
                             </div>
 
                             <div class="form-group">
                                 <label for="question_title_fr" class="col-form-label">Add Question French Short Title<strong style="color: red">*</strong></label>
-                                <input type="text" name="question_title_short_fr" class="form-control fr_field" id="q_simple_model_main_fr">
+                                <input type="text" name="question_title_short_fr" class="form-control fr_field" id="q_simple_model_main_fr" maxlength="30" onkeyup="document.getElementById('q_simple_model_main_en').onkeyup=null">
+                                <span style="color:red;">Maximum 30 Characters</span>
                             </div>
 
                             <div class="form-group">
                                 <label for="control_id" class="col-form-label">Control ID <strong style="color: red">*</strong></label>
-                                <input type="text" name="control_id" class="form-control" id="control_id">
+                                <input type="text" name="control_id" maxlength="30" class="form-control" id="control_id">
+                                <span style="color:red;">Maximum 30 Characters</span>
                             </div>
                             
                             <div class="form-group" id="qmodel-type" style="display: none"></div>
@@ -350,6 +437,24 @@
     <script type="text/javascript" src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script>
+        $(document).ready(function(){
+            $('#addQuestionModel').on('shown.bs.modal', function () {
+                // Trigger a click event on a specific button (replace 'yourButtonID' with your actual button ID)
+                if ($('#qmodel-same').is(':checked')){
+                    console.log("checked");
+                    $('#qmodel-same-d').prop('checked', false);
+                } 
+                else{
+                    $('#qmodel-same').click();
+                    $('#qmodel-same-d').prop('checked', false);
+                }
+            });
+        });
+        function enable_french(){
+            $('#qmodel-same').click();
+        }
+    </script>
+    <script>
         var section_id = 0;
         $('.dropify').dropify();
 
@@ -360,6 +465,10 @@
 
             // child_questions = [];
             // current = 0;
+            // Selected Button
+            $('.question-button').removeClass('selected');
+            $('#' + type).addClass('selected');
+            ///////
 
             if (previous_type !=  type || type == 'sp') {
                 previous_type = type;
@@ -374,11 +483,11 @@
                                     '<label for="question_options" class="col-form-label">Add (,) Separated English options <strong style="color:  red">*</strong></label>'+
                                     '<textarea onkeyup="$(`#question_options_fr`).val($(this).val())" type="text" class="form-control" name="question_options" id="question_options"></textarea>'+
                                     '<label for="question_options_fr" class="col-form-label">Add (,) Separated French options <strong style="color:  red">*</strong></label>'+
-                                    '<textarea type="text" class="form-control fr_field" id="question_options_fr" name="question_options_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" id="question_options_fr" onkeyup="document.getElementById(`question_options`).onkeyup = null" name="question_options_fr"></textarea>'+
                                     '<label for="question_comment" class="col-form-label">Add English Question Comment (Optional)</label>'+
                                     '<textarea type="text" class="form-control" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
                                     '<label for="question_comment_fr" class="col-form-label">Add Question Comment French (Optional)</label>'+
-                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" id="question_comment_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" onkeyup="document.getElementById(`question_comment`).onkeyup = null" id="question_comment_fr"></textarea>'+
                                     '<div class="d-flex pt-3">'+
                                         '<input type="checkbox" onclick="add_attachment_box(event)" value="false"  name="add_attachments_box">&nbsp; Allow Attachments &nbsp;&nbsp;'+
                                     '</div>'+
@@ -391,11 +500,11 @@
                                     '<label for="question_options" class="col-form-label">Add (,) Separated English options <strong style="color:  red">*</strong></label>'+
                                     '<textarea onkeyup="$(`#question_options_fr`).val($(this).val())" type="text" class="form-control" name="question_options" id="question_options"></textarea>'+
                                     '<label for="question_options_fr" class="col-form-label">Add (,) Separated French options <strong style="color:  red">*</strong></label>'+
-                                    '<textarea type="text" class="form-control fr_field" id="question_options_fr" name="question_options_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" id="question_options_fr" onkeyup="document.getElementById(`question_options`).onkeyup = null" name="question_options_fr"></textarea>'+
                                     '<label for="question_comment" class="col-form-label">Add English Question Comment (Optional)</label>'+
                                     '<textarea type="text" class="form-control" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
                                     '<label for="question_comment_fr" class="col-form-label">Add Question Comment French (Optional)</label>'+
-                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" id="question_comment_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" onkeyup="document.getElementById(`question_comment`).onkeyup = null" id="question_comment_fr"></textarea>'+
                                     '<div class="d-flex pt-3">'+
                                         '<input type="checkbox" onclick="add_attachment_box(event)" value="false"  name="add_attachments_box">&nbsp; Allow Attachments &nbsp;&nbsp;'+
                                     '</div>'+
@@ -406,9 +515,9 @@
                         html +='<div class="form-group" id="qmodel-type">'+
                                     '<input type="hidden" value="'+type+'" name="type">'+
                                     '<label for="question_comment" class="col-form-label">Add English Question Comment (Optional)</label>'+
-                                    '<textarea type="text" class="form-control fr_field" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
+                                    '<textarea type="text" class="form-control" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
                                     '<label for="question_comment_fr" class="col-form-label">Add Question Comment French (Optional)</label>'+
-                                    '<textarea type="text" class="form-control" name="question_coment_fr" id="question_comment_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" onkeyup="document.getElementById(`question_comment`).onkeyup = null" id="question_comment_fr"></textarea>'+
                                     '<div class="d-flex pt-3">'+
                                         '<input type="checkbox" onclick="add_attachment_box(event)" value="false"  name="add_attachments_box">&nbsp; Allow Attachments &nbsp;&nbsp;'+
                                     '</div>'+
@@ -435,7 +544,7 @@
                                 '<label for="question_comment" class="col-form-label">Add English Question Comment (Optional)</label>'+
                                 '<textarea type="text" class="form-control" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
                                 '<label for="question_comment_fr" class="col-form-label">Add Question Comment French (Optional)</label>'+
-                                '<textarea type="text" class="form-control" name="question_coment_fr" id="question_comment_fr"></textarea>'+
+                                '<textarea type="text" class="form-control fr_field" name="question_coment_fr" onkeyup="document.getElementById(`question_comment`).onkeyup = null" id="question_comment_fr"></textarea>'+
                             '</div>'+
                         '</div>';
                         break;
@@ -454,7 +563,7 @@
                                     '<label for="question_comment" class="col-form-label">Add English Question Comment (Optional)</label>'+
                                     '<textarea type="text" class="form-control" name="question_coment" onkeyup="$( `#question_comment_fr`).val($(this).val())" id="question_comment"></textarea>'+
                                     '<label for="question_comment_fr" class="col-form-label">Add Question Comment French (Optional)</label>'+
-                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" id="question_comment_fr"></textarea>'+
+                                    '<textarea type="text" class="form-control fr_field" name="question_coment_fr" onkeyup="document.getElementById(`question_comment`).onkeyup = null" id="question_comment_fr"></textarea>'+
                                     '<div class="d-flex pt-3">'+
                                         '<input type="checkbox" onclick="add_attachment_box(event)" value="false"  name="add_attachments_box">&nbsp; Allow Attachments &nbsp;&nbsp;'+
                                     '</div>'+
@@ -489,6 +598,9 @@
                 }
 
                 $('#render_question_data').html(html);
+                if ($('#qmodel-same').is(':checked')){
+                    $('.fr_field').attr('readonly', true);
+                }
             }
         }
 
@@ -535,8 +647,8 @@
                             '<label  for="inlineRadio1"> EXCEL &nbsp;&nbsp;</label>'+
                             '<input  type="checkbox" name="attachment[]" id="" value="5">'+
                             '<label  for="inlineRadio1"> ZIP  &nbsp;&nbsp</label>'+
-                            '<input  type="checkbox" name="attachment" id="" value="0">'+
-                            '<label  for="inlineRadio1"> Allow All</label>'+
+                            // '<input  type="checkbox" name="attachment" id="" value="0">'+
+                            // '<label  for="inlineRadio1"> Allow All</label>'+
                         '</div>'
                     );
                 // }
@@ -602,6 +714,12 @@
                     console.log("res", res);
                     if (res.status) {
                         switch (type) {
+                            case "control":
+                                $(`#append_div_to_edit_control_${q_id}`).html("");
+                                $(`#display_control_id_${q_id}`).append(
+                                    `<span class="edit_control_id" onclick=edit_question_ajax(event) id="edit_con_id_${q_id}" q_id="${q_id}" q_val="${val}" value="${val}" type="control">${val}</span> `
+                                );
+                                break;
                             case "english":
                                 $(`#append_div_to_edit_english_${q_id}`).html("");
                                 $(`#display_english_question_${q_id}`).append(
@@ -628,10 +746,30 @@
                                     `<span class="edit_fr_comment" onclick="edit_question_ajax(event)" id="edit_fr_c_${q_id}" q_id="${q_id}" q_val="${val}" type="fr_comment" value="${val}">${val}</span>`
                                 );
                                 break;
+                            case "en_option":
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1500);
+                                break;
+                            case "fr_option":
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1500);
+                                break;
+                            
                             default:
                                 break;
                         }
-                        swal('', res.success, 'success');
+                        if(res.code == 200){
+                            swal('', res.success, 'warning');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                        else{
+                            swal('', res.success, 'success');
+                        }
+                        
                     }else{
                         swal('', res.error, 'warning');
                     }
@@ -647,6 +785,14 @@
             let id    = $(e.target).attr('id');
             let type  = $(e.target).attr('type');
             switch (type) {
+                case "control":
+                    $(`#append_div_to_edit_control_${q_id}`).append(
+                        `<textarea id="edit_con_id_${q_id}" type="${type}" q_id="${q_id}" name="edit_con_id" class="mr-2" maxlength="30" rows="3">${q_val}</textarea>
+                        <button class="btn btn-success" onclick=update_question(edit_con_id_${q_id})>  
+                            <i class="fas fa-check-circle m-0"></i>
+                        </button>`
+                    );
+                    break;
                 case "english":
                     $(`#append_div_to_edit_english_${q_id}`).append(
                         `<textarea id="edit_en_q_${q_id}" type="${type}" q_id="${q_id}" name="edit_en_q" class="mr-2" rows="3">${q_val}</textarea>
@@ -679,6 +825,25 @@
                         </button>`
                     );
                     break;
+                case "en_option":
+                    $(`#display_en_option_${q_id}`).html("");
+                    $(`#append_div_to_edit_en_option_${q_id}`).append(
+                        `<textarea id="edit_en_o_${q_id}" type="${type}" q_id="${q_id}" name="edit_en_o" class="mr-2" rows="3">${q_val}</textarea>
+                        <button class="btn btn-success" onclick=update_question(edit_en_o_${q_id})>  
+                            <i class="fas fa-check-circle m-0"></i>
+                        </button>`
+                    );
+                    break;
+                case "fr_option":
+                    $(`#display_fr_option_${q_id}`).html("");
+                    $(`#append_div_to_edit_fr_option_${q_id}`).append(
+                        `<textarea id="edit_fr_o_${q_id}" type="${type}" q_id="${q_id}" name="edit_fr_o" class="mr-2" rows="3">${q_val}</textarea>
+                        <button class="btn btn-success" onclick=update_question(edit_fr_o_${q_id})>  
+                            <i class="fas fa-check-circle m-0"></i>
+                        </button>`
+                    );
+                    break;
+
                 default:
                     break;
             }
@@ -875,13 +1040,21 @@
                 success: function (res) {
                     if (!res.status) {
                         swal('', res.error, 'warning');
-                    }else{
+                    }
+                    if(res.status == true){
                         $('#addQuestionModel').modal('hide');
                         console.log();
                         swal('', res.success, 'success');
                         setTimeout(() => {
                             location.reload();
-                        }, 500);
+                        }, 1000);
+                    }
+                    if(res.status == false){
+                        $('#addQuestionModel').modal('hide');
+                        console.log();
+                        swal('', res.success, 'warning');
+                        setTimeout(() => {
+                        }, 1000);
                     }
                 }
             });
@@ -921,6 +1094,75 @@
                     }
                 }
             });
+        }
+
+        $(".updatesorting").click(function() {
+            var id = this.id;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: '{{ url('auditupdateSorting') }}',
+                type: 'POST',
+                data: {
+                    'fq_id': id,
+                    'sort_order': $('#sort_order_' + id).val(),
+                    'group_id': $('#group_id').val()
+
+                },
+                success: function(data) {
+                    if (data.status) {
+                        swal('', data.msg, 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        swal('', data.msg, 'error');
+                    }
+                }
+            });
+        });
+
+        function delete_question(id, title) {
+            var data = id.split("-");
+            var question_type = data[1];
+            var question_id = data[2];
+            var qtype = question_type;
+            if (qtype == 'normal') {
+                qtype = '';
+            }
+            swal({
+                    title: 'Delete ' + qtype + ' question',
+                    text: title,
+                    type: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#F79426',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes',
+                    showLoaderOnConfirm: true
+                },
+                function() {
+                    // swal('Question Deleted Successfully','' , 'success');
+                    var post_data = {};
+                    post_data['_token'] = '{{ csrf_token() }}';
+                    post_data['question_id'] = question_id;
+                    post_data['question_type'] = question_type;
+                    $.ajax({
+                        url: "/group/question/delete/"+question_id,
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: post_data,
+                        success: function(response) {
+
+                            swal('Question Deleted Successfully', '', 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+                        }
+                    });
+                });
         }
 
     </script>

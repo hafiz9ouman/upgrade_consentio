@@ -9,6 +9,8 @@ use App\PasswordSecurity;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
+use Illuminate\Support\Arr;
+
 class DetailExport implements FromView
 {
     /**
@@ -92,13 +94,13 @@ class DetailExport implements FromView
   $options_array = explode(",",$data);
   $en_opt[] = array_filter(array_map('trim', $options_array));
   }
-  $opt_final_en =array_flatten($en_opt);
+  $opt_final_en =Arr::flatten($en_opt);
   foreach($question as $questions){
   $data = $questions->options_fr;
   $options_array = explode(",",$data);
   $fr_opt[] = array_filter(array_map('trim', $options_array));
   }
-  $opt_final_fr =array_flatten($fr_opt);
+  $opt_final_fr =Arr::flatten($fr_opt);
 
         //bari end
         // echo "<pre>";

@@ -4,7 +4,7 @@
 @endsection
 @section('content')
     <style>
-        td {
+        td, th {
             text-align: center;
             vertical-align: middle !important;
         }
@@ -14,16 +14,19 @@
         }
     </style>
     <section class="assets_list">
-        <div class="row bg-white p-3">
+        <div class="row">
+            <div class="col-12">
+            <div class="card">
+            
             {{--<td>{{Auth::user()->client_id}}-{{$plan->asset_number}}</td> <td>{{$plan->assets_name}}</td> --}}
 
             <div class="col-12">
                 <h2 align="center">@if(session('locale') == 'fr') {{ $remediation_plans[0]->sub_form_title_fr }} @else {{ $remediation_plans[0]->sub_form_title }} @endif</h2>
             </div>
 
-            <div class="col-md-10 px-5 offset-1 py-2 d-flex justify-content-between">
+            <div class="col-12 px-5 py-2 d-flex justify-content-between">
                 <h4>{{__("remediation_item_name")}} : @if($remediation_plans[0]->type == 'others') {{ $remediation_plans[0]->other_name }} @else {{ $remediation_plans[0]->assets_name }}@endif</h4>
-                <h4>{{__("Group Question")}} : {{ $remediation_plans[0]->group_name }}</h4>
+                <h4>{{__("Group Name")}} : @if(session('locale') == 'fr') {{ $remediation_plans[0]->group_name_fr }} @else {{ $remediation_plans[0]->group_name }} @endif</h4>
                 <h4>{{__("remediation_item_number")}} : 
                     @if($remediation_plans[0]->type == 'others')
                         N-
@@ -33,25 +36,25 @@
                     {{Auth::user()->client_id}}-
                     @if($remediation_plans[0]->type == 'others') {{ $remediation_plans[0]->other_number }} @else {{ $remediation_plans[0]->assets_number }}@endif</h4>
             </div>
-
+            <div class="card-table">
             <div class="col-12 overflow-auto py-3">
-                <table class="table" id="remediation_details" style="min-width:800px">
-                    <thead class="back_blue">
+                <table class="table" id="datatable" style="min-width:800px">
+                    <thead>
                         <tr>
                             <th> #</th>
-                            <th> Control ID</th>
-                            <th> Control Title</th>
-                            <th> Control Question</th>
-                            <th> User Response</th>
-                            <th> Review Comment</th>
-                            <th style="min-width: 350px"> Proposed Remediation </th>
-                            <th style="min-width: 350px"> Completed Actions </th>
-                            <th>ETA</th>
-                            <th> Person In Charge </th>
-                            <th>Remediation status</th>
-                            <th> Initial Rating</th>
-                            <th>POST Assessment</th>
-                            <th>POST Rating</th>
+                            <th> {{__('Control ID')}}</th>
+                            <th> {{__('Control Title')}}</th>
+                            <th> {{__('Control Question')}}</th>
+                            <th> {{__('User Response')}}</th>
+                            <th> {{__('Review Comment')}}</th>
+                            <th style="min-width: 350px"> {{__('Proposed Remediation')}} </th>
+                            <th style="min-width: 350px"> {{__('Completed Actions')}} </th>
+                            <th>{{__('ETA')}}</th>
+                            <th> {{__('Person In Charge')}} </th>
+                            <th>{{__('Remediation status')}}</th>
+                            <th> {{__('Initial Rating')}}</th>
+                            <th>{{__('POST Assessment')}}</th>
+                            <th>{{__('POST Rating')}}</th>
                         </tr>
                 </thead>
                     <tbody id="render_questions">
@@ -93,23 +96,31 @@
                                 </td>
                                 <td style="min-width: 220px">
                                     <select class="form-control handle_onChange" plan_id="{{$plan->id}}" name="status">
-                                        <option value="Analysis in Progress" @if($plan->status == "Analysis in Progress") selected @endif >Analysis in Progress</option>
-                                        <option value="Remediation in Progress" @if($plan->status == "Remediation in Progress") selected @endif >Remediation in Progress</option>
-                                        <option value="Remediation Applied" @if($plan->status == "Remediation Applied") selected @endif >Remediation Applied</option>
-                                        <option value="Risk Acceptance" @if($plan->status == "Risk Acceptance") selected @endif >Risk Acceptance</option>
-                                        <option value="Other" @if($plan->status == "Other") selected @endif >Other</option>
+                                        <option value="Analysis in Progress" @if($plan->status == "Analysis in Progress") selected @endif >{{__('Analysis in Progress')}}</option>
+                                        <option value="Remediation in Progress" @if($plan->status == "Remediation in Progress") selected @endif >{{__('Remediation in Progress')}}</option>
+                                        <option value="Remediation Applied" @if($plan->status == "Remediation Applied") selected @endif >{{__('Remediation Applied')}}</option>
+                                        <option value="Risk Acceptance" @if($plan->status == "Risk Acceptance") selected @endif >{{__('Risk Acceptance')}}</option>
+                                        <option value="Other" @if($plan->status == "Other") selected @endif >{{__('Other')}}</option>
                                     </select>
                                 </td>
                                 <td> 
-                                    <b class="px-3 py-2 rounded" style="background-color: {{$plan->color}}; color: {{$plan->text_color}} ">{{$plan->rating}} </b>
+                                @php
+                                    $client_id = Auth()->user()->client_id;
+                                    $rating = $plan->rate_level;
+                                    $rat = DB::table('evaluation_rating')
+                                        ->where('rate_level', $rating)
+                                        ->where('owner_id', $client_id)
+                                        ->first();
+                                @endphp
+                                    <b class="px-3 py-2 rounded" style="background-color: {{$rat->color}}; color: {{$rat->text_color}} ">{{__($rat->rating)}} </b>
                                 </td>
                                 <td style="min-width: 200px">
                                     <select class="form-control handle_onChange" onchange="$(this)." q_type="rating" plan_id="{{$plan->id}}" class="form-control handle_onChange" name="post_remediation_rating" >
                                         @if(true)
-                                            <option value="">select Assessment</option>
+                                            <option value="">{{__('Select Assessment')}}</option>
                                         @endif
                                         @foreach($eval_ratings as $rate)
-                                            <option value="{{ $rate->id }}" rating ="{{ $rate->rating }}" @if($plan->post_remediation_rating ==  $rate->id) selected @endif>{{ $rate->assessment }}</option>
+                                            <option value="{{ $rate->id }}" rating ="{{ $rate->rating }}" @if($plan->post_remediation_rating ==  $rate->id) selected @endif>{{__($rate->assessment)}}</option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -117,7 +128,7 @@
                                     <p id="post_ratting_{{$plan->id}}">
                                         @foreach($eval_ratings as $rate) 
                                             @if($plan->post_remediation_rating ==  $rate->id) 
-                                                <b class="px-3 py-2 rounded" style="background-color: {{$rate->color}}; color: {{$rate->text_color}}">{{ $rate->rating }}</b>
+                                                <b class="px-3 py-2 rounded" style="background-color: {{$rate->color}}; color: {{$rate->text_color}}">{{__($rate->rating)}}</b>
                                             @endif
                                         @endforeach
                                         @if($plan->post_remediation_rating ==  "")
@@ -130,6 +141,9 @@
 
                     </tbody>
                 </table>
+            </div>
+            </div>
+            </div>
             </div>
         </div>
     </section>

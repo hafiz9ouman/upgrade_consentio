@@ -21,7 +21,7 @@
       <h3 class="tile-title">Form Assignees for <span style="color:#0f75bd">{{$selected_form->title}}</span>
       </h3>
       <div class="table-responsive">
-	  	  <button class="btn btn-primary"  onclick="getall_checkbox()" id="assign">Assign / Unassign</button>
+	  	  <!-- <button class="btn btn-primary"  onclick="getall_checkbox()" id="assign">Assign / Unassign</button> -->
         <table class="table" id="assignees-table">
           <thead class="back_blue">
     <tr>
@@ -40,9 +40,15 @@
   	<?php foreach ($client_list as $client): ?>
 
     <tr>
+	@if(DB::table('sub_forms')->where('parent_form_id', $form_id)->where('client_id', $client->id)->count() > 0)
 	
-	   <td><input type="checkbox" onclick="checkfu({{$client->id}})" class="cbox" name="row{{$client->id}}" id="row{{$client->id}}" value="{{$client->id}}" <?php if (in_array($client->id, $assigned_client_ids)) echo 'checked'; ?> ></td>
+	   <td><input type="checkbox" onclick="checkfu({{$client->id}})" class="cbox" name="row{{$client->id}}" id="row{{$client->id}}" value="{{$client->id}}" <?php if (in_array($client->id, $assigned_client_ids)) echo 'checked'; ?> disabled ></td>
 	
+   @else
+
+		<td><input type="checkbox" onclick="checkfu({{$client->id}})" class="cbox" name="row{{$client->id}}" id="row{{$client->id}}" value="{{$client->id}}" <?php if (in_array($client->id, $assigned_client_ids)) echo 'checked'; ?> ></td>
+	
+	@endif
       <td>{{ $client->company }}</td>
 
     </tr>
@@ -52,11 +58,13 @@
   </tbody>
 
 </table>
+<button class="btn btn-primary"  onclick="getall_checkbox()" id="assign">Assign / Unassign</button>
 
 </div>
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
 	var asgn_ids = [];
 		
@@ -135,20 +143,39 @@ function checkfu(id){
 		post_data['del_ids'] = $('#del_ids').val();
 		post_data['asg_ids'] = $('#asgn_ids').val();
 		
-		$.ajax({
-			url:'{{route('assign_form_to_client')}}',
-			method:'POST',
-			// headers: {
-			// 	'X-CSRF-TOKEN': $( 'meta[name="csrf-token"]' ).attr( 'content' )
-			// },
-			data: post_data,
-			success: function(response) {
-				//console.log(response);
-			
-				swal('Information Updated', 'Forms assigned/un-assigned to company', 'success');
-				setTimeout(function () { location.reload(); }, 1000);
+		Swal.fire({
+			title: 'Are you sure?',
+			text: '',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonText: 'Yes, proceed',
+			cancelButtonText: 'Cancel'
+		}).then((result) => {
+			if (result.isConfirmed) {
+				// User clicked "Yes, proceed," so make the AJAX request
+				$.ajax({
+					url:'{{route('assign_form_to_client')}}',
+					method:'POST',
+					// headers: {
+					// 	'X-CSRF-TOKEN': $( 'meta[name="csrf-token"]' ).attr( 'content' )
+					// },
+					data: post_data,
+					success: function(response) {
+						//console.log(response);
+					
+						swal.fire('Information Updated', 'Forms assigned/un-assigned to company', 'success');
+						setTimeout(function () { window.history.back(); }, 2000);
+						
+					}
+				});
+				
+			} else {
+				
+				// User clicked "Cancel" or closed the dialog, do nothing
 			}
 		});
+
+		
     }
 </script>
 <input type="hidden" id="asgn_ids">

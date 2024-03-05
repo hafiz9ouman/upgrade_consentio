@@ -213,7 +213,7 @@ input:checked + .slider:before {
 							<div class="form-group row">
 							<label class="col-sm-2 form-control-label">{{ __('Enable Email Verification')}}</label>
 								<label class="switch" style="margin-left: 10px;">
-								    @if(old('slider') == "on")
+								    @if(old('mail_verification') == "on")
 									  <input name="mail_verification" type="checkbox" checked>
 									  @else
 									  <input name="mail_verification" type="checkbox" >
@@ -281,9 +281,9 @@ input:checked + .slider:before {
 							
 
 							<div class="form-group row">
-								<div class="col-sm-12 text-right">
-									<a href="{{url('users_management')}}" class="btn btn-sm btn-secondary"> {{ __('Cancel')}}</a>
-									<button type="submit" id="sub_button" class="btn btn-sm btn-primary">{{ __('Save')}} </button>
+								<div class="col-sm-12 text-right d-flex justify-content-end">
+									<a href="{{url('users_management')}}" class="btn btn-secondary bg-dark p-2 px-5" style="border-radius:35px;"> {{ __('Cancel')}}</a>
+									<button type="submit" id="sub_button" class="btn btn-info p-2 px-5 ml-1" style="border-radius:35px;background:#0f75bd;">{{ __('Save')}} </button>
 								</div>
 							</div>
 				

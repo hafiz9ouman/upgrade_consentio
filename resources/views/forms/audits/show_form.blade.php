@@ -40,7 +40,11 @@
 							<li><strong>★</strong></li>
 							<li><i class="fa fa-chevron-up"></i></li>
 						</ul>
-						<h3>{{ $form_details->title_fr }}</h3> 
+						@if (session('locale') == 'fr')
+							<h3>{{ $form_details->title_fr }}</h3> 
+						@else
+							<h3>{{ $form_details->title }}</h3> 
+						@endif
 					</div>
 				</div>
 			</div> 
@@ -56,7 +60,11 @@
 								<li><i class="fa fa-chevron-up" aria-hidden="true"></i></li>
 							</ul>
 							<div class="w-100 px-4 d-flex justify-content-between">
+							@if (session('locale') == 'fr')
+								<h3 id="title">{{ $section->section_title_fr }}</h3>
+							@else
 								<h3 id="title">{{ $section->section_title }}</h3>
+							@endif
 							</div>
 						</div>
 					</span>
@@ -72,32 +80,91 @@
 												</span>
 											</div>
 
-											<h6 id="display_english_question_{{$question->id}}">
-												<strong class="mr-3">En Q: </strong>
-												<span class="edit_question_english" onclick="edit_question_ajax(event)" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->question}}</span> 
-											</h6>
-											<div class="d-flex align-items-end" id="append_div_to_edit_english_{{$question->id}}"></div>
+											@if(Auth::user()->role == 1)
 
-											@if($question->question_comment)
-												<h6 class="question-comment" data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit English Question Comment">
-													<small class="d-flex" id="display_english_comment_{{$question->id}}"> En Comment:&nbsp;&nbsp;<span class="edit_english_comment" onclick="edit_question_ajax(event)" id="edit_en_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment}}" type="en_comment" value="{{$question->question_comment}}">{{ $question->question_comment }}</span></small>
+												<h6 id="display_english_question_{{$question->id}}">
+													<strong class="mr-3">{{__('Control ID')}}: </strong>
+													<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->control_id}}</span> 
 												</h6>
-												<div class="d-flex align-items-end" id="append_div_to_edit_en_comment_{{$question->id}}"></div>
-											@endif
 
-											<h6 id="display_fr_question{{$question->id}}" data-toggle="tooltip" data-placement="left" title="" data-original-title="Question Title French">
-												<strong class="mr-3">Fr Q: </strong>
-												<span class="edit_question_fr ml-1" onclick="edit_question_ajax(event)" id="edit_fr_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_fr}}" type="fr" value="{{$question->question_fr}}">{{ $question->question_fr }}</span>
-											</h6>
-											<div class="d-flex align-items-end" id="append_div_to_edit_fr_{{$question->id}}"></div>
-
-											@if($question->question_comment_fr)
-												<h6 class="question-comment " data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit French Question Comment">
-													<small class="mr-3" id="display_fr_comment{{$question->id}}">Fr Comment: 
-														<span class="edit_fr_comment" onclick="edit_question_ajax(event)" id="edit_fr_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment_fr}}" type="fr_comment" value="{{$question->question_comment_fr}}">{{ $question->question_comment_fr }}</span>
-													</small>
+												<h6 id="display_english_question_{{$question->id}}">
+													<strong class="mr-3">En Q: </strong>
+													<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->question}}</span> 
 												</h6>
-												<div class="d-flex align-items-end" id="append_div_to_edit_fr_comment_{{$question->id}}"></div>
+												<div class="d-flex align-items-end" id="append_div_to_edit_english_{{$question->id}}"></div>
+
+												<h6 id="display_fr_question{{$question->id}}" data-toggle="tooltip" data-placement="left" title="" data-original-title="Question Title French">
+													<strong class="mr-3">Fr Q: </strong>
+													<span class="edit_question_fr ml-1" id="edit_fr_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_fr}}" type="fr" value="{{$question->question_fr}}">{{ $question->question_fr }}</span>
+												</h6>
+												<div class="d-flex align-items-end" id="append_div_to_edit_fr_{{$question->id}}"></div>
+
+												<h6 id="display_english_question_{{$question->id}}">
+													<strong class="mr-3">En SQ: </strong>
+													<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->question_short}}</span> 
+												</h6>
+
+												<h6 id="display_english_question_{{$question->id}}">
+													<strong class="mr-3">Fr SQ: </strong>
+													<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->question_short_fr}}</span> 
+												</h6>
+
+												@if($question->question_comment)
+													<h6 class="question-comment" data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit English Question Comment">
+														<small class="d-flex" id="display_english_comment_{{$question->id}}"> En Comment:&nbsp;&nbsp;<span class="edit_english_comment" id="edit_en_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment}}" type="en_comment" value="{{$question->question_comment}}">{{ $question->question_comment }}</span></small>
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_en_comment_{{$question->id}}"></div>
+												@endif
+
+												@if($question->question_comment_fr)
+													<h6 class="question-comment " data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit French Question Comment">
+														<small class="mr-3" id="display_fr_comment{{$question->id}}">Fr Comment: 
+															<span class="edit_fr_comment" id="edit_fr_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment_fr}}" type="fr_comment" value="{{$question->question_comment_fr}}">{{ $question->question_comment_fr }}</span>
+														</small>
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_fr_comment_{{$question->id}}"></div>
+												@endif
+
+											@else
+
+												<h6 id="display_english_question_{{$question->id}}">
+													<strong class="mr-3">{{__('Control ID')}}: </strong>
+													<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->control_id}}</span> 
+												</h6>
+												
+												@if (session('locale') == 'fr')
+													<h6 id="display_fr_question{{$question->id}}" data-toggle="tooltip" data-placement="left" title="" data-original-title="Question Title French">
+														<strong class="mr-3">Fr Q: </strong>
+														<span class="edit_question_fr ml-1" id="edit_fr_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_fr}}" type="fr" value="{{$question->question_fr}}">{{ $question->question_fr }}</span>
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_fr_{{$question->id}}"></div>
+
+													@if($question->question_comment_fr)
+													<h6 class="question-comment " data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit French Question Comment">
+														<small class="mr-3" id="display_fr_comment{{$question->id}}">Fr Comment: 
+															<span class="edit_fr_comment" id="edit_fr_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment_fr}}" type="fr_comment" value="{{$question->question_comment_fr}}">{{ $question->question_comment_fr }}</span>
+														</small>
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_fr_comment_{{$question->id}}"></div>
+													@endif
+												@else
+													<h6 id="display_english_question_{{$question->id}}">
+														<strong class="mr-3">En Q: </strong>
+														<span class="edit_question_english" id="edit_en_q_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question}}" value="{{$question->question}}" type="english">{{$question->question}}</span> 
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_english_{{$question->id}}"></div>
+
+													@if($question->question_comment)
+													<h6 class="question-comment" data-toggle="tooltip" data-placement="left" title="" data-original-title="Click To Edit English Question Comment">
+														<small class="d-flex" id="display_english_comment_{{$question->id}}"> En Comment:&nbsp;&nbsp;<span class="edit_english_comment" id="edit_en_c_{{$question->id}}" q_id="{{$question->id}}" q_val="{{$question->question_comment}}" type="en_comment" value="{{$question->question_comment}}">{{ $question->question_comment }}</span></small>
+													</h6>
+													<div class="d-flex align-items-end" id="append_div_to_edit_en_comment_{{$question->id}}"></div>
+													@endif
+												@endif
+												
+
+												
+
 											@endif
 
 											@switch($question->type)
@@ -112,44 +179,92 @@
 													</div>
 													@break
 												@case('mc')
-													<section class="options" id="">
-														@php 
-															$options    = explode(',', $question->options);
-															$options_fr = explode(',', $question->options_fr);
-														@endphp
-														<label for="easySelectable">Englih Options</label>
-														<ul id="easySelectable" class="easySelectable">
-															@foreach($options as $option)
-															<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-															@endforeach
-														</ul>
-														<label for="easySelectable">French Options</label>
-														<ul id="easySelectable" class="easySelectable">
-															@foreach($options_fr as $option)
-															<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-															@endforeach
-														</ul>
-													</section>
+													@if(Auth::user()->role==1)
+														<section class="options" id="">
+															@php 
+																$options    = explode(',', $question->options);
+																$options_fr = explode(',', $question->options_fr);
+															@endphp
+															<label for="easySelectable">English Options</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															<label for="easySelectable">{{__('French Options')}}</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options_fr as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+														</section>
+													@else
+														<section class="options" id="">
+															@php 
+																$options    = explode(',', $question->options);
+																$options_fr = explode(',', $question->options_fr);
+															@endphp
+															@if (session('locale') == 'en')
+															<label for="easySelectable">English Options</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															@else
+															<label for="easySelectable">{{__('French Options')}}</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options_fr as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															@endif
+														</section>
+													@endif
 													@break
 												@case('sc')
-													<section class="options" id="">
-														@php 
-															$options    = explode(',', $question->options);
-															$options_fr = explode(',', $question->options_fr);
-														@endphp
-														<label for="easySelectable">Englih Options</label>
-														<ul id="easySelectable" class="easySelectable">
-															@foreach($options as $option)
-															<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-															@endforeach
-														</ul>
-														<label for="easySelectable">French Options</label>
-														<ul id="easySelectable" class="easySelectable">
-															@foreach($options_fr as $option)
-															<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
-															@endforeach
-														</ul>
-													</section>
+													@if(Auth::user()->role==1)
+														<section class="options" id="">
+															@php 
+																$options    = explode(',', $question->options);
+																$options_fr = explode(',', $question->options_fr);
+															@endphp
+															<label for="easySelectable">English Options</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															<label for="easySelectable">{{__('French Options')}}</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options_fr as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+														</section>
+													@else
+														<section class="options" id="">
+															@php 
+																$options    = explode(',', $question->options);
+																$options_fr = explode(',', $question->options_fr);
+															@endphp
+															@if (session('locale') == 'en')
+															<label for="easySelectable">English Options</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															@else
+															<label for="easySelectable">{{__('French Options')}}</label>
+															<ul id="easySelectable" class="easySelectable">
+																@foreach($options_fr as $option)
+																<li class="es-selectable " name="" value="Non applicable" type="sc">{{ $option }}</li>
+																@endforeach
+															</ul>
+															@endif
+														</section>
+													@endif
 													@break
 												@case('dc')
 													@php 
@@ -162,6 +277,19 @@
 													@break
 												@default
 											@endswitch
+											@if($question->attachment_allow)
+														@php
+															$formats = json_decode($question->accepted_formates);
+														@endphp
+														
+														<p style="font-size:14px;">
+															@foreach($formats as $format)
+																@if($format == 1) Image | @elseif($format == 2) Docs | @elseif($format == 3) PDF | @elseif($format == 4) Excel | @elseif($format == 5) Zip | @endif
+															@endforeach
+															{{__('Allowed Format')}}
+														</p>
+														<input type="file" class="attachment_file" disabled>
+											@endif
 										</div>
 									</div>
 								</div>
@@ -231,7 +359,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="control_id" class="col-form-label">Control ID <strong style="color: red">*</strong></label>
+                                <label for="control_id" class="col-form-label">{{__('Control ID')}} <strong style="color: red">*</strong></label>
                                 <input type="text" name="control_id" class="form-control" id="control_id">
                             </div>
                             
@@ -283,6 +411,32 @@
             </div>
         </div>
     {{-- Add Section model end --}}
+	@if(session('locale')=='fr')
+	<script>
+		$(document).ready(function(){
+			$('.dropify').dropify();
+
+			$('.dropify-message p').text('Glissez-déposez un fichier ou cliquez pour sélectionner');
+			$('.dropify-infos-replace').text('Glissez-déposez un fichier ou cliquez pour remplacer');
+			$('.dropify-infos-message').text('Glissez-déposez un fichier ou cliquez pour remplacer');
+			$('.dropify-infos-remove').text('Supprimer le fichier');
+			$('.dropify-errors').text('Oups! Une erreur s\'est produite.');
+
+		})
+	</script>
+	@endif
+
+	<script>
+		window.onload = function() {
+			// Get the dropify message paragraph
+			var clearButton = document.querySelector('.dropify-clear');
+			
+			if (clearButton) {
+				// Set its display property to none
+				clearButton.style.display = 'none';
+			}
+		};
+	</script>
 
 @endsection
 @push('scripts')

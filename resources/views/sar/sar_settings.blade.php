@@ -66,9 +66,13 @@
         margin-right: 30px;
       }
   }
+  @media screen and (max-width: 516px) {
+        .modaldialogResponsive{
+            margin-top: 30px !important;
+        }}
 </style>
 <div class="modal" id="edit-modal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modaldialogResponsive">
       <div class="modal-content">
       
         <!-- Modal Header -->
@@ -97,7 +101,7 @@
   {{ __('SAR FORM EXPIRY SETTINGS') }}
   @endsection  
 <h3 class="tile-title" style="margin-left: 25px;"> </h3>
-<div class="custom_width_sub_card">
+<div class="card custom_width_sub_card">
 
     <?php
         $days   = $sar_settings->duration;
@@ -117,7 +121,7 @@
                     <option value="months"<?php echo ($sar_settings->period == 'months')?('selected'):(''); ?>>{{ __('Months') }}</option>
                 </select>
             </div>
-            <button class="btn btn-primary" id="update-settings">{{ __('Update Settings') }}</button>
+            <button class="buton" id="update-settings">{{ __('Update Settings') }}</button>
         </div>
     </div>
 

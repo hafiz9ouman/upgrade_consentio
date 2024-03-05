@@ -30,12 +30,14 @@
     }
     .set_heading , .set_bg {
         background: #dfdfdfb3;
-        border-radius: 11px;
-        /*color: #fff;*/
+        border-radius: 10px 15px 15px 10px;
+        color: #7A7A7A;
+        font-size: 18px !important;
+        font-weight:600 !important;
     }
     .styling {
       font-size: 18px !important;
-      color: #1cc88a !important;
+      color: #7A7A7A !important;
     }
     .table-bordered thead td, .table-bordered thead th {
     border-bottom-width: 2px;
@@ -63,20 +65,32 @@
       .print_exp {
         margin-bottom: .5rem;
       }
+      .dataTables_wrapper .dataTables_filter {
+            float: left !important;
+      }
+      #datatables_filter input {
+          /* Your styling properties go here */
+          border: 1px solid #ccc;
+          padding: 15px 50px;
+          border-radius: 35px;
+          box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
   </style>
 
-  <div class="export_btn" style="    margin-left: 40px; margin-bottom: 1rem;"> 
-    <a href="{{url('report_export/2')}}" class="btn btn-sm btn-primary"><i class="fa fa-arrow-circle-down" aria-hidden="true"></i> {{ __('Export') }}</a>
+  <div class="export_btn" style="margin-bottom: 1rem;"> 
+    <a href="{{url('report_export/2')}}" class="buton"><i class="fa fa-arrow-circle-down" aria-hidden="true"></i> {{ __('Export') }}</a>
   </div>
 
-  <div class="card" style="border-radius: 30px;;margin-left: 30px; margin-right: 30px">
+  <div class="card">
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table table-responsive-sm text-center" id="tab">
+        <table class="table table-striped text-center" id="datatables">
           <thead>
             <tr>
              @if(count($option_questions))
                  <th class="set_heading fixed">  {{ __('User') }} </th> 
+                 <th class="set_heading fixed">  {{ __('Activity Name') }} </th> 
+                 <th class="set_heading fixed">  {{ __('Assets Name') }} </th> 
              @endif
               @foreach($option_questions as $quest_heading)
                 <th class="set_heading" colspan="{{$quest_heading['op_count']}}" >
@@ -93,6 +107,8 @@
               @endforeach
             </tr>
             <tr>
+              <td class="coloring fixed"> <!-- <span> User </span> |  Option --> </td>
+              <td class="coloring fixed"> <!-- <span> User </span> |  Option --> </td>
               <td class="coloring fixed"> <!-- <span> User </span> |  Option --> </td>
               @if(session('locale') == 'fr' && $final_fr != null)
                 @foreach($final_fr as $options)   
@@ -114,6 +130,20 @@
                     ({{$responses['sub_form_title_fr']?$responses['sub_form_title_fr']:$responses['sub_form_title']}})
                   @else
                     ( {{$responses['sub_form_title']}})
+                  @endif
+                </td>
+                <td class="add_color table-sm fixed">
+                  @if($responses['activity'] == null)
+                    -
+                  @else
+                    {{$responses['activity']}}
+                  @endif
+                </td>
+                <td class="add_color table-sm fixed">
+                  @if($responses['asset'] == null)
+                    -
+                  @else
+                    {{$responses['asset']}}
                   @endif
                 </td>
                 @if(session('locale') == 'fr' && $final_fr != null)
@@ -159,9 +189,40 @@
   
   <script>
     /* global $ */
-    $("#dl").click(function(){
-      $("#tab").table2csv('output', {appendTo: '#out'});
-      $("#tab").table2csv();
-    })
+    // $("#dl").click(function(){
+    //   $("#tab").table2csv('output', {appendTo: '#out'});
+    //   $("#tab").table2csv();
+    // })
+  </script>
+  <script>
+      $(document).ready(function() {
+        $('#datatables').DataTable({
+            "order": [],
+            "language": {
+                "search": "",
+                @if(session('locale')=='fr')
+                "sLengthMenu":    "Montrer _MENU_ Entrées",
+                "sZeroRecords":   "Aucun résultat trouvé",
+                "sEmptyTable":    "aucune donnée disponible",
+                "sInfo":          "Présentation de _START_ à _END_ d'un total de _TOTAL_ Entrées",
+                "sInfoEmpty":     "Présentation de 0 à 0 d'un total de 0 Entrées",
+                "sInfoFiltered": "(filtré à partir de _MAX_ nombre total d'entrées)",
+                "sInfoPostFix":  "",
+                "oPaginate": {
+                    "sNext":    "Suivant",
+                    "sPrevious": "Précédent"
+                },
+                "searchPlaceholder": "Cherche ici"
+                @else
+                "searchPlaceholder": "Search Here"
+                @endif
+                
+            },
+            "scrollX": true,
+            "responsive": true,
+            "autoWidth": false // Disable automatic column width calculation
+        });
+          
+      });
   </script>
 @endsection

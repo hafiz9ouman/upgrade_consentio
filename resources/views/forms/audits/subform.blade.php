@@ -77,6 +77,19 @@
         background: #4e73df;
         color: #fff;
     }
+    #main {
+        margin-top: 0px !important;
+        padding: 0px 10px !important;
+    }
+
+    @media screen and (max-width: 516px) {
+        .modaldialogResponsive {
+            width: 100%;
+        }}
+        @media screen and (max-width: 516px) {
+        .modaldialogResponsive{
+            margin-top: 40px !important;
+        }}
   </style>
   @if (session('alert'))
     <div class="alert alert-danger">
@@ -115,8 +128,8 @@
     @endif
   </div>
 
-  <div class="modal" id="edit-modal">
-    <div class="modal-dialog">
+  <div class="modal" id="edit-modal"  style="padding: 15% 0% 5% 0%;">
+    <div class="modal-dialog modaldialogResponsive">
       <div class="modal-content">
         <!-- Modal Header -->
         <div class="modal-header">
@@ -167,29 +180,21 @@
     @endif
 
     <section class="assets_list">
-      <div class="main_custom_table">
+      <div class="row">
         <div class="table_filter_section">
-          <div class="select_tbl_filter">
-            <div class="main_filter_tbl">
-              <p>{{ __('Show')}}</p>
-              <select>
-                  <option>10</option>
-                  <option>20</option>
-                  <option>30</option>
-              </select>
-              <p>{{ __('Entries')}}</p>
-            </div>
+            
             <div class="add_more_tbl">
-              <a id="add" type="button" class="btn rounded_button"><i class='bx bx-plus mr-1' ></i> {{ __('ADD SUB FORM') }}</a>
+              <a id="add" type="button" class="button mb-3 ml-3"><i class='bx bx-plus mr-1' ></i> {{ __('ADD SUB FORM') }}</a>
             </div>
-          </div>
         </div>
-        <div class="main_table_redisign">
+        <div class="col-12">
           @section('page_title')
           {{ __('SUB FORMS') }}
           @endsection
-          <div class="over_main_div">
-            <table class="table table-striped text-center">
+          <div class="card">
+          <div class="card-table">
+              <a id="add" href="{{ url('audit/list') }}" type="button" class="button mb-3">{{ __('Back') }}</a>
+            <table class="table table-striped text-center" id="datatable">
               @if ($user_type == 'admin')
                 <thead class="back_blue">
               @else
@@ -197,7 +202,7 @@
               @endif
                 @if (!empty($sub_forms))
                   <tr>
-                    <th colspan="{{( ( (Auth::user()->role == 2) || (Auth::user()->role == 3) ) || (Auth::user()->user_type == 1) )?(6):(3)}}" style="text-align:center">
+                    <th colspan="{{( ( (Auth::user()->role == 2) || (Auth::user()->role == 3) ) || (Auth::user()->user_type == 1) )?(8):(3)}}" style="text-align:center">
                       @if(session('locale')=='fr')
                         {{$form_info->title_fr}}
                         {{ __('Sub Forms') }}
@@ -213,7 +218,7 @@
                   <th scope="col">{{ __('Group Name') }}</th>
                   <th scope="col">{{ __('Asset Number') }}</th>
                   <th scope="col">{{ __('Asset Name') }}</th>
-                  @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || (Auth::user()->role == 3)): 
+                  @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || (Auth::user()->role == 3)) 
                     <th scope="col">{{ __('External Users') }}</th>     
                     <th scope="col">{{ __('Internal Users') }}</th>     
                     <th scope="col">{{ __('Sub Form Users') }}</th>
@@ -270,7 +275,7 @@
                     $ex_link_title = '<i class="fas fa-link"></i> Open / <i class="fas fa-arrow-right"></i> Send';
                     $in_link_title = 'Send / Show Forms';
                     @endphp
-                    @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || Auth::user()->role == 3):
+                    @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || Auth::user()->role == 3)
                       <td>
                         <?php
                         $count = 0;
@@ -280,7 +285,7 @@
 
                         @if($count >= 0)
                         <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}"> 
-                          <span class="adding_circle" style="vertical-align: middle;">{{$count}}</span> 
+                          <span class="adding_circle" style="vertical-align: middle;margin-right: 0px;">{{$count}}</span> 
                           {{ __('Assign To') }}</a>
                         @else
                           <span class="fs-14">0</span> {{ __('Assign To') }}
@@ -288,7 +293,7 @@
                       </td>   
                       <td>
                         <a class="fs-14" href="{{url('audit/internal/assigned/'.$sub_forms[$i]->id)}}">  
-                          <span class="adding_circle" style="vertical-align: middle;">
+                          <span class="adding_circle" style="vertical-align: middle;margin-right: 0px;">
                             <?php echo (isset($sub_forms[$i]->internal_users_count) && !empty($sub_forms[$i]->internal_users_count))?($sub_forms[$i]->internal_users_count):(0); ?>
                           </span> {{ __('Assign To') }}
                         </a>
@@ -296,11 +301,11 @@
                       <td>
                         <!-- <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   -->
                         <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}">  
-                          <span style="color: #3fd474;">
+                          <span style="color: #3fd474;margin-right: 0px;">
                             {{ __('SHOW') }}
                           </span> 
                         </a>
-                        <span style="color: black;">|</span>
+                        <span style="color: black;margin-right: 0px;">|</span>
                         <!-- <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">    -->
                         <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}">   
                           <span style="color: #5778ba;">
@@ -308,11 +313,21 @@
                           </span>
                         </a>
                       </td>
+                      @php
+                        $check=DB::table('user_form_links')->where('sub_form_id', $sub_forms[$i]->id)->where('is_locked', 1)->count();
+                      @endphp
                       <td>
+                        @if($check>0)
                         <div class="action_icons">
-                          <a data-toggle="modal" data-target="#edit-modal" class="edit-sb" sb-id="{{$sub_forms[$i]->id}}" sb-name="{{ $sub_forms[$i]->title }}"><i class="bx bx-edit"></i></a>
-                          <a sb-id="{{$sub_forms[$i]->id}}" class=" delete-sb"><i class="bx bxs-trash"></i></a>
+                          <a style="filter: grayscale(100%);"><img class="action-edit-right" src="{{url('assets-new/img/action-edit.png')}}"></a>
+                          <a style="filter: grayscale(100%);"><img class="action-edit-right" src="{{url('assets-new/img/action-delete.png')}}"></a>
                         </div>
+                        @else
+                        <div class="action_icons">
+                          <a data-toggle="modal" data-target="#edit-modal" class="edit-sb" sb-id="{{$sub_forms[$i]->id}}" sb-name="{{ $sub_forms[$i]->title }}"><img class="action-edit-right" src="{{url('assets-new/img/action-edit.png')}}"></a>
+                          <a sb-id="{{$sub_forms[$i]->id}}" class=" delete-sb"><img class="action-edit-right" src="{{url('assets-new/img/action-delete.png')}}"></a>
+                        </div>
+                        @endif
                       </td>                 
                     @endif
                   </tr>
@@ -320,6 +335,7 @@
                 @endif   
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       </div>
@@ -386,6 +402,10 @@
 
       var subform_info = {};
       subform_info['_token'] = '{{ csrf_token() }}';
+
+      $(document).on('click', '.exit-subform', function (){
+        $('#sub-form-area').html('');
+      });
 
       $(document).on('click', '.create-subform', function (){
         const item_type = $('#item-type-'+counter).val();
@@ -473,6 +493,7 @@
         $('.modal-body #sb-name').val($(this).attr('sb-name'));
         $('.modal-body #sb-name').attr('sb-id', $(this).attr('sb-id'));
         var name = $('#sb-name').val();   
+        $('#edit-modal').modal('show');
       });
       $('#edit-form').click(function(){
         var sb_id    = $('#sb-name').attr('sb-id');        
@@ -602,6 +623,7 @@
                 '<div class="w-50 pl-2">'+
                   '<label "> </label><br/>'+
                   '<button class="btn rounded_button btn-primary create-subform mt-2" id="subform-'+counter+'" asset_count="'+ asetscount +'">{!! __('Create') !!}</button>'+
+                  '<button class="btn rounded_button btn-secondary exit-subform ml-2 mt-2" id="exit-subform">{!! __('Cancel') !!}</button>'+
                 '</div>'+
               '</div>'+
               '</div>'+

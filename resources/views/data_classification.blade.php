@@ -15,11 +15,11 @@
 
   
  @if(auth()->user()->role == 1) 
-<div class="row" style="margin-left:10px;">
+<div class="row">
   <div class="col-md-12">
     <div class="tile">
    
-      <div class="table-responsive cust-table-width">
+      <div class="">
 
 
         @if(Session::has('message'))
@@ -64,7 +64,9 @@
  <script>
     $(document).ready(function(){
         $('#forms-table').DataTable({
-                "order": [[ 0, "desc" ]]
+                "order": [[ 0, "desc" ]],
+                "scrollX": true,
+			          "autoWidth": false
         });
 
         $(function () {

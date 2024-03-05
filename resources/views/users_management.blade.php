@@ -1,24 +1,6 @@
 @extends('admin.client.client_app')
 @section('content')
-<style>
-    .row-btn {
-        margin-bottom:10px;
-        display:flex;
-        flex-direction:row;
-        justify-content: flex-end;
-    }
-    .expired {
-        color:#d73b3b;
-    }
-    #forms-list_wrapper {
-        white-space: nowrap;
-        padding-top: 15px;
-    }
-    .align_button {
-        display: flex;
-        justify-content: space-between;
-    }
-</style>
+
 
 
  <link href="{{ url('frontend/css/jquery.mswitch.css')}}"  rel="stylesheet" type="text/css">
@@ -44,46 +26,38 @@
 
     
     <section class="assets_list">
-      <div class="main_custom_table">
-        <div class="table_filter_section">
-          <div class="select_tbl_filter">
-            <div class="main_filter_tbl">
-              <p>{{ __('Show') }}</p>
-              <select>
-                <option>10</option>
-                <option>20</option>
-                <option>30</option>
-              </select>
-              <p>{{ __('Entries') }}</p>
+        <div class="row">
+            <div class="col">
+                <a href="{{url('add_user')}}" class="button pull-left cust_color mb-2"><i class="fa fa-plus" ></i> {{ __('Add Organization User') }}</a>
             </div>
-          </div>
         </div>
-        <div class="main_table_redisign">
+      <div class="row">
+        <div class="col-12">
+            <div class="card">
 
           @section('page_title')
           {{-- <div class="table_breadcrumb"> --}}
             {{-- <h3> --}}
-            {{ __('ORGANISATION USERS') }} {{ __('(EXCLUDING ADMINS)') }}
+            {{ __('ORGANISATION USERS') }}
             {{-- </h3> --}}
           @endsection
           {{-- <div class="table_breadcrumb">
             <h3>GENERATED FORMS</h3>
           </div> --}}
 
-          <div class="over_main_div">
-            <a href="{{url('add_user')}}" class="btn btn-sm btn-primary pull-right cust_color" style="margin-top: 15px; float: right; margin-right: 10px "><i class="fa fa-plus" ></i> {{ __('Add Organization User') }}</a>
-            <table class="table table-striped text-center paginated" >
+          <div class="card-table">
+            <table id="datatable" class="table table-striped text-center" >
             <thead>
             <tr style = "text-transform:uppercase;">
-                         <th>{{ __('Name') }}</th>
-                            <th>{{ __('Email') }}</th>
-                            <th>{{ __('Image') }}</th>
-                            <th>{{ __('User Type') }}</th>
-                            <th>{{ __('Added By') }}</th>
-                            {{-- <th>Super User status</th> --}}
-                            <th>{{ __('Permissions') }}</th>                          
+                         <th style="vertical-align: middle;">{{ __('Name') }}</th>
+                            <th style="vertical-align: middle;">{{ __('Email') }}</th>
+                            <th style="vertical-align: middle;">{{ __('Image') }}</th>
+                            <th style="vertical-align: middle;">{{ __('User Type') }}</th>
+                            <th style="vertical-align: middle;">{{ __('Added By') }}</th>
+                            {{-- <th style="vertical-align: middle;">Super User status</th> --}}
+                            <th style="vertical-align: middle;">{{ __('Permissions') }}</th>                          
 
-                            <th width="130" class="text-center">{{ __('Actions') }}</th>
+                            <th style="vertical-align: middle;" width="130" class="text-center">{{ __('Actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -123,27 +97,27 @@
                             <td class="text-center">
                                 {{-- <div class="actions-btns dule-btns">
                                     <!-- <a href="javascript:void(0)" data-id="{{$row->id}}" data-status="{{$row->status}}" id="change_status" class="btn btn-sm btn-primary"> <i class="fa fa-eye"> </i></a>  -->
-                                    <a href="{{url('edit_user/' . $row->id)}}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
-                                    <a href="javascript:void(0)" data-id="{{$row->id}}" class="btn btn-sm btn-danger removePartner"><i class="fa fa-trash"></i></a>
+                                    <a href="{{url('edit_user/' . $row->id)}}" class="btn btn-sm btn-info"><img src="{{url('assets-new/img/action-edit.png')}}" alt=""></a>
+                                    <a href="javascript:void(0)" data-id="{{$row->id}}" class="btn btn-sm btn-danger removePartner"><img src="{{url('assets/img/action-delete.png')}}" alt=""></a>
                                 </div> --}}
 
                                 <div class="action_icons">
-                                   <a href="{{url('edit_user/' . $row->id)}}"><i class="bx bx-edit"></i></a>
-                                   <a href="javascript:void(0)" data-id="{{$row->id}}" class="removePartner" data-id="46"><i class="bx bxs-trash"></i></a>
+                                   <a href="{{url('edit_user/' . $row->id)}}"><img src="{{url('assets-new/img/action-edit.png')}}" alt=""></a>
+                                   <a href="javascript:void(0)" data-id="{{$row->id}}" class="removePartner" data-id="46"><img src="{{url('assets-new/img/action-delete.png')}}" alt=""></a>
                                 </div>
                             </td>
                         </tr>
                         @endforeach
         </tbody>
             </table>
-            <div class="table_footer">
-              <p>{{ __('Showing 1 to 9 of 9 entries')}}</p>
-              <div class="table_custom_pagination">
-                <p class="active_pagination">1</p>
-                <p>2</p>
-                <p>3</p>
-              </div>
-            </div>
+                <!-- <div class="table_footer">
+                <p>{{ __('Showing 1 to 9 of 9 entries')}}</p>
+                <div class="table_custom_pagination">
+                    <p class="active_pagination">1</p>
+                    <p>2</p>
+                    <p>3</p>
+                </div>
+                </div> -->
         </div>
         </div>
       </div>
@@ -152,6 +126,11 @@
 
 
 <!-- </div> -->
+<script>
+    $(document).ready(function() {
+      $('#datatable').DataTable();
+    });
+</script>
 
 <script type="text/javascript">
     $(document).ready(function(){
@@ -171,6 +150,7 @@
                     confirmButtonColor: '#F79426',
                     cancelButtonColor: '#d33',
                     confirmButtonText: "{!! __('Yes') !!}",
+                    cancelButtonText: "{!! __('No') !!}",
                     showLoaderOnConfirm: true
                 },
                 function () {

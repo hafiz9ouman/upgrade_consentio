@@ -149,11 +149,58 @@ input:checked + .slider:before {
                                         if($total_permissions == 'Users Management' || $total_permissions == 'Sub Forms Expiry Settings' ||  $total_permissions =='SAR Expiry Settings'){
                                           continue;
                                         }
+                                        $per = $total_permissions;
+                                        if(session('locale') == 'fr'){
+                                          if ($total_permissions == "Dashboard") {
+                                            $per = "Tableau de bord";
+                                        } elseif ($total_permissions == "Manage Forms") {
+                                            $per = "Gérer les formulaires";
+                                        } elseif ($total_permissions == "My Assigned Forms") {
+                                            $per = "Mes formulaires assignés";
+                                        } elseif ($total_permissions == "Completed Forms") {
+                                            $per = "Formulaires complétés";
+                                        } elseif ($total_permissions == "Generated Forms") {
+                                            $per = "Formulaires générés";
+                                        } elseif ($total_permissions == "Manage Audits") {
+                                            $per = "Gérer les audits";
+                                        } elseif ($total_permissions == "Assigned Audits") {
+                                            $per = "Audits assignés";
+                                        } elseif ($total_permissions == "Completed Audits") {
+                                            $per = "Audits complétés";
+                                        } elseif ($total_permissions == "Generated Audits") {
+                                            $per = "Audits générés";
+                                        } elseif ($total_permissions == "SAR Forms") {
+                                            $per = "Formulaires SAR";
+                                        } elseif ($total_permissions == "SAR Forms Submitted") {
+                                            $per = "Formulaires SAR soumis";
+                                        } elseif ($total_permissions == "SAR Forms pending") {
+                                            $per = "Formulaires SAR en attente";
+                                        } elseif ($total_permissions == "Global Data Inventory") {
+                                            $per = "Inventaire global des données";
+                                        } elseif ($total_permissions == "Detailed Data Inventory") {
+                                            $per = "Inventaire détaillé des données";
+                                        } elseif ($total_permissions == "Assets List") {
+                                            $per = "Liste des actifs";
+                                        } elseif ($total_permissions == "Activities List") {
+                                            $per = "Liste des activités";
+                                        } elseif ($total_permissions == "Incident Register") {
+                                            $per = "Registre des incidents";
+                                        } elseif ($total_permissions == "Data Elements") {
+                                            $per = "Éléments de données";
+                                        } elseif ($total_permissions == "Data Classification") {
+                                            $per = "Classification des données";
+                                        } elseif ($total_permissions == "Evaluation Rating") {
+                                            $per = "Évaluation de la notation";
+                                        } elseif ($total_permissions == "Remediation Plans") {
+                                            $per = "Plans de remédiation";
+                                        }
+                                        
+                                        }
                                              
                                     ?>
                                     <tr>
-                                         <th>{{$total_permissions}}</th>   
-                                        <td>
+                                         <th style="vertical-align: middle;">{{$per}}</th>   
+                                        <td style="padding:8px;">
                                             <label class="switch">
                                                 <input name="permiss[]" value="{{$total_permissions}}"  @if(in_array($total_permissions, $granted_permissions) == true) checked="true" @endif  type="checkbox">
                                                 <span class="slider round"></span>
@@ -168,8 +215,8 @@ input:checked + .slider:before {
                      <input id="file" type="hidden" class="form-control" name="id" value="{{$id}}">
                      <div class="form-group row form-btn">
 						<div class="col-sm-12 text-right">
-							<a href="{{url('users_management')}}" class="btn btn-sm btn-secondary"> {{ __('Cancel')}}</a>
-							<button type="submit" class="btn btn-sm btn-primary">{{ __('Save')}} </button>
+							<a href="{{url('users_management')}}" class="buton bg-dark" style="padding:9px;"> {{ __('Cancel')}}</a>
+							<button type="submit" class="buton ">{{ __('Save')}} </button>
 						</div>
 					 </div>	
 			         

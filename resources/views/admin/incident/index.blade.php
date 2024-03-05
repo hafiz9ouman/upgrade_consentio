@@ -70,46 +70,45 @@
     @endif 
 </div>
 
-<section class="assets_list">
-            <div class="main_custom_table">
+<section class="section">
+      <div class="row">
+        <div class="tile-footer col-sm-12 text-left">
+          <a href="{{url('add_inccident')}}" type="button" class="button mb-2"><i class='bx bx-plus mr-1' ></i> {{ __('ADD INCIDENT') }}</a>
+        </div>
+      </div>
+            <div class="row">
+            <div class="col-12">
+            
                 <div class="table_filter_section">
                     <div class="select_tbl_filter">
-                        <div class="main_filter_tbl">
-                            <p>{{ __('Show') }}</p>
-                            <select>
-                                <option>10</option>
-                                <option>20</option>
-                                <option>30</option>
-                            </select>
-                            <p>{{ __('Entries') }}</p>
-                        </div>
                         <div class="add_more_tbl">
-                            <a href="{{url('add_inccident')}}" type="button" class="btn rounded_button"><i class='bx bx-plus mr-1' ></i> {{ __('ADD INCIDENT') }}</a>
-                        </div>
+                            </div>
                     </div>
                 </div>
-                <div class="main_table_redisign">
+                
+                  <div class="card">
+                
                     {{-- <div class="table_breadcrumb">
                         <h3>INCIDENT REGISTER</h3>
                     </div> --}}
                     @section('page_title')
                     {{ __('INCIDENT REGISTER') }}
                     @endsection
-                    <div class="over_main_div">
-                    <table class="table table-striped text-center">
+                    <div class="card-table">
+                    <table class="table table-striped text-center" id="datatable">
                       <thead>
                         <tr>
-                          <th scope="col">{{ __('INCIDENT') }} <br> {{ __('NAME') }}</th>
-                          <th scope="col">{{ __('TYPE') }}</th>
-                          <th scope="col">{{ __('ORGANIZATION') }}</th>
-                          <th scope="col">{{ __('ASSIGNEE') }}</th>
-                          <th scope="col">{{ __('ROOT CAUSE') }}</th>
-                          <th scope="col">{{ __('DATE') }} <br> {{ __('DISCOVERED') }}</th>
-                          <th scope="col">{{ __('DEADLINE') }} <br> DATE</th>
-                          <th scope="col">{{ __('STATUS') }}</th>
-                          <th scope="col">{{ __('SEVERITY') }}</th>
-                          <th scope="col">{{ __('DATE') }}</th>
-                          <th scope="col">{{ __('ACTIONS') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('INCIDENT') }} <br> {{ __('NAME') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('TYPE') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('ORGANIZATION') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('ASSIGNEE') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('ROOT CAUSE') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('DATE') }} <br> {{ __('DISCOVERED') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('DEADLINE') }} <br> DATE</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('STATUS') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('SEVERITY') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('DATE') }}</th>
+                          <th style="vertical-align: middle;" scope="col">{{ __('ACTIONS') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -170,15 +169,14 @@
                             <!-- <td>{{$row->root_cause}}</td> -->
                             <td>
                               {{-- <a href="" class="btn btn-primary btn-sm nowrap_btn"  data-toggle="modal" data-val="{{$row->root_cause}}"  data-target='#practice_modal' ><i class="fa fa-eye mr-2"></i>See Detail</a></td> --}}
-                             <button type="button" data-toggle="modal" data-val="{{$row->root_cause}}"  data-target='#practice_modal' class="btn seet_detail_btn"><i class='bx bx-show-alt'></i> {{ __('See Detail') }}</button>
+                             <button type="button" data-toggle="modal" data-val="{{$row->root_cause}}"  data-target='#practice_modal' class="btn seet_detail_btn text-primary"><img src="{{url('assets-new/img/solar_eye-bold.png')}}"> {{ __('See Detail') }}</button>
 
                             <td>
                                 <!-- {{$row->date_discovered}} -->
-
-                            {{date('d', strtotime($row->date_discovered))}} {{date(' F', strtotime($row->date_discovered))}} {{date('Y  ', strtotime($row->date_discovered))}}
+                            {{date('d', strtotime($row->date_discovered))}} {{__(trim(date(' F', strtotime($row->date_discovered))))}} {{date('Y  ', strtotime($row->date_discovered))}}
                             </td>
                             <td>
-                                 {{date('d', strtotime($row->deadline_date))}} {{date(' F', strtotime($row->deadline_date))}} {{date('Y  ', strtotime($row->deadline_date))}}
+                                 {{date('d', strtotime($row->deadline_date))}} {{__(trim(date(' F', strtotime($row->deadline_date))))}} {{date('Y  ', strtotime($row->deadline_date))}}
                             </td>
                             <td>
                           {{ __($row->incident_status)}}
@@ -186,7 +184,7 @@
                              <td class="{{$row->incident_severity}}">
                            <strong>{{ __($row->incident_severity)}}</strong>
                              </td>
-                            <td>{{date('d', strtotime($row->created_at))}} {{date(' F', strtotime($row->created_at))}} {{date('Y  h:i ', strtotime($row->created_at))}}</td>
+                            <td>{{date('d', strtotime($row->created_at))}} {{__(trim(date(' F', strtotime($row->created_at))))}}  {{date('Y  h:i ', strtotime($row->created_at))}}</td>
                             <td class="text-center">
                                 {{-- <div class="actions-btns dule-btns">
                                     <a href="{{url('edit_incident/' . $row->id)}}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
@@ -194,8 +192,8 @@
                                 </div> --}}
 
                                 <div class="action_icons">
-                                   <a href="{{url('edit_incident/' . $row->id)}}"><i class='bx bx-edit'></i></a>
-                                   <a href="javascript:void(0)" class="removePartner" data-id="{{$row->id}}"><i class='bx bxs-trash' ></i></a>
+                                   <a href="{{url('edit_incident/' . $row->id)}}"><img class="action-edit-right" src="{{url('assets-new/img/action-edit.png')}}"></a>
+                                   <a href="javascript:void(0)" class="removePartner" data-id="{{$row->id}}"><img class="action-edit-right" src="{{url('assets-new/img/action-delete.png')}}"></a>
                                 </div>
                             </td>
                         </tr>
@@ -208,12 +206,13 @@
                       </tbody>
                     </table>
                     </div>
+                    </div>
                 </div>
             </div>
         </section>
 
 
-<div class="modal fade" id="practice_modal" tabindex="-1" role="dialog" aria-labelledby="my-modal" aria-hidden="true">
+<div class="modal fade pt-5 mt-5" id="practice_modal" tabindex="-1" role="dialog" aria-labelledby="my-modal" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -244,17 +243,6 @@
 
     $(document).ready(function(){
         
-        
-
-        $(document).ready(function() {
-
-            $('#orgs').DataTable( {
-
-                "order": [[ 10, "desc" ]]
-
-            } );
-
-        } );
         
     	$( "body" ).on( "click", ".removePartner", function () {
     		var task_id = $( this ).attr( "data-id" );

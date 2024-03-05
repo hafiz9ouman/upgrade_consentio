@@ -121,7 +121,7 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header d-flex align-items-center">
-          <h3 class="h4">Add/Remove Permissions </h3>
+          <h3 class="h4">Add/Remove Permissions ({{$user_name[0]}})</h3>
         </div>
         <div class="card-body" id="org-form">
           <div class="card-body-form">

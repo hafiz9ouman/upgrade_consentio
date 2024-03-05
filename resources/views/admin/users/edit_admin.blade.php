@@ -317,6 +317,26 @@ input:checked + .slider:before {
 
 						</div>
 
+
+						<div class="col-sm-6 col-md-4">
+
+							<div class="form-group">
+
+								<label class="form-control-label">Blocked</label>
+
+								<select name="is_blocked" id="is_blocked" class="form-control">
+
+						   			<option {{$user->is_blocked=="Yes"? 'Selected' : ""}} value="Yes">Yes</option>
+									<option {{$user->is_blocked=="No"? 'Selected' : ""}} value="No">No</option>
+								
+								</select>
+
+								<span id='message'></span>
+
+							</div>
+
+						</div>
+
 					
 
 						</div>
@@ -328,7 +348,7 @@ input:checked + .slider:before {
   										   UPLOADCARE_PUBLIC_KEY = "demopublickey";
 										</script>
 										<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-										<input type="hidden" role="uploadcare-uploader" data-crop="5:4" data-images-only >
+										<input type="hidden" role="uploadcare-uploader" data-crop="1:1" data-images-only >
 
 										<!-- Your preview will be put here -->
 										<div class="main_croppir_img" style="width: fit-content;">
@@ -593,6 +613,10 @@ $('#password, #rpassword').on('keyup', function () {
   if ($('#password').val() == $('#rpassword').val()) {
 
     $('#message').html('<h5>Password is Matched</h5>').css('color', 'green');
+
+	if ($('#password').val() == '' && $('#rpassword').val() == ''){
+		$('#message').html('').css('color', 'green');
+	}
 
   } else 
 

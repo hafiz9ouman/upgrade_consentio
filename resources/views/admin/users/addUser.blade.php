@@ -274,10 +274,9 @@ input:checked + .slider:before {
 								<div class="col-sm-8">
 									<select name="is_blocked" id="is_blocked" class="form-control" style="width: 50%">
 
-						
-							<option value="Yes">Yes</option>
-							<option value="No">No</option>
-							</select>
+									<option value="Yes">Yes</option>			
+									<option value="No">No</option>
+									</select>
 								</div>
 							</div>
 
@@ -325,7 +324,7 @@ input:checked + .slider:before {
   										   UPLOADCARE_PUBLIC_KEY = "demopublickey";
 										</script>
 										<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-										<input type="hidden" role="uploadcare-uploader" data-crop="5:4" data-images-only >
+										<input type="hidden" role="uploadcare-uploader" data-crop="1:1" data-images-only >
 
 										<!-- Your preview will be put here -->
 										<div class="main_croppir_img" style="width: fit-content;">

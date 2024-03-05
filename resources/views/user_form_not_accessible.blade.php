@@ -11,7 +11,7 @@
     // echo "</pre>";
     // exit;
 ?>
-<h1>Access Notice</h1>
-<p style="font-size:20px;color:#f00">The form cannot be accessed</p>
+<h1>{{__('Access Notice')}}</h1>
+<p style="font-size:20px;color:#f00">{{__('The form cannot be accessed')}}</p>
 
 @endsection

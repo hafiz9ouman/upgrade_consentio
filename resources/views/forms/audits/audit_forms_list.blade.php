@@ -4,73 +4,68 @@
     {{ __('Manage Audits') }}
 @endsection
 @section('content')
-    <style>
-    @media screen and (max-width: 580px) {
-        .add_responsive {
-            overflow: scroll;
-            display: block;
-        }
-    }
-    </style>
 
 @if(auth()->user()->role != 1)
-    <section class="assets_list">
-        <div class="main_custom_table">
-            <div class="table_filter_section">
-                <div class="select_tbl_filter">
-                </div>
-            </div>
-            <div class="main_table_redisign">
-                <div class="over_main_div no_scroll">
-                    <table class="table table-striped text-center add_responsive">
-                        <thead>
-                            <tr>
-                                <th scope="col">{{ __('Audit Form Name') }}</th>
-                                <th scope="col">{{ __('Group Name') }}</th>
-                                <th scope="col">{{ __('Show Form') }}</th>
-                                <?php if (Auth::user()->role != 1): ?>
-                                <th scope="col">{{ __('Sub Forms List') }}</th>
-                                <?php endif;?>
-                                <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
-                                <th scope="col">{{ __('Number Of Subforms') }}</th>
-                                <?php endif;?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($forms_list as $form_info): ?>
-                            <tr>
-
-                                <td>{{ $form_info->title }}</td>
-                                <td>{{ $form_info->group_name }}</td>
-                                <td>
-                                    <div class="vie_form">
-                                        <a href="{{ route('view_audit_form', $form_info->form_id) }}">
-                                            <p><i class='bx bx-show-alt'></i>{{ __('View Form') }}</p>
+    <section class="section dashboard">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-table">
+                        <table id="datatable" class="table fixed_header manage-assessments-table">
+                            <thead>
+                                <tr>
+                                    <th style="vertical-align: middle;" scope="col">{{ __('Audit Form Name') }}</th>
+                                    <th style="vertical-align: middle;" scope="col">{{ __('Group Name') }}</th>
+                                    <th style="vertical-align: middle;" scope="col">{{ __('Show Form') }}</th>
+                                    <?php if (Auth::user()->role != 1): ?>
+                                    <th style="vertical-align: middle;" scope="col">{{ __('Sub Forms List') }}</th>
+                                    <?php endif;?>
+                                    <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
+                                    <th style="vertical-align: middle;" scope="col">{{ __('Reports') }}</th>
+                                    <?php endif;?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($forms_list as $form_info)
+                                    <tr>
+                                        <td>{{ $form_info->title }}</td>
+                                        <td>{{ $form_info->group_name }}</td>
+                                        <td>
+                                            <a href="{{ route('view_audit_form', $form_info->form_id) }}">
+                                            <span class="table-sssf">   
+                                            <img src="{{url('assets-new/img/solar_eye-bold.png')}}">{{ __('View Form') }}
+                                            </span>     
                                         </a>
-                                    </div>
-                                </td>
-                                <?php if (Auth::user()->role != 1): ?>
-                                <td>
-                                    <div class="add_plus_form">
-                                        <div class="add_forms">
-                                            <a href="{{ route('report.asset', ['id' => $form_info->group_id]) }}">
-                                            <i class='bx bxs-report'></i> {{ __("Report") }}</a>
-                                        </div>
-                                        <div class="show_sub_forms">
+                                        </td>
+                                        <?php if (Auth::user()->role != 1): ?>
+                                        <td>
+                                            
                                             <a href="{{ route('audit.sub-form', ['id' => $form_info->form_id]) }}">
-                                            <i class='bx bx-list-ul'></i> {{ __('Show Sub Forms') }}</a>
-                                        </div>
-                                    </div>
-                                </td>
-                                <?php endif;?>
-                                <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
-                                <td>{{ $form_info->subforms_count }}</td>
-                                <?php endif;?>
-
-                            <tr>
-                                <?php endforeach;?>
-                        </tbody>
-                    </table>
+                                            <span class="table-sssf">    
+                                            <img src="{{url('assets-new/img/sub-forms.png')}}"> {{ __('Show Sub Forms') }} ({{ $form_info->subforms_count }}) 
+                                            </span>    
+                                        </a>
+                                        </td>
+                                        <?php endif;?>
+                                        <?php if (Auth::user()->role == 2 || Auth::user()->user_type == 1): ?>
+                                        <td>
+                                            <div class="add_plus_form">
+                                                <div class="add_forms">
+                                                    <a href="{{ route('report.asset', ['id' => $form_info->group_id]) }}">
+                                                    <i class='bx bxs-report'></i> {{ __("Audit") }}</a>
+                                                </div>
+                                                <div class="add_forms">
+                                                    <a href="{{ route('report.onerem', ['id' => $form_info->group_id]) }}">
+                                                    <i class='bx bxs-report'></i> {{ __("Remediation") }}</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <?php endif;?>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,11 +75,11 @@
 
 
 @if(auth()->user()->role == 1)
-    <div class="row" style="margin-left:10px;">
-        <div class="col-md-12">
-            <div class="tile">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
 
-                <div class="table-responsive cust-table-width">
+                <div class="card-table">
 
 
                     @if(Session::has('message'))
@@ -95,8 +90,8 @@
                             style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a>
                     </h3>
 
-                    <table class="table" id="forms-table">
-                        <thead class="back_blue">
+                    <table  class="table fixed_header manage-assessments-table" id="forms-table">
+                        <thead>
                             <tr>
                                 <th scope="col" col-span="2">Form Name English </th>
                                 <th scope="col" col-span="2">Form Name French </th>

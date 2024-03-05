@@ -179,7 +179,7 @@ input:checked + .slider:before {
 
 								<label class="form-control-label">Phone</label>
 
-								<input id="name" type="text" class="form-control" name="phone" value="{{ $user->phone }}" required autofocus>
+								<input id="name" type="text" class="form-control" name="phone" maxlength="13" onkeyup="this.value = this.value.replace(/[^0-9+]/g, '')" value="{{ $user->phone }}" required autofocus>
 
 							</div>                                                    
  
@@ -187,11 +187,24 @@ input:checked + .slider:before {
 
 								<label class="form-control-label">Website</label>
 
-								<input id="website_" type="text" class="form-control change_color" onkeyup="isValidURL(this.value)" name="website" value="{{ $user->website }}" required autofocus>
+								<input id="website_" type="text" class="form-control change_color" onkeyup="isValidURL(this.value)" name="website" value="{{ $user->website }}"  autofocus>
 								<div class="show_error"  style="color: red; display: none;">
 										<small>Please provide proper web address</small>
 									</div>	
 							</div> 
+							
+							
+							<div class="form-group">
+
+								<label class="form-control-label">Remember Me Days</label>
+
+								<input id="website_" type="number" class="form-control change_color"  name="rememberme_days" value="{{ $user->rememberme_days }}"  autofocus>
+								<div class="show_error"  style="color: red; display: none;">
+										
+									</div>	
+							</div> 
+							
+							
 
 						</div>
 
@@ -222,7 +235,7 @@ input:checked + .slider:before {
   										   UPLOADCARE_PUBLIC_KEY = "demopublickey";
 										</script>
 										<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
-										<input type="hidden" role="uploadcare-uploader" data-crop="free, 5:1 ,16:9, 4:3, 5:4, 1:1" data-images-only >
+										<input type="hidden" role="uploadcare-uploader" data-crop="free, 5:1" data-images-only >
 
 										<!-- Your preview will be put here -->
 										<div class="main_croppir_img"  style="width: fit-content;" >
@@ -299,7 +312,10 @@ input:checked + .slider:before {
 
 <script>
 	// Getting an instance of the widget.
-const widget = uploadcare.Widget('[role=uploadcare-uploader]');
+// const widget = uploadcare.Widget('[role=uploadcare-uploader]');
+const widget = uploadcare.Widget('[role=uploadcare-uploader]', {
+  tabs: 'file url',
+});
 // Selecting an image to be replaced with the uploaded one.
 const preview = document.getElementById('preview');
 // "onUploadComplete" lets you get file info once it has been uploaded.
@@ -373,7 +389,7 @@ $( "body" ).on( "click", ".removePartner", function () {
     			id: task_id
     		};
     		swal( {
-    				title: "@lang('users.delete_user')",
+    				title: "@lang('users.delete_org')",
     				text: "@lang('users.delete_user_msg')",
     				type: 'info',
     				showCancelButton: true,
@@ -393,7 +409,7 @@ $( "body" ).on( "click", ".removePartner", function () {
     					success: function ( msg ) {
     						swal( "@lang('users.success_delete')", '', 'success' )
     						setTimeout( function () {
-    							location.reload();
+    							window.location.href = '/company';
     						}, 2000 );
     					}
     				} );

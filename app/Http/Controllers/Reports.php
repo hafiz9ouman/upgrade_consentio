@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
 
 class Reports extends Controller{
 
@@ -846,7 +847,7 @@ class Reports extends Controller{
             $en_opt[] = array_filter(array_map('trim', $options_array));
         }
 
-        $opt_final_en = array_flatten($en_opt);
+        $opt_final_en = Arr::flatten($en_opt);
 
         foreach ($question as $questions) {
             $data = $questions->options_fr;
@@ -854,7 +855,7 @@ class Reports extends Controller{
             $fr_opt[] = array_filter(array_map('trim', $options_array));
         }
 
-        $opt_final_fr = array_flatten($fr_opt);
+        $opt_final_fr = Arr::flatten($fr_opt);
         $opt = null;
 
         foreach ($question as $value) {
@@ -1137,14 +1138,14 @@ class Reports extends Controller{
             $options_array = explode(",", $data);
             $en_opt[] = array_filter(array_map('trim', $options_array));
         }
-        $opt_final_en = array_flatten($en_opt);
+        $opt_final_en = Arr::flatten($en_opt);
 
         foreach ($question as $questions) {
             $data = $questions->options_fr;
             $options_array = explode(",", $data);
             $fr_opt[] = array_filter(array_map('trim', $options_array));
         }
-        $opt_final_fr = array_flatten($fr_opt);
+        $opt_final_fr = Arr::flatten($fr_opt);
 
         //bari end
         $opt = null;

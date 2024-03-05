@@ -13,7 +13,7 @@
   #sub-form-area .sub-form{
     display: flex;
     flex-direction: row;
-        align-items: baseline;
+    align-items: baseline;
   }
   #sub-form-area .sub-form input,#sub-form-area .sub-form select{
     max-width: 80%;
@@ -58,6 +58,14 @@
     background: #4e73df;
     color: #fff;
   }
+  #main {
+        margin-top: 0px !important;
+        padding: 0px 10px !important;
+    }
+    @media screen and (max-width: 516px) {
+        .modaldialogOne{
+            margin-top: 40px !important;
+        }}
 </style>
 @if (session('alert'))
     <div class="alert alert-danger">
@@ -96,8 +104,8 @@
     </div>
     @endif 
 </div>
-<div class="modal" id="edit-modal">
-    <div class="modal-dialog">
+<div class="modal" id="edit-modal" style="padding: 15% 0% 5% 0%;">
+    <div class="modal-dialog modaldialogOne" >
       <div class="modal-content">
       
         <!-- Modal Header -->
@@ -108,7 +116,7 @@
         
         <!-- Modal body -->
         <div class="modal-body">
-          <label for="usr">{{ __('Name') }} :</label>
+          <label for="usr"><b>{{ __('Name') }} </b></label>
             <input type="text" name="sb-name" id="sb-name" sb-id="" class="form-control zdd">
         </div>
         
@@ -152,32 +160,26 @@
 <?php endif; ?>
 
 <section class="assets_list">
-            <div class="main_custom_table">
+            <div class="row">
+              <div class="col-12">
                 <div class="table_filter_section">
                     <div class="select_tbl_filter">
-                        <div class="main_filter_tbl">
-                            <p>{{ __('Show')}}</p>
-                            <select>
-                                <option>10</option>
-                                <option>20</option>
-                                <option>30</option>
-                            </select>
-                            <p>{{ __('Entries')}}</p>
-                        </div>
                         <div class="add_more_tbl">
-                            <a id="add" type="button" class="btn rounded_button"><i class='bx bx-plus mr-1' ></i> {{ __('ADD SUB FORM') }}</a>
+                            <a id="add" type="button" class="button mb-3"><i class='bx bx-plus mr-1' ></i> {{ __('ADD SUB FORM') }}</a>
                         </div>
                     </div>
                 </div>
-                <div class="main_table_redisign">
+                <div class="card">
                     {{-- <div class="table_breadcrumb">
                         <h3>INCIDENT REGISTER</h3>
                     </div> --}}
                     @section('page_title')
                     {{ __('SUB FORMS') }}
                     @endsection
-                    <div class="over_main_div">
-                    <table class="table table-striped text-center">
+                    
+                    <div class="card-table">
+                    <a href="{{ url('Forms/FormsList') }}"><button class="buton" style="margin-bottom: 16px;float:left;">{{__('Back')}}</button></a>
+                    <table class="table table-striped text-center" id="datatable">
                                <?php if ($user_type == 'admin'): ?>
     <thead class="back_blue">
     <?php else: ?>
@@ -189,28 +191,28 @@
 
               {{-- {{$form_info->title}} Sub Forms --}}
                 @if(session('locale')=='fr')
-  {{$form_info->title_fr}}
-  {{ __('Sub Forms') }}
-  @else
-  {{$form_info->title}}
-  {{ __('Sub Forms') }}
-  @endif
+    {{$form_info->title_fr}}
+    {{ __('Sub Forms') }}
+    @else
+    {{$form_info->title}}
+    {{ __('Sub Forms') }}
+    @endif
 
             </th>  
           </tr>
           @endif
           <tr>
             <th scope="col">{{ __('Form Name') }}</th>
-      @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || (Auth::user()->role == 3)): 
+      @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || (Auth::user()->role == 3)) 
             <th scope="col">{{ __('External Users') }}</th>     
             <th scope="col">{{ __('Internal Users') }}</th>     
             <th scope="col">{{ __('Sub Form Users') }}</th>
-            <th scope="col" style="width:100px">{{ __('Actions') }}</th>
+            <th scope="col">{{ __('Actions') }}</th>
       @endif
             <!--<th scope="col">External Users Forms</th>-->
           </tr>
         </thead>
-               <tbody>
+        <tbody>
     @if (!empty($sub_forms))
       @for ($i = 0; $i < count($sub_forms); $i++)          
           <tr>
@@ -225,7 +227,7 @@
         $ex_link_title = '<i class="fas fa-link"></i> Open / <i class="fas fa-arrow-right"></i> Send';
         $in_link_title = 'Send / Show Forms';
       @endphp
-      @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || Auth::user()->role == 3):
+      @if (Auth::user()->role == 2 || Auth::user()->user_type == 1 || Auth::user()->role == 3)
       <td>
           <?php
               $count = 0;
@@ -235,7 +237,7 @@
               
               if ($count>=0):
           ?>
-              <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}"> <span class="adding_circle" style="vertical-align: middle;">{{$count}}</span> {{ __('Assign To') }}</a>
+              <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}"> <span class="adding_circle" style="vertical-align: middle;margin-right: 0px;">{{$count}}</span> {{ __('Assign To') }}</a>
           <?php
               else:
           ?>
@@ -243,12 +245,16 @@
           <?php endif; ?>
       </td>     
       
-      <td><a class="fs-14" href="{{url('Forms/SubFormAssignees/'.$sub_forms[$i]->id)}}">  <span class="adding_circle" style="vertical-align: middle;"><?php echo (isset($sub_forms[$i]->internal_users_count) && !empty($sub_forms[$i]->internal_users_count))?($sub_forms[$i]->internal_users_count):(0); ?></span> {{ __('Assign To') }}</a></td>
+      <td><a class="fs-14" href="{{url('Forms/SubFormAssignees/'.$sub_forms[$i]->id)}}">  <span class="adding_circle" style="vertical-align: middle;margin-right: 0px;"><?php echo (isset($sub_forms[$i]->internal_users_count) && !empty($sub_forms[$i]->internal_users_count))?($sub_forms[$i]->internal_users_count):(0); ?></span> {{ __('Assign To') }}</a></td>
       
-      <td><a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">  <span style="color: #3fd474;">{{ __('SHOW') }}</span>  </a>
-          <span style="color: black;">|</span>
-          <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   <span style="color: #5778ba;">{{ __('SEND FORM') }}</span></a>
+      <td><a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">  <span style="color: #3fd474;margin-right: 0px;">{{ __('SHOW') }}</span>  </a>
+          <span style="color: black;margin-right: 0px;">|</span>
+          <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   <span style="color: #5778ba;margin-right: 0px;">{{ __('SEND FORM') }}</span></a>
       </td>
+      @php
+      $count = DB::table('user_form_links')->where('sub_form_id', $sub_forms[$i]->id)->where('is_locked', 1)->count();
+      @endphp
+      @if($count>0)
       <td>
 
         
@@ -258,10 +264,25 @@
                      <a class="fs-14 delete-sb" sb-id="{{$sub_forms[$i]->id}}" href="#"><i class="fas fa-minus-circle"></i></a>
  --}}
 
-                          <a data-toggle="modal" data-target="#edit-modal" class="edit-sb" sb-id="{{$sub_forms[$i]->id}}" sb-name="{{ $sub_forms[$i]->title }}"><i class="bx bx-edit"></i></a>
-                          <a sb-id="{{$sub_forms[$i]->id}}" class=" delete-sb"><i class="bx bxs-trash"></i></a>
+                          <a ><img style="filter: grayscale(100%);" src="{{url('assets-new/img/action-edit.png')}}" alt=""></a>
+                          <a ><img style="filter: grayscale(100%);" src="{{url('assets-new/img/action-delete.png')}}" alt=""></a>
                         </div>
-       </td>                 
+       </td>
+       @else
+       <td>
+
+        
+                  <div class="action_icons">
+                   {{--  <a data-toggle="modal" data-target="#edit-modal" class="fs-14 edit-sb" sb-id="{{$sub_forms[$i]->id}}" sb-name="{{ $sub_forms[$i]->title }}" href="#"> <i class="fas fa-pencil-alt"></i></a>
+
+                     <a class="fs-14 delete-sb" sb-id="{{$sub_forms[$i]->id}}" href="#"><i class="fas fa-minus-circle"></i></a>
+ --}}
+
+                          <a data-toggle="modal" data-target="#edit-modal" class="edit-sb" sb-id="{{$sub_forms[$i]->id}}" sb-name="{{ $sub_forms[$i]->title }}"><img src="{{url('assets-new/img/action-edit.png')}}" alt=""></a>
+                          <a sb-id="{{$sub_forms[$i]->id}}" class=" delete-sb"><img src="{{url('assets-new/img/action-delete.png')}}" alt=""></a>
+                        </div>
+       </td>
+       @endif                 
       @endif
           </tr>
       @endfor
@@ -316,21 +337,33 @@ $(document).ready(function() {
     var counter = {{ $i }};
 
     $('#add').click(function(){
+        $('#sub-form-area').html('');
         counter++;
         console.log("test");
-        $('#sub-form-area').append( '<div class="row" style="">'+
-                                      '<div style="width:31%">'+
-                                        '<label>{{ __("Label in English") }}</label>'+
-                                        '<input type="text" class="form-control" id="subform-title-'+counter+'" value="<?php echo $form_info->title; ?>">'+
+        $('#sub-form-area').append( '<div class="row" style="">'+ 
+                                      '<div class="col-lg-8 offset-lg-2 p-3 mb-3" style="">'+
+                                        '<div class="card" style="">'+
+                                        '<div class="card-body" style="">'+
+                                          '<div>'+
+                                            '<label>{{ __("Label in English") }}</label>'+
+                                            '<input type="text" class="form-control" id="subform-title-'+counter+'" value="<?php echo $form_info->title; ?>">'+
+                                          '</div>'+
+                                          '<br>'+
+                                          '<div>'+
+                                            '<label>{{ __("Label in French") }}</label>'+
+                                            '<input type="text" class="form-control" id="subform-title-fr-'+counter+'" value="<?php echo str_replace("'", '', $form_info->title_fr); ?>">'+
+                                          '</div>'+
+                                          '<br>'+
+                                            '<button style="margin-top:10px;margin-left:2px; margin-bottom:30px;" class="btn rounded_button btn-primary create-subform" id="subform-'+counter+'">{!! __('Create') !!}</button>'+
+                                            '<button style="margin-top:10px;margin-left:2px; margin-bottom:30px;" class="btn rounded_button btn-secondary exit-subform" id="exit-subform">{!! __('Cancel') !!}</button>'+
+                                        '</div>'+
+                                        '</div>'+
                                       '</div>'+
-                                      '<br>'+
-                                      '<div style="width:30%">'+
-                                        '<label>{{ __("Label in French") }}</label>'+
-                                        '<input style="width:100%" type="text" class="form-control" id="subform-title-fr-'+counter+'" value="<?php echo str_replace("'", '', $form_info->title_fr); ?>">'+
-                                      '</div>'+
-                                      '<br>'+
-                                        '<button style="margin-top:10px;margin-left:2px; margin-bottom:30px;" class="btn rounded_button btn-primary create-subform" id="subform-'+counter+'">{!! __('Create') !!}</button>'+
                                     '</div>');
+    });
+
+    $(document).on('click', '.exit-subform', function (){
+      $('#sub-form-area').html('');
     });
 
 
@@ -379,6 +412,8 @@ $(document).ready(function() {
         
         
         var name = $('#sb-name').val();
+
+        $('#edit-modal').modal('show');
           
     });
     

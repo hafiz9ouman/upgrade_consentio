@@ -90,9 +90,9 @@
             
             <img src="{{ url('_organisation.png') }}" style="width: 258px;">
           </h3>
-           1.Go to the inbox of <strong><?php //echo $email;?></strong> and open the e-mail from <strong>noreply@consentio.cloud</strong> with the subject line "Consentio 2FA Code".<br>
-    (Can't find the e-mail? Please check your spam folder as well.)<br>
-    2.Enter the authentication code provided in the e-mail. 
+           1.{{ __('Go_To_Inbox') }} <strong><?php //echo $email;?></strong> {{ __('Open_The_Email') }} <strong>noreply@consentio.cloud</strong> {{ __('With_Subject_Line') }}.<br>
+    {{ __('Cannot_find_Email') }}<br>
+    2.{{ __('Enter_The_Authentication') }}
 
 
           <div class="form-group">
@@ -103,7 +103,14 @@
                         <strong>{{ $errors->first('code') }}</strong>
                     </span>
                 @endif
-                <span style="vertical-align: text-bottom;" ><input style="margin-bottom: 10px;" type="checkbox" name="rememberme" id="rememberme" />&nbsp;Do not ask me for code for 90 days.</span><br>
+				<?php 
+				$user = DB::table('users')->where('id' , auth()->user()->client_id)->first();
+				
+				?>
+                <span style="vertical-align: text-bottom;" ><input style="margin-bottom: 10px;" type="checkbox" name="rememberme" id="rememberme" />&nbsp;
+				{{ __('Donot_Ask_Again_Pre') }}{{$user->rememberme_days}}{{ __('Donot_Ask_Again_Post') }}
+				
+				</span>
 
           </div>
           <div class="form-group main_align_item_form">
@@ -183,7 +190,7 @@ alert('Please enter code.');return false;
 
 
 
-
+//alert(rememberme);
            var form_data = {
                 id: id,
                 rememberme:rememberme,
@@ -200,6 +207,7 @@ alert('Please enter code.');return false;
                         url: '{{url('verify_code')}}',
                         data: form_data,
                         success: function ( response ) {
+							//alert(response['status']);return false;
                             if(response['status'] == 'success'){
                               show_alert_message( 
                                                  title = "{!! __('Success') !!}" ,
