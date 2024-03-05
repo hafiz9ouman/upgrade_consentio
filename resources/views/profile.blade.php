@@ -2,7 +2,7 @@
 
 @section('content')
 @section('page_title')
-EDIT PROFILE
+{{__('EDIT PROFILE')}}
 @endsection
 
         <!-- Begin Page Content -->

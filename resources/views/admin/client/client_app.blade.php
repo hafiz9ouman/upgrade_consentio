@@ -768,6 +768,13 @@
             });
         });
     </script>
+    @if(session('locale') == 'fr')
+    <script>
+        $(document).ready(function() {
+            $('.uploadcare--widget__button').html("Choisir une image");
+        });
+    </script>
+    @endif
     @stack('scripts')
 </body>
 
