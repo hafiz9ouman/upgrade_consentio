@@ -277,6 +277,8 @@ class Groups extends Controller
                 'type'                  => 'required',
                 'question_title'        => 'required',
                 'question_title_fr'     => 'required',
+                'question_title_short'  => 'required',
+                'question_title_short_fr'=> 'required',
                 'question_options'      => 'required_if:type,mc|min:1',
                 'question_options_fr'   => 'required_if:type,mc|min:1',
                 'question_options'      => 'required_if:type,sc|min:1',
@@ -286,6 +288,8 @@ class Groups extends Controller
                 ],[
                 'question_title.required'           => __('English Question Can Not Be Empty.'),
                 'question_title_fr.required'        => __('French Question Can Not Be Empty.'),
+                'question_title_short.required'     => __('English Short Question Can Not Be Empty.'),
+                'question_title_short_fr.required'  => __('French Short Question Can Not Be Empty.'),
                 'question_options.required_if'      => __('English Question Options Can Not Be Empty.'),
                 'question_options_fr.required_if'   => __('French Question Options Can Not Be Empty.'),
                 'question_options.min'              => __('Please provide at least one English option to proceed'),

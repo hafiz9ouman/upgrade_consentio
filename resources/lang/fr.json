@@ -1312,6 +1312,8 @@
     "Audit Form Details": "Détails du formulaire d'audit",
     "Control ID": "ID de contrôle",
     "French Options": "Options françaises",
+    "Empty Field": "Champ vide",
+    "Please Enter Email in Text Box": "Veuillez saisir l'adresse électronique dans la zone de texte",
 
     "Access Notice": "Avis d'accès", 
     "The form cannot be accessed": "Le formulaire n'est pas accessible", 

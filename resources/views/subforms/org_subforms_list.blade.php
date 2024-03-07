@@ -360,6 +360,12 @@
       $('#send-email').click(function(){
         var emails; 
         emails = $('#email-list').val();
+        if (emails.trim() === '') {
+            // Stop processing if the email list is empty
+            console.log("Email list is empty. Stopping.");
+            swal.fire("{!! __('Empty Field') !!}"," {!! __('Please Enter Email in Text Box') !!}", "error");
+            return 0;
+        }
         var new_line_match = /\r|\n/.exec(emails);
         if (new_line_match) {
           console.log('new line pattern');
@@ -388,8 +394,8 @@
             console.log('t'); 
           }
           else {  
-            //alert("Failed. "+emails[i]+" is not valid email");
-            swal("{!! __('Invalid Email') !!}", emails[i]+" {!! __('is not valid email. Please enter email in correct format') !!}", "error");
+            console.log('invalid mail');
+            swal.fire("{!! __('Invalid Email') !!}", emails[i]+" {!! __('is not valid email. Please enter email in correct format') !!}", "error");
             return 0;
           }
         }
