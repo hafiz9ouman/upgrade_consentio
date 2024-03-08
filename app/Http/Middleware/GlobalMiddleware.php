@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Auth;
 use Session;
+use Request;
 
 class GlobalMiddleware
 {
@@ -24,6 +25,13 @@ class GlobalMiddleware
                 Session::flush();    
                 return redirect('/')->with('status', __('Your_account_is_currently_blocked'));
             }
+        }
+
+        $url = Request::Segment(1);
+        // dd($url);
+
+        if($url == "export-asset" || $url == "report_export" || $url == "export-sample-data"){
+            return $response;
         }
 
         $response->header('Cache-Control', 'no-cache, no-store, must-revalidate');

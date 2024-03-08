@@ -41,7 +41,7 @@ class PackagesController extends Controller
 
     public function saveClient(Request $request, $id)
     {
-        $clientid = Input::get('team');
+        $clientid = $request['team'];
         // print_r($id);exit();
         User::where('id',$id)->update(['client_id'=> $clientid]);
         return redirect('selectClient')->with('alert', __('Client linked Successfully'));

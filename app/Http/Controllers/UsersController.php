@@ -351,7 +351,7 @@ class UsersController extends Controller
             ]
         );
         $mail_verification = $request['mail_verification'];
-        $clientid = Input::get('team');
+        $clientid = $request['team'];
         $value = $request['optradio'];
         $any = $request->input('email');
         $test = DB::table('users')->where('email', '=', $any)->first();
