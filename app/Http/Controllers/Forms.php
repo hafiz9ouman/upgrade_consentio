@@ -4963,6 +4963,11 @@ class Forms extends Controller{
                 'q_type.required'                   => __('No Question is selected.'),
             ]);
         }
+        if($request->q_type == "im"){
+            if(!isset($request->attachment)){
+                return redirect()->back()->with('message', __('Attachment Type not Selected'));
+            }
+        }
         if($request->q_type=="dc" && $request->dropdown_value_from == 0){
             $request->question_title        = "What activity are you assessing?";
             $request->question_title_fr     = "Quelle activité évaluez-vous ?";
