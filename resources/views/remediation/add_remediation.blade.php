@@ -50,7 +50,7 @@
             </div>
 
             <div class="col-12 p-3 d-flex justify-content-end">
-                <button class="btn btn-primary" onclick="add_new_remediation_db()"> Add </button>
+                <button class="btn btn-primary" onclick="add_new_remediation_db()"> {{__('Add')}} </button>
             </div>
         </div>
     </section>

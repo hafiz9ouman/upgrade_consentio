@@ -13,6 +13,7 @@ use App\SubForm;
 use App\Question;
 use App\User;
 use Auth;
+use Session;
 
 class RemediationController extends Controller{
 
@@ -417,9 +418,13 @@ class RemediationController extends Controller{
                 $remediation->client_id             = $question["client_id"];
                 $remediation->save();
             }
-
-            return response()->json(["status"   => true,"message"  => "Remediation Successfully Added"],200);
-        } catch(\Exception $ex){
+            if(session('locale') == 'fr'){
+                return response()->json(["status"   => true,"message"  => "Remédiation ajoutée avec succès"],200);
+            }
+            else{
+                return response()->json(["status"   => true,"message"  => "Remediation Successfully Added"],200);
+            }
+            } catch(\Exception $ex){
             return response()->json(["status"   => false, "error"  => $ex->getMessage()],200);
         }
     }
