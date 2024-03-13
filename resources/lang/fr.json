@@ -57,7 +57,7 @@
     "Hosting Location": "Fournisseur d'hébergement",
     "Country": "Pays",
     "City": "Ville",
-    "State": "&Eacute;tat",
+    "State": "État",
     "Form Name": "Nom de formulaire",
     "Number of Subforms": "Nombre de sous folmulaires",
     "External User Forms": "Formulaires d'utilisateurs externes",
@@ -1235,6 +1235,14 @@
     "Rating":"Evaluation",
     "Background Color":"Couleur de fond",
     "Text Color":"Couleur du texte",
+
+    "Crown Jewels":"Les joyaux de la couronne",
+    "Tier 1":"Niveau 1",
+    "Tier 2":"Niveau 2",
+    "Tier 3":"Niveau 3",
+    "tier 1":"Niveau 1",
+    "tier 2":"Niveau 2",
+    "tier 3":"Niveau 3",
 
     "Show Remediation plan" : "Show Remediation",
     "Show Remediation"      : "Remédiation des spectacles",

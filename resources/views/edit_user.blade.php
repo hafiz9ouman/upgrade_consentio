@@ -229,6 +229,9 @@
                             <div class="profile_info">
 								<div class="form-group">	
 									<script>
+										@if(session('locale') == 'fr')
+											UPLOADCARE_LOCALE = 'fr';
+										@endif
 										UPLOADCARE_PUBLIC_KEY = "demopublickey";
 									</script>
 									<input type="hidden" role="uploadcare-uploader" data-crop="free,1:1,5:4" data-images-only >

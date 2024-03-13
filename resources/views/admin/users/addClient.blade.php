@@ -230,7 +230,7 @@ input:checked + .slider:before {
 							</div>
 							
 							
-							<div class="form-group row">
+							<!-- <div class="form-group row">
 								<label class="form-control-label change_color">Remember Me Days</label>
 								<div class="">
 									<input id="website_" type="number" class="form-control website_error" name="rememberme_days"  value="{{ old('rememberme_days') }}" autofocus> 
@@ -240,7 +240,7 @@ input:checked + .slider:before {
 										
 								</div>
 
-							</div>
+							</div> -->
 							
 							
 							

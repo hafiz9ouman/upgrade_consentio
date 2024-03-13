@@ -402,7 +402,7 @@ input:checked + .slider:before {
 
 					<div class="tile-footer col-sm-12 text-right">
 
-						<a href="{{url('admin')}}" class="btn btn-default" style="border: solid 1px;">@lang('general.cancel')</a>
+						<a href="{{url('site_admins')}}" class="btn btn-default" style="border: solid 1px;">@lang('general.cancel')</a>
 
 						<button type="submit" id="sub_button" class="btn btn-primary">Update</button>
 

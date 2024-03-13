@@ -78,6 +78,7 @@
 								<div class="actions-btns dule-btns">
 									<!-- <a href="javascript:void(0)" data-id="{{$row->id}}" data-status="{{$row->status}}" id="change_status" class="btn btn-sm btn-primary"> <i class="fa fa-eye"> </i></a>  -->
 									<a href="{{url('users/edit/' . $row->id)}}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
+									<button type="button" data-id="{{$row->id}}" class="btn btn-sm btn-danger removePartner"><i class="fa fa-trash"></i></button>
 									
 								</div>
 							</td>
@@ -99,8 +100,39 @@
 			"autoWidth": false
 	   });
 
-
-    	
+	   $( "body" ).on( "click", ".removePartner", function () {
+    		var task_id = $( this ).attr( "data-id" );
+    		var form_data = {
+    			id: task_id
+    		};
+    		swal( {
+    				title: "@lang('users.delete_user')",
+    				text: "@lang('users.delete_user_msg')",
+    				type: 'info',
+    				showCancelButton: true,
+    				confirmButtonColor: '#F79426',
+    				cancelButtonColor: '#d33',
+    				confirmButtonText: 'Yes',
+    				showLoaderOnConfirm: true
+    			},
+    			function () {
+    				$.ajax( {
+    					type: 'POST',
+    					headers: {
+    						'X-CSRF-TOKEN': $( 'meta[name="csrf-token"]' ).attr( 'content' )
+    					},
+    					url: '<?php echo url("users/delete"); ?>',
+    					data: form_data,
+    					success: function ( msg ) {
+    						swal( "@lang('users.success_delete')", '', 'success' )
+    						setTimeout( function () {
+    							location.reload();
+    						}, 2000 );
+    					}
+    				});
+    			});
+    
+    	});
     	
     	$( "body" ).on( "click", "#change_status", function () {
     		var id = parseInt( $( this ).attr( "data-id" ) );

@@ -130,6 +130,9 @@
           
            
                     <script>
+                      @if(session('locale') == 'fr')
+                         UPLOADCARE_LOCALE = 'fr';
+                      @endif
                          UPLOADCARE_PUBLIC_KEY = "demopublickey";
                     </script>
                     <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
