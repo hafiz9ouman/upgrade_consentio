@@ -336,7 +336,7 @@
 								</div>
 								<div class="form-group row form-btn" style="margin-left: 52px;">
 										<div class="col-sm-12 text-left">
-											<a href="{{url('admin')}}" class="btn btn-sm btn-secondary">@lang('general.cancel')</a>
+											<a href="{{url('site_admins')}}" class="btn btn-sm btn-secondary">@lang('general.cancel')</a>
 											<button type="submit" id="sub_button" class="btn btn-sm btn-primary">@lang('general.save') </button>
 										</div>
 									</div>	
