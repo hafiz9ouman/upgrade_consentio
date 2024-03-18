@@ -114,9 +114,12 @@
               </div>
 
             <div class="tile-footer col-sm-12 text-right">
-
-              <a href="{{url('admin')}}" class="btn btn-default" style="border: solid 1px;">@lang('general.cancel')</a>
-
+              
+              @if(DB::table('forms')->where('id', $form->id)->pluck('type')->first() == "audit")
+              <a href="{{url('/Forms/AdminFormsList/audit')}}" class="btn btn-default" style="border: solid 1px;">@lang('general.cancel')</a>
+              @else
+              <a href="{{url('/Forms/AdminFormsList')}}" class="btn btn-default" style="border: solid 1px;">@lang('general.cancel')</a>
+              @endif
               <button type="submit" class="btn btn-primary">Update</button>
 
             </div>

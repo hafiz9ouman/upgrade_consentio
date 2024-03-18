@@ -256,7 +256,11 @@
                 </div>
                 <div class="card-footer" style="">
                   <div class="col-sm-12 text-left">
+                  @if(Request::segment(2)=='Add-audit-form')
+                      <a href="{{url('/Forms/AdminFormsList/audit')}}" class="btn btn-sm btn-secondary">@lang('general.cancel')</a>
+                  @else
                       <a href="{{url('/Forms/AdminFormsList')}}" class="btn btn-sm btn-secondary">@lang('general.cancel')</a>
+                  @endif
                       <button type="submit" id="sub_button" class="btn btn-sm btn-primary">@lang('general.save') </button>
                   </div>
                 </div> 

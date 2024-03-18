@@ -300,7 +300,7 @@
                       </td>
                       <td>
                         <!-- <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   -->
-                        <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}">  
+                        <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id)}}">  
                           <span style="color: #3fd474;margin-right: 0px;">
                             {{ __('SHOW') }}
                           </span> 
