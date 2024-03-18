@@ -299,7 +299,15 @@ class Groups extends Controller
                 'control_id.required'               => __('Control ID Can Not Be Empty.')
             ]);
 
-            if('control_id'){}
+            if($request->add_attachments_box){
+                // dd("attachment true");
+                if(!$request->attachment){
+                    return response()->json([
+                        'status'    => false,
+                        'error'     => 'Please Select at least one Attachment Option',
+                    ], 200);
+                }
+            }
 
             if (Question::where('section_id', $request->section_id)->where('control_id', $request->control_id)->count() > 0) {
                 return response()->json([
