@@ -305,13 +305,13 @@
                             {{ __('SHOW') }}
                           </span> 
                         </a>
-                        <span style="color: black;margin-right: 0px;">|</span>
+                        <!-- <span style="color: black;margin-right: 0px;">|</span> -->
                         <!-- <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">    -->
-                        <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}">   
+                        <!-- <a class="fs-14" href="{{url('/audit/external/assigned/'.$sub_forms[$i]->id.'/?ext_user_only=1')}}">   
                           <span style="color: #5778ba;">
                             {{ __('SEND FORM') }}
                           </span>
-                        </a>
+                        </a> -->
                       </td>
                       @php
                         $check=DB::table('user_form_links')->where('sub_form_id', $sub_forms[$i]->id)->where('is_locked', 1)->count();

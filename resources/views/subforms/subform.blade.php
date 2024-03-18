@@ -248,8 +248,8 @@
       <td><a class="fs-14" href="{{url('Forms/SubFormAssignees/'.$sub_forms[$i]->id)}}">  <span class="adding_circle" style="vertical-align: middle;margin-right: 0px;"><?php echo (isset($sub_forms[$i]->internal_users_count) && !empty($sub_forms[$i]->internal_users_count))?($sub_forms[$i]->internal_users_count):(0); ?></span> {{ __('Assign To') }}</a></td>
       
       <td><a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">  <span style="color: #3fd474;margin-right: 0px;">{{ __('SHOW') }}</span>  </a>
-          <span style="color: black;margin-right: 0px;">|</span>
-          <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   <span style="color: #5778ba;margin-right: 0px;">{{ __('SEND FORM') }}</span></a>
+          <!-- <span style="color: black;margin-right: 0px;">|</span> -->
+          <!-- <a class="fs-14" href="{{url('/Forms/OrgSubFormsList/'.$sub_forms[$i]->id)}}">   <span style="color: #5778ba;margin-right: 0px;">{{ __('SEND FORM') }}</span></a> -->
       </td>
       @php
       $count = DB::table('user_form_links')->where('sub_form_id', $sub_forms[$i]->id)->where('is_locked', 1)->count();
