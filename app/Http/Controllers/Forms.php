@@ -4218,8 +4218,18 @@ class Forms extends Controller{
                     $attachments[$i] = false;
                 }
             }
+            // dd($attachments);
+            foreach($attachments as $key => $attach){
+                // dd($attach);
+                if($attach){
+                    if(!isset($request->attachment[$key+1])){
+                        // dd("attachment Option does not  exist");
+                        // return redirect()->back()->with('message', __('Attachment Options are not Selected'));
+                        $attachments[$key] = false;
+                    }
+                }
+            }
         }
-        
         // dd($attachments);
 
         $obj    = (object) null;
