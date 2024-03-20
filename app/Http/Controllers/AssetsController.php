@@ -162,7 +162,12 @@ class AssetsController extends Controller
         }
         catch(\Exception $exception)
         {
-            return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
+            if(session('locale') == 'fr'){
+                return redirect()->back()->with(['msg'=>'Veuillez sélectionner le fichier approprié']);
+            }
+            else{
+                return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
+            }
         }
     }
 
@@ -582,7 +587,12 @@ class AssetsController extends Controller
         }
         catch(\Exception $exception)
         {
-            return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
+            if(session('locale') == 'fr'){
+                return redirect()->back()->with(['msg'=>'Veuillez sélectionner le fichier approprié']);
+            }
+            else{
+                return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
+            }
         }
         
     }

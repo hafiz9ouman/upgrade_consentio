@@ -146,7 +146,7 @@
                                 <div class='input-field'>
                                     <label for='country'>{{ __('Category (Asset Tier)') }}</label>
                                     <select id='tier_sub_field_up' class="form-control" required name='tier_sub_filed'>
-                                        <!-- <option value="crown jewels"> {{__('Crown Jewels')}}</option> -->
+                                        <option value="Crown Jewels" {{ $data->tier == "Crown Jewels" ? "selected" : "" }}> {{__('Crown Jewels')}}</option>
                                         <option value="tier 1" {{ $data->tier == "tier 1" ? "selected" : "" }}> {{__('Tier 1')}}</option>
                                         <option value="tier 2" {{ $data->tier == "tier 2" ? "selected" : "" }}> {{__('Tier 2')}}</option>
                                         <option value="tier 3" {{ $data->tier == "tier 3" ? "selected" : "" }}> {{__('Tier 3')}}</option>
@@ -357,9 +357,9 @@
 
                                     <td class='spocNames'>
                                         @if(session('locale') == 'fr')
-                                            {{ $asset->tier }}
+                                            {{ __($asset->tier) }}
                                         @else
-                                            {{ $asset->tier }}
+                                            {{ __($asset->tier) }}
                                         @endif
                                     </td>
 
@@ -552,7 +552,7 @@
                                         <div class='input-field'>
                                             <label for='country'>{{ __('Category (Asset Tier)') }}</label>
                                             <select id='tier_sub_field' class="form-control" required name='tier_sub_filed'>
-                                                <!-- <option > {{__('Crown Jewels')}}</option> -->
+                                                <option value="Crown Jewels"> {{__('Crown Jewels')}}</option>
                                                 <option value="tier 1"> {{__('Tier 1')}}</option>
                                                 <option value="tier 2"> {{__('Tier 2')}}</option>
                                                 <option value="tier 3"> {{__('Tier 3')}}</option>
