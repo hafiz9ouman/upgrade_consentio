@@ -3173,6 +3173,18 @@ class Forms extends Controller{
                 }
             }
         }
+        $form_info = DB::table('forms')->where('id', $form_id)->first();
+
+        if($form_info->type == 'audit'){
+            $sections = DB::table('group_section')->where('group_id', $form_info->group_id)->get();
+
+            foreach($sections as $section){
+                $count_question = DB::table('group_questions')->where('section_id', $section->id)->count();
+                if($count_question == 0){
+                    DB::table('group_section')->where('id', $section->id)->delete();
+                }
+            }
+        }
 
         ////-------------------------
         //echo '<pre>';print_r($_POST);exit;

@@ -593,6 +593,19 @@ class AuditFormsController extends Controller{
             return response()->json(['status' => 'error', 'msg' => __('Sub-form by this name already exists')]);
         }
 
+        $form_info = DB::table('forms')->where('id', $form_id)->first();
+
+        if($form_info->type == 'audit'){
+            $sections = DB::table('group_section')->where('group_id', $form_info->group_id)->get();
+
+            foreach($sections as $section){
+                $count_question = DB::table('group_questions')->where('section_id', $section->id)->count();
+                if($count_question == 0){
+                    DB::table('group_section')->where('id', $section->id)->delete();
+                }
+            }
+        }
+
         if($other_id){
             $latest_assigned_number = 0;
             if (DB::table('sub_forms')->where('client_id', $client_id)->orderby('other_number', 'DESC')->count() > 0) {
