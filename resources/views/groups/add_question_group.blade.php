@@ -1051,8 +1051,15 @@
                     }
                     if(res.status == false){
                         $('#addQuestionModel').modal('hide');
-                        console.log();
+                        console.log("ok");
                         swal('', res.error, 'warning');
+                        setTimeout(() => {
+                        }, 1000);
+                    }
+                    if(res.status == 200){
+                        $('#addQuestionModel').modal('hide');
+                        console.log("ok");
+                        swal('', 'Section Name Already Exist', 'warning');
                         setTimeout(() => {
                         }, 1000);
                     }

@@ -137,6 +137,11 @@ function checkfu(id){
 				checkbox.push(Number(<?php echo $client_id; ?>));
 			}		
 		<?php endforeach; ?>
+
+		if (checkbox.length == 0) {
+			console.log("Checkbox array is empty");
+			return;
+		}
 		
         var post_data        = {};
 		post_data['ids']     = $('#asgn_ids').val();

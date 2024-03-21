@@ -190,7 +190,7 @@ class Groups extends Controller
             // dd($dublicate);
             if($dublicate > 0){
                 return response()->json([
-                    'status' => false,
+                    'status' => 200,
                     'success' => "Section Name Already Exist",
                 ], 200);
             }
