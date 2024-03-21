@@ -5021,7 +5021,9 @@ class Forms extends Controller{
 
         $allow_attach = 0;
         if ($request->add_attachments_box){
-            $allow_attach = 1;
+            if(isset($request->attachment)){
+                $allow_attach = 1;
+            }
         }
         $section_num = DB::table('admin_form_sections')->where('id', $request->this_section_id)->where('form_id', $request->form_id)->pluck('sec_num')->first();
 
