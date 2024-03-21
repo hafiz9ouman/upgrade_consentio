@@ -448,7 +448,7 @@
 
                     Sort Order: <input type="text" id="sort_order_{{ $question->question_id }}"
                         style="width:50px;height:20px;1px solid #000;color:#000"
-                        value="{{ $question->question_num }}" /><a href="javascript:;" class="updatesorting mt-3"
+                        value="{{ $question->question_num }}" /><a href="javascript:;" class="updatesorting mt-3 pr-4"
                         id="{{ $question->question_id }}">Update Sorting</a>
                     <h6 @if ($form_id > 14) @if ($can_update)  
 								data-toggle="tooltip" data-placement="left" title="Question Title English" @endif

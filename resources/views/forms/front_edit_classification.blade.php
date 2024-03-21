@@ -131,7 +131,7 @@ $('#password, #rpassword').on('keyup', function() {
   if ($('#password').val() == $('#rpassword').val()) {
     $('#message').html('<h5>Password is Matched</h5>').css('color', 'green');
   } else{
-    $('#message').html('<h5>Password is Not Matching</h5>').css('color', 'red');
+    $('#message').html('<h5>Password is not Matched</h5>').css('color', 'red');
   }
 });
 </script>

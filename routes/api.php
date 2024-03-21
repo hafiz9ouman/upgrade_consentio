@@ -88,6 +88,7 @@
                 $table->text('form_link')->nullable();
                 $table->text('form_link_id')->nullable();
                 $table->integer('is_locked')->default(0);
+                $table->integer('is_temp_lock')->default(0);
                 $table->integer('is_accessible')->default(1);
                 $table->integer('curr_sec')->default(1);
                 $table->integer('email_sent')->default(0);
@@ -591,6 +592,7 @@
                 $table->integer('other_number')->nullable();
                 $table->string('other_id')->nullable();
                 $table->integer('asset_id')->nullable();
+                $table->integer('rating_loc')->nullable();
                 $table->datetime('expiry_time')->nullable();
                 $table->timestamps();
             });

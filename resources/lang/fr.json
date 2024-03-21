@@ -934,7 +934,7 @@
     "Inconnue": "Inconnue",
     "Create": "Créer",
     "(External Users Only)": "(Utilisateurs externes uniquement)",
-    "Password is Not Matching": "Le mot de passe ne correspond pas",
+    "Password is not Matched": "Le mot de passe ne correspond pas",
     "Password is Matched": "Le mot de passe correspond",
     "Sorry - you are browser does not support the FileReader API": "Désolé - votre navigateur ne prend pas en charge l'API FileReader",
     "Social Engineering (Phishing)": "Ingénierie sociale (Hameçonnage)",
