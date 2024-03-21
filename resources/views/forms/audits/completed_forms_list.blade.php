@@ -256,7 +256,7 @@
           },
           data:post_data,
           success: function (response) {
-              swal.fire("{!! __('Lock Status') !!}", response.msg, response.status);
+              swal.fire("{!! __('Submittion Status Changed') !!}", response.msg, response.status);
               setTimeout( function () {
                       location.reload();
                     }, 2000 ); 

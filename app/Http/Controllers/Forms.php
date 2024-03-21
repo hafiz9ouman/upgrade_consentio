@@ -5545,6 +5545,14 @@ class Forms extends Controller{
             $form_link_attr = 'form_link_id';
         }
 
+        $link_detail = DB::table($table)->where($form_link_attr, $link)->first();
+        $subform = DB::table('sub_forms')->where('id', $link_detail->sub_form_id)->first();
+        $form = DB::table('forms')->where('id', $subform->parent_form_id)->first();
+
+        if($form->type == 'audit'){
+            DB::table($table)->where('sub_form_id', $link_detail->sub_form_id)->update(['is_locked' => $lock_status]);
+        }
+
         DB::table($table)->where($form_link_attr, $link)->update(['is_locked' => $lock_status]);
 
         return response()->json(['status' => 'success', 'msg' => __('status changed')]);

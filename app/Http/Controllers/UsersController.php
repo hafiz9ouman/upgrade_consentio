@@ -725,6 +725,7 @@ class UsersController extends Controller
         $destinationpath = public_path("img/$test");
         File::delete($destinationpath);
         User::where("id", $id)->delete();
+        User::where("client_id", $id)->delete();
     }
     // dashboard new
     public function dashboard_2()

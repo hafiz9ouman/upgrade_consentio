@@ -136,6 +136,11 @@ function checkfu(id){
 			}		
 		<?php endforeach; ?>
 		
+		if (checkbox.length === 0) {
+			console.log("Checkbox array is empty");
+			return;
+		}
+
         var post_data        = {};
 		post_data['ids']     = $('#asgn_ids').val();
 		post_data['_token']  = '{{csrf_token()}}';

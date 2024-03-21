@@ -176,7 +176,11 @@
 					data: post_data,
 					beforeSend:function(){
 					    $(this).prop('disabled', true);
-					    $('#assign').text('Processing...')
+						@if(session('locale') == 'fr')
+					    	$('#assign').text('Traitement...')
+						@else
+							$('#assign').text('Processing...')
+						@endif
 					},
 					success: function(response) {
 						//console.log(response);

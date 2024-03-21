@@ -1052,7 +1052,7 @@
                     if(res.status == false){
                         $('#addQuestionModel').modal('hide');
                         console.log();
-                        swal('', res.success, 'warning');
+                        swal('', res.error, 'warning');
                         setTimeout(() => {
                         }, 1000);
                     }
