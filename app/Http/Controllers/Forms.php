@@ -2222,6 +2222,23 @@ class Forms extends Controller{
 
         $client_id = Auth::user()->client_id;
 
+        //////delete section that has no question
+
+        $form_info = DB::table('forms')->where('id', $form_id)->first();
+
+        if($form_info->type == 'assessment'){
+            $sections = DB::table('admin_form_sections')->where('form_id', $form_id)->get();
+
+            foreach($sections as $section){
+                $count_question = DB::table('questions')->where('question_section_id', $section->id)->count();
+                if($count_question == 0){
+                    DB::table('admin_form_sections')->where('id', $section->id)->delete();
+                }
+            }
+        }
+
+        ////-------------------------
+
         // check if form already exists by this name
         $existing_subform = DB::table('sub_forms')
             ->where('parent_form_id', '=', $form_id)
@@ -3141,6 +3158,23 @@ class Forms extends Controller{
 
         $client_ids = $request->input('ids');
         $form_id = $request->input('form_id');
+
+        //////delete section that has no question
+
+        $form_info = DB::table('forms')->where('id', $form_id)->first();
+
+        if($form_info->type == 'assessment'){
+            $sections = DB::table('admin_form_sections')->where('form_id', $form_id)->get();
+
+            foreach($sections as $section){
+                $count_question = DB::table('questions')->where('question_section_id', $section->id)->count();
+                if($count_question == 0){
+                    DB::table('admin_form_sections')->where('id', $section->id)->delete();
+                }
+            }
+        }
+
+        ////-------------------------
         //echo '<pre>';print_r($_POST);exit;
         $form_info = DB::table('forms')->where('id', '=', $form_id)->first();
         if (isset($request->del_ids) && $request->del_ids != '') {
