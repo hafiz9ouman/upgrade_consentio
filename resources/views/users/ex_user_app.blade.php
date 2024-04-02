@@ -58,14 +58,14 @@
                       <div class="top_menu">
                           <div class="subform_Add_top">
                               @if(session('locale')=='fr')
-                              <a class="dropdown-item" href="{{ url('language/en') }}">
-                                  <img src="{{url('public/img/eng.png')}}"
-                                      style=" width: 23px; margin-right: 5px;">English
+                              <a class="dropdown-item font-weight-bold" href="{{ url('language/en') }}">
+                                  <!-- <img src="{{url('public/img/eng.png')}}" style=" width: 23px; margin-right: 5px;"> -->
+                                  EN
                               </a>
                               @elseif(session('locale')=='en')
-                              <a class="dropdown-item" href="{{ url('language/fr') }}">
-                                  <img src="{{url('public/img/fr.png')}}"
-                                      style=" width: 23px; margin-right: 5px;">French
+                              <a class="dropdown-item font-weight-bold" href="{{ url('language/fr') }}">
+                                  <!-- <img src="{{url('public/img/fr.png')}}" style=" width: 23px; margin-right: 5px;"> -->
+                                  FR
                               </a>
                               @endif
                           </div>
