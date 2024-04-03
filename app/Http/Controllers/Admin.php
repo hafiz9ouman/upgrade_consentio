@@ -530,6 +530,7 @@ class Admin extends Controller
         $data = array(
             "name" => $request->input('name'),
             "email" => $request->input('email'),
+            "is_email_varified" => 1,
             "role" => 1,
             "image_name" => $imgname,
             "tfa" => 0,

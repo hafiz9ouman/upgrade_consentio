@@ -1078,7 +1078,11 @@
 					success: function(response) {
 						if (response == 1) {
 							$('#add_comment_model').modal('hide'); 
+							@if(session('locale') == 'fr')
+							swal('Commentaire ajouté avec succès','' , 'success');
+							@else
 							swal('Comment Successfully Added','' , 'success');
+							@endif
 							$('#comment_for_question').val("");
 						}
 					}

@@ -1137,7 +1137,11 @@
 				data: data,
 				success: function(response) {
 					if (response == 1) {
-						toastr.success('Comment Successfully Added');
+						@if(session('locale') == 'fr')
+							toastr.success('Commentaire ajouté avec succès');
+						@else
+							toastr.success('Comment Successfully Added');
+						@endif
 					}
 				}
 			});		
@@ -1162,7 +1166,11 @@
 				data: data,
 				success: function(response) {
 					if (response == 1) {
-						toastr.success('Comment Successfully Added');
+						@if(session('locale') == 'fr')
+							toastr.success('Commentaire ajouté avec succès');
+						@else
+							toastr.success('Comment Successfully Added');
+						@endif
 					}
 				}
 			});		

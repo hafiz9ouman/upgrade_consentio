@@ -1030,11 +1030,11 @@ class UsersController extends Controller
                 $assigned_permissions = explode(',', $value);
             }
         }
+        if (auth()->user()->role == 1) {
+            return redirect('admin');
+        }
         if (!in_array('Dashboard', $assigned_permissions)) {
             return redirect('profile/' . auth()->user()->id);
-        }
-        if (auth()->user()->role == 1) {
-            return redirect()->back();
         }
 
         // =============================================== //
