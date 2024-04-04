@@ -15,19 +15,25 @@ class AssetsImport implements ToModel
     */
     public function model(array $row)
     {
+
+        // Check if it's the first row
+        static $firstRow = true;
+        if ($firstRow) {
+            $firstRow = false;
+            return null;
+        }
         //dd($row[7]);
-       $client_id =  DB::table('users')->where('id', Auth::user()->client_id)->select('id')->get()->toArray();
-       $row[10]= $client_id;
-    //    dd($row[10]);
+       $client_id = Auth::user()->client_id;
+    //    dd($client_id);
         
         $data = ucwords($row[7]);
         $impact= DB::table('impact')->where('impact_name_en', $data)->get();
-        //dd($impact);
+        // dd($impact);
         $row[7]= $impact;
 
         $var = ucfirst($row[8]);
-        $data_class= DB::table('data_classifications')->where('classification_name_en', $var)->where('organization_id', $row[10][0]->id)->get();
-        //dd($data_class);
+        $data_class= DB::table('data_classifications')->where('classification_name_en', $var)->where('organization_id', $client_id)->get();
+        // dd($data_class);
         $row[8]= $data_class;
 
         $address = urlencode($row[4] . ' ' . $row[5]); // Concatenate city and country for the address
@@ -57,11 +63,11 @@ class AssetsImport implements ToModel
         
         $data1=1;
         
-        if (DB::table('assets')->where('client_id', $row[10][0]->id)->orderby('asset_number', 'DESC')->count() > 0) {
+        if (DB::table('assets')->where('client_id', $client_id)->orderby('asset_number', 'DESC')->count() > 0) {
             //dd('ok');
-            $latest_assigned_number =  DB::table('assets')->where('client_id', $row[10][0]->id)->orderby('asset_number', 'DESC')->get();
-            //dd($latest_assigned_number);
-            $row[16]= $latest_assigned_number;
+            $latest_assigned_number =  DB::table('assets')->where('client_id', $client_id)->orderby('asset_number', 'DESC')->first();
+            // dd($latest_assigned_number);
+            $asset_number= $latest_assigned_number->asset_number+1;
             // dd($row[16]);
             // dd($row[16][0]->asset_number);
 
@@ -76,13 +82,13 @@ class AssetsImport implements ToModel
                 "impact_id" => $row[7][0]->id,
                 "data_classification_id" => $row[8][0]->id,
                 "tier" => $row[9],
-                "client_id"=> $row[10][0]->id,
-                "it_owner" => $row[11],
-                "business_owner" => $row[12],
-                "business_unit" => $row[13],
-                "internal_3rd_party" => $row[14],
-                "data_subject_volume" => $row[15],
-                "asset_number" => $row[16][0]->asset_number+1,
+                "it_owner" => $row[10],
+                "business_owner" => $row[11],
+                "business_unit" => $row[12],
+                "internal_3rd_party" => $row[13],
+                "data_subject_volume" => $row[14],
+                "asset_number" => $asset_number,
+                "client_id"=> $client_id,
                 "lat" => $latitude,
                 "lng" => $longitude,
             ]);
@@ -99,12 +105,12 @@ class AssetsImport implements ToModel
                 "impact_id" => $row[7][0]->id,
                 "data_classification_id" => $row[8][0]->id,
                 "tier" => $row[9],
-                "client_id"=> $row[10][0]->id,
-                "it_owner" => $row[11],
-                "business_owner" => $row[12],
-                "business_unit" => $row[13],
-                "internal_3rd_party" => $row[14],
-                "data_subject_volume" => $row[15],
+                "it_owner" => $row[10],
+                "business_owner" => $row[11],
+                "business_unit" => $row[12],
+                "internal_3rd_party" => $row[13],
+                "data_subject_volume" => $row[14],
+                "client_id"=> $client_id,
                 "asset_number" => $data1,
                 "lat" => $latitude,
                 "lng" => $longitude,
