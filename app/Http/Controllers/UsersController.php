@@ -401,6 +401,7 @@ class UsersController extends Controller
                     "role" => 2,
                     "image_name" => $imgname,
                     "is_email_varified" => 0,
+                    "tfa" => 1,
                     "client_id" => $clientid,
                     "created_by" => Auth::user()->id,
                 );
@@ -412,6 +413,7 @@ class UsersController extends Controller
                     "role" => 2,
                     "image_name" => $imgname,
                     "is_email_varified" => 1,
+                    "tfa" => 0,
                     "client_id" => $clientid,
                     "created_by" => Auth::user()->id,
                 );
@@ -619,11 +621,26 @@ class UsersController extends Controller
                 } else {
                     $imgname = $test;
                 }
-                $record = array(
-                    "name" => $request->input('name'),
-                    "email" => $request->input('email'),
-                    "image_name" => $imgname,
-                );
+                if ($mail_verification == "on") {
+                    $record = array(
+                        "name" => $request->input('name'),
+                        "email" => $request->input('email'),
+                        "image_name" => $imgname,
+                        "is_email_varified" => 0,
+                        "tfa" => 1,
+                    );
+                }
+                else{
+                    $record = array(
+                        "name" => $request->input('name'),
+                        "email" => $request->input('email'),
+                        "image_name" => $imgname,
+                        "is_email_varified" => 1,
+                        "tfa" => 0,
+                        "rememberme" => 0,
+                    );
+                }
+                
                 $record['is_blocked'] = $request->is_blocked;
                 if ($request->is_blocked == 'No') {
                     $record['login_attempts'] = 0;
@@ -673,6 +690,7 @@ class UsersController extends Controller
                         "is_blocked" => $request->input('is_blocked'),
                         "image_name" => $imgname,
                         "is_email_varified" => 0,
+                        "tfa" => 1,
                     );
                 } else {
                     $record = [
@@ -681,6 +699,8 @@ class UsersController extends Controller
                         "is_blocked" => $request->input('is_blocked'),
                         "image_name" => $imgname,
                         "is_email_varified" => 1,
+                        "tfa" => 0,
+                        "rememberme" => 0,
                     ];
                 }
                 $record['is_blocked'] = $request->is_blocked;

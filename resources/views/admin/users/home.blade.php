@@ -47,7 +47,7 @@
 						
 						<tr>
 							<td style="text-transform:none;"> {{$row->name}} <?php 
-							if($row->is_email_varified==0) echo '<span style="color:green;">(2FA)</span>';
+							if($row->tfa==1) echo '<span style="color:green;">(2FA)</span>';
 							 ?> </td>
 							<td style="text-transform:none;">{{$row->email}}</td>
 							<?php $client_id = $row->client_id ?>

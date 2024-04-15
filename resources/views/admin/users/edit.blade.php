@@ -305,7 +305,7 @@
 								<div class="form-group">
 									<label class="form-control-label">{{ __('Enable Email Verification')}}</label><br>
 										<label class="switch">
-										@if($user->is_email_varified==0)
+										@if($user->tfa==1)
 											<input name="mail_verification" type="checkbox" checked>
 										@else
 											<input name="mail_verification" type="checkbox">
