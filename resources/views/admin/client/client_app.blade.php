@@ -1,5 +1,9 @@
 <!DOCTYPE html>
+@if(session('locale') == 'fr')
+<html lang="fr">
+@else
 <html lang="en">
+@endif
 
 <head>
     <meta charset="gb18030">

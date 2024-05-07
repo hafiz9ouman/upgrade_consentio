@@ -537,9 +537,15 @@ $(document).ready(function() {
 
 <script type="text/javascript">
     // First Chart 
+    @if(session('locale') == 'fr')
+    google.charts.load("current", {
+        packages: ["corechart"], language: 'fr'
+    });
+    @else
     google.charts.load("current", {
         packages: ["corechart"]
     });
+    @endif
     google.charts.setOnLoadCallback(function() {
         // Call drawChart with the chartData array as a parameter
 
