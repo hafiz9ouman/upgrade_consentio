@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use App\GroupSection;
 use App\Question;
 use App\Group;
@@ -9,6 +10,29 @@ use DB;
 
 class Groups extends Controller
 {
+    public function groups_restore(){
+        try {
+            // Path to your SQL file
+            $sqlFilePath = storage_path('group.sql');
+            // dd($sqlFilePath);
+
+            // Check if the file exists
+            if (File::exists($sqlFilePath)) {
+                // Read the contents of the SQL file
+                $sqlQueries = File::get($sqlFilePath);
+
+                // Execute the queries
+                DB::unprepared($sqlQueries);
+
+                return redirect('group/list')->with('msg', 'Special Question Group Restored');
+            } else {
+                return redirect('group/list')->with('msg', 'Restore File is missing');
+            }
+        } 
+        catch (\Exception $th) {
+            return $th->getMessage();
+        }
+    }
 
     // ----------------- GROUPS CRUD --------------------- //
     

@@ -10,10 +10,19 @@
     </ul>
 </div>
 <a href="" id="delete_item"></a>
+@if(Session::has('msg'))
+    <p class="alert alert-info">{{ Session::get('msg') }}</p>
+@endif
+@if(Session::has('alert'))
+    <p class="alert alert-danger">{{ Session::get('alert') }}</p>
+@endif
 <div class="row bg-white py-3">  
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <h3>{{ __('Question Groups') }}</h3>
-        <a href="{{ route('group_add') }}"  class="btn btn-sm btn-primary"><i class="fa fa-plus mr-0"></i> {{ __('Add Group') }}</a>
+        <div>
+            <a href="{{ route('groups_restore') }}"  class="btn btn-sm btn-secondary"><i class="fa fa-plus mr-0"></i> {{ __('Group Restore') }}</a>
+            <a href="{{ route('group_add') }}"  class="btn btn-sm btn-primary"><i class="fa fa-plus mr-0"></i> {{ __('Add Group') }}</a>
+        </div>
     </div>  
     <div class="col-md-12">
         <table class="table" id="group-table" style="min-width:720px">

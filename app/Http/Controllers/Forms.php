@@ -18,6 +18,30 @@ use \Carbon\Carbon;
 
 class Forms extends Controller{
 
+    public function forms_restore(){
+        try {
+            // Path to your SQL file
+            $sqlFilePath = storage_path('ass_forms.sql');
+            // dd($sqlFilePath);
+
+            // Check if the file exists
+            if (File::exists($sqlFilePath)) {
+                // Read the contents of the SQL file
+                $sqlQueries = File::get($sqlFilePath);
+
+                // Execute the queries
+                DB::unprepared($sqlQueries);
+
+                return redirect('Forms/AdminFormsList')->with('message', __('Special Assessment Forms Restored'));
+            } else {
+                return redirect('Forms/AdminFormsList')->with('alert', __('Restore File is missing'));
+            }
+        } 
+        catch (\Exception $th) {
+            return $th->getMessage();
+        }
+    }
+
     public function data_classification(){
         $data = DB::table('data_classifications')
             ->where('organization_id', Auth::user()->client_id)

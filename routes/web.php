@@ -353,7 +353,11 @@ Route::group(["middleware" => 'admin'], function () {
     Route::post('change_question_comment', 'Forms@change_question_comment')->name('change_question_comment')->middleware(['auth']);
     Route::post('delete_question', 'Forms@delete_question')->name('delete_question')->middleware(['auth']);
     Route::get('duplicate/{id}', 'Forms@duplicate')->name('form_duplicate')->middleware(['auth']);
-
+    
+    // ------------------------------------------ RESTORE FORMS -----------------------------------------------
+    Route::get('group/restore', 'Groups@groups_restore')->name('groups_restore');
+    Route::get('Forms/restore', 'Forms@forms_restore')->name('forms_restore');
+    
     // ------------------------------------------ Users -----------------------------------------------
     Route::get('/users/edit/{id}', 'UsersController@edit');
     Route::get('/users/detail/{id}', 'UsersController@detail');
