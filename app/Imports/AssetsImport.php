@@ -23,16 +23,75 @@ class AssetsImport implements ToModel
             return null;
         }
         //dd($row[7]);
-       $client_id = Auth::user()->client_id;
-    //    dd($client_id);
+        $client_id = Auth::user()->client_id;
+        //dd($client_id);
+
+        //check Asset Type
+        if(strtolower($row[1]) == 'serveur'){
+            $row[1] = "Server";
+        }
+        if(strtolower($row[1]) == 'base de données'){
+            $row[1] = "Database";
+        }
+        if(strtolower($row[1]) == 'stockage physique'){
+            $row[1] = "Physical Storage";
+        }
+        if(strtolower($row[1]) == 'autre'){
+            $row[1] = "Other";
+        }
+        if(strtolower($row[1]) == 'site internet'){
+            $row[1] = "Website";
+        }
+
+        //check Hosting Type
+        if(strtolower($row[2]) == 'nuage'){
+            $row[2] = "Cloud";
+        }
+        if(strtolower($row[2]) == 'sur site'){
+            $row[2] = "On-Premise";
+        }
+        if(strtolower($row[2]) == 'pas certain'){
+            $row[2] = "Not Sure";
+        }
+        if(strtolower($row[2]) == 'hybride'){
+            $row[2] = "Hybrid";
+        }
+
+        //check Tier
+        if(strtolower($row[9]) == 'les joyaux de la couronne'){
+            $row[9] = "Crown Jewels";
+        }
+        if(strtolower($row[9]) == 'niveau 1'){
+            $row[9] = "tier 1";
+        }
+        if(strtolower($row[9]) == 'niveau 2'){
+            $row[9] = "tier 3";
+        }
+        if(strtolower($row[9]) == 'niveau 3'){
+            $row[9] = "tier 3";
+        }
+
+        //check internal or 3rd party
+        if(strtolower($row[13]) == 'interne'){
+            $row[13] = "internal";
+        }
+        if(strtolower($row[13]) == '3ème partie'){
+            $row[13] = "3rd Party";
+        }
         
         $data = ucwords($row[7]);
         $impact= DB::table('impact')->where('impact_name_en', $data)->get();
+        if(count($impact) == 0 ){
+            $impact= DB::table('impact')->where('impact_name_fr', $data)->get();
+        }
         // dd($impact);
         $row[7]= $impact;
 
         $var = ucfirst($row[8]);
         $data_class= DB::table('data_classifications')->where('classification_name_en', $var)->where('organization_id', $client_id)->get();
+        if(count($data_class) == 0 ){
+            $data_class= DB::table('data_classifications')->where('classification_name_fr', $var)->where('organization_id', $client_id)->get();
+        }
         // dd($data_class);
         $row[8]= $data_class;
 

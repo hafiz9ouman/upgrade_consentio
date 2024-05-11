@@ -328,7 +328,7 @@
 						<h3>
 							<?php
 								if(session('locale')=='fr'){ echo $questions[0]->title_fr?$questions[0]->title_fr:$questions[0]->title;}
-								else{ echo $questions[0]->title_fr;}	
+								else{ echo $questions[0]->title;}	
 
 							?>	
 						</h3>
@@ -386,7 +386,7 @@
 				</div>
 
 				<div class="alert alert-info" style="margin-top:10px;">
-					<h4>Section List</h4>
+					<h4>{{__('Section List')}}</h4>
 					<div class="user-guide">
 						<p><span class="legend-green">&#x25A0;</span> {{ __('Filled / Not Required Sections') }} </p>
 						<p><span class="legend-red">&#x25A0;</span> {{ __('Not Filled Sections') }} </p>

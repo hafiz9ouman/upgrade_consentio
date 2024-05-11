@@ -275,7 +275,7 @@
                     @endif
                     <tr class="border">
                         <td>{{$plans[0]->name}}</td>
-                        <td>{{$plans[0]->tier}}</td>
+                        <td>{{__($plans[0]->tier)}}</td>
                         @foreach ($plans as $plan)
                         <td style="color:{{$plan->text_color}} !important; background-color:{{$plan->color}} !important;">{{__($plan->rating)}}</td>
                         @endforeach
@@ -335,6 +335,22 @@ $busData = [
         @endif
     @endif
 @endforeach
+@if(session('locale')=='fr')
+    @php
+        $chartData = array_map(function ($item) {
+            if ($item[0] == "Crown Jewels") {
+                $item[0] = "Les joyaux de la couronne";
+            } elseif ($item[0] == "tier 1") {
+                $item[0] = "Niveau 1";
+            } elseif ($item[0] == "tier 2") {
+                $item[0] = "Niveau 2";
+            } elseif ($item[0] == "tier 3") {
+                $item[0] = "Niveau 3";
+            }
+            return $item;
+        }, $chartData);
+    @endphp
+@endif
 
 <!-- For Hosting Type -->
 @foreach ($remediation_plans as $subform => $plans)
@@ -367,6 +383,22 @@ $busData = [
         @endif
     @endif
 @endforeach
+@if(session('locale')=='fr')
+    @php
+        $impData = array_map(function ($item) {
+            if ($item[0] == "Cloud") {
+                $item[0] = "Nuage";
+            } elseif ($item[0] == "On-Premise") {
+                $item[0] = "Sur site";
+            } elseif ($item[0] == "Hybrid") {
+                $item[0] = "Hybride";
+            } elseif ($item[0] == "Not Sure") {
+                $item[0] = "Pas certain";
+            }
+            return $item;
+        }, $impData);
+    @endphp
+@endif
 
 <!-- For Business Location -->
 @foreach ($remediation_plans as $subform => $plans)
@@ -841,9 +873,24 @@ $(document).ready(function() {
                         // Create a new table row
                         var newRow = $("<tr>");
 
+                        var custom_tier;
+                        @if(session('locale')=='fr')
+                            if(plan[0].tier == 'Crown Jewels'){
+                                custom_tier = "Les joyaux de la couronne";
+                            }else if(plan[0].tier == 'tier 1'){
+                                custom_tier = "niveau 1";
+                            }else if(plan[0].tier == 'tier 2'){
+                                custom_tier = "niveau 3";
+                            }else if(plan[0].tier == 'tier 3'){
+                                custom_tier = "niveau 3";
+                            }
+                        @else
+                            custom_tier = plan[0].tier;
+                        @endif
+
                         // Append table cells with data
                         newRow.append("<td>" + plan[0].name + "</td>");
-                        newRow.append("<td>" + plan[0].tier + "</td>");
+                        newRow.append("<td>" + custom_tier + "</td>");
 
                         $.each(plan, function(key, plans) {
                             @if(session('locale')=='fr')
@@ -871,6 +918,7 @@ $(document).ready(function() {
 
 
                     // For Tier
+                    let Crown_Jewels = 0;
                     let tier1 = 0;
                     let tier2 = 0;
                     let tier3 = 0;
@@ -894,18 +942,30 @@ $(document).ready(function() {
                             if (item[0].tier == 'tier 3') {
                                 tier3 += 1;
                             }
+                            if (item[0].tier == 'Crown Jewels') {
+                                Crown_Jewels += 1;
+                            }
                         }
                     })
                     const tier = {
+                        Crown_Jewels: Crown_Jewels,
                         tier1: tier1,
                         tier2: tier2,
                         tier3: tier3,
                     };
                     // console.log('zetiertiertieree', tier)
 
+                    @if(session('locale')=='fr')
+                    tierchart.push(['Les joyaux de la couronne', tier.Crown_Jewels]);
+                    tierchart.push(['Niveau 1', tier.tier1]);
+                    tierchart.push(['Niveau 2', tier.tier2]);
+                    tierchart.push(['Niveau 3', tier.tier3]);
+                    @else
+                    tierchart.push(['Crown Jewels', tier.Crown_Jewels]);
                     tierchart.push(['Tier 1', tier.tier1]);
                     tierchart.push(['Tier 2', tier.tier2]);
                     tierchart.push(['Tier 3', tier.tier3]);
+                    @endif
 
 
                     //for hosting
@@ -945,11 +1005,17 @@ $(document).ready(function() {
                         hybrid: hybrid,
                     };
                     // console.log('zetiertiertieree', tier)
-
+                    @if(session('locale')=='fr')
+                    hostchart.push(['Nuage', host.cloud]);
+                    hostchart.push(['Sur site', host.premise]);
+                    hostchart.push(['Pas certain', host.nsure]);
+                    hostchart.push(['Hybride', host.hybrid]);
+                    @else
                     hostchart.push(['Cloud', host.cloud]);
                     hostchart.push(['On-Premise', host.premise]);
                     hostchart.push(['Not Sure', host.nsure]);
                     hostchart.push(['Hybrid', host.hybrid]);
+                    @endif
 
                     const dataArray = Object.values(response)
                     const countriesObject = {}
