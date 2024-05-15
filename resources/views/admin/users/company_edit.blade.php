@@ -194,7 +194,7 @@ input:checked + .slider:before {
 							</div> 
 							
 							
-							<!-- <div class="form-group">
+							<div class="form-group">
 
 								<label class="form-control-label">Remember Me Days</label>
 
@@ -202,7 +202,7 @@ input:checked + .slider:before {
 								<div class="show_error"  style="color: red; display: none;">
 										
 									</div>	
-							</div>  -->
+							</div> 
 							
 							
 
