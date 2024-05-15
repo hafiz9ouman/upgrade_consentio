@@ -412,7 +412,7 @@
             } elseif ($item[0] == "Good") {
                 $item[0] = "Bonne";
             } elseif ($item[0] == "Satisfactory") {
-                $item[0] = "Satisfaisant";
+                $item[0] = "Satisfaisante";
             } elseif ($item[0] == "N/A") {
                 $item[0] = "N/A";
             } elseif ($item[0] == "Blank") {
@@ -470,7 +470,7 @@
             } elseif ($item[0] == "Good") {
                 $item[0] = "Bonne";
             } elseif ($item[0] == "Satisfactory") {
-                $item[0] = "Satisfaisant";
+                $item[0] = "Satisfaisante";
             } elseif ($item[0] == "N/A") {
                 $item[0] = "N/A";
             } elseif ($item[0] == "Blank") {
@@ -710,7 +710,7 @@ $(document).ready(function() {
             'Marginal': '#FF8C01',
             'Blank': '#808080',
             'Bonne': '#037428',
-            'Satisfaisant': '#DEEE91',
+            'Satisfaisante': '#DEEE91',
             'Faible': '#ED2938',
             'Marginale': '#FF8C01',
             'Blanc': '#808080'
@@ -825,7 +825,7 @@ $(document).ready(function() {
                             } else if (plan.prating == "Good") {
                                 prate = "Bonne";
                             } else if (plan.prating == "Satisfactory") {
-                                prate = "Satisfaisant";
+                                prate = "Satisfaisante";
                             } else if (plan.prating == "N/A") {
                                 prate = "N/A";
                             }
@@ -910,7 +910,7 @@ $(document).ready(function() {
                     postRatting.push(['Marginale', postratings.Marginal, 'color: #FF8C01']);
                     postRatting.push(['Faible', postratings.Weak, 'color: #ED2938']);
                     postRatting.push(['Bonne', postratings.Good, 'color: #037428']);
-                    postRatting.push(['Satisfaisant', postratings.Satisfactory, 'color: #DEEE91']);
+                    postRatting.push(['Satisfaisante', postratings.Satisfactory, 'color: #DEEE91']);
                     postRatting.push(['Blanc', postratings.Blank, 'color: #e3e6f0']);
                     @else
                     postRatting.push(['Marginal', postratings.Marginal, 'color: #FF8C01']);

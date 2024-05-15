@@ -901,7 +901,7 @@ $(document).ready(function() {
                                 } else if (plans.rating == "Good") {
                                     rate = "Bonne";
                                 } else if (plans.rating == "Satisfactory") {
-                                    rate = "Satisfaisant";
+                                    rate = "Satisfaisante";
                                 } else if (plans.rating == "N/A") {
                                     rate = "N/A";
                                 }

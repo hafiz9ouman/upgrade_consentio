@@ -406,7 +406,7 @@
             } elseif ($item[0] == "Good") {
                 $item[0] = "Bonne";
             } elseif ($item[0] == "Satisfactory") {
-                $item[0] = "Satisfaisant";
+                $item[0] = "Satisfaisante";
             } elseif ($item[0] == "N/A") {
                 $item[0] = "N/A";
             } elseif ($item[0] == "Blank") {
@@ -464,7 +464,7 @@
             } elseif ($item[0] == "Good") {
                 $item[0] = "Bonne";
             } elseif ($item[0] == "Satisfactory") {
-                $item[0] = "Satisfaisant";
+                $item[0] = "Satisfaisante";
             } elseif ($item[0] == "N/A") {
                 $item[0] = "N/A";
             } elseif ($item[0] == "Blank") {
@@ -714,7 +714,7 @@ $(document).ready(function() {
             'Marginal': '#FF8C01',
             'Blank': '#808080',
             'Bonne': '#037428',
-            'Satisfaisant': '#DEEE91',
+            'Satisfaisante': '#DEEE91',
             'Faible': '#ED2938',
             'Marginale': '#FF8C01',
             'Blanc': '#808080',
@@ -916,7 +916,7 @@ $(document).ready(function() {
                         } else if (plan.prating == "Good") {
                             prate = "Bonne";
                         } else if (plan.prating == "Satisfactory") {
-                            prate = "Satisfaisant";
+                            prate = "Satisfaisante";
                         } else if (plan.prating == "N/A") {
                             prate = "N/A";
                         }
@@ -997,7 +997,7 @@ $(document).ready(function() {
                 postRatting.push(['Marginale', postratings.Marginal]);
                 postRatting.push(['Faible', postratings.Weak]);
                 postRatting.push(['Bonne', postratings.Good]);
-                postRatting.push(['Satisfaisant', postratings.Satisfactory]);
+                postRatting.push(['Satisfaisante', postratings.Satisfactory]);
                 postRatting.push(['Blanc', postratings.Blank,]);
                 @else
                 postRatting.push(['Marginal', postratings.Marginal]);
