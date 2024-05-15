@@ -497,13 +497,13 @@
                                     <thead>
                                     <tr>
                                         <th class="align-middle" scope="col">{{ __('Asset #') }}</th>
-                                        <th class="align-middle" scope="col">{{ __('Name') }}</th> 
+                                        <th class="align-middle" scope="col">{{ __('Asset Name') }}</th> 
                                         <th class="align-middle" scope="col">{{ __('Business Unit') }}</th> 
                                         <th class="align-middle" scope="col">{{ __('Tier') }}</th> 
                                         <th class="align-middle" scope="col">{{ __('Asset Type') }}</th>
                                         <th class="align-middle" scope="col">{{ __('Hosting Provider') }}</th>
                                         <th class="align-middle" scope="col">{{ __('Internal or 3rd party') }}</th> 
-                                        <th class="align-middle" scope="col">{{ __('Hosting Location') }}</th>   
+                                        <!-- <th class="align-middle" scope="col">{{ __('Hosting Location') }}</th>    -->
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -513,11 +513,11 @@
                                             <td>A-{{$ass->client_id}}-{{$ass->asset_number}}</td>
                                             <td>{{$ass->name}}</td> 
                                             <td>{{$ass->business_unit}}</td>
-                                            <td>{{$ass->tier}}</td>
-                                            <td>{{$ass->hosting_type}}</td>
+                                            <td>{{__($ass->tier)}}</td>
+                                            <td>{{__($ass->hosting_type)}}</td>
                                             <td>{{$ass->hosting_provider}}</td>
-                                            <td>{{$ass->internal_3rd_party}}</td>
-                                            <td>{{$ass->country}}</td>
+                                            <td>{{__($ass->internal_3rd_party)}}</td>
+                                            <!-- <td>{{$ass->country}}</td> -->
                                             <!-- <td style="text-align:center">{{$ass->state}}</td> -->
                                         </tr>
                                         <?php endforeach; ?>

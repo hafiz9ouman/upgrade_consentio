@@ -127,7 +127,7 @@
                     </div>
                     <div class="form-gourp">
                                 <label for="">{{ __('Impact') }}</label>
-                                <select name="impact" id="impact_name_up" class="form-control">
+                                <select name="impact" id="impact_name_up" class="form-control for_change">
                                     @foreach ($impact as $imp)
                                         <option value="{{ $imp->id }}" {{ $imp->id == $data->impact_id ? "selected" : "" }}> @if(session('locale') == 'fr') {{ $imp->impact_name_fr }} @else {{ $imp->impact_name_en }} @endif</option>
                                     @endforeach
@@ -136,7 +136,7 @@
                             <div class="form-gourp">
                                 <label for="">{{ __('Data Classification') }}</label>
                                 <select name="data_classification" id="classification_name_up"
-                                    class="form-control">
+                                    class="form-control for_change">
                                     @foreach ($dt_classification->take(5) as $dc)
                                         <option value="{{ $dc->id }}"  {{ $dc->id == $data->data_classification_id ? "selected" : "" }}> @if(session('locale') == 'fr') {{ $dc->classification_name_fr }} @else {{ $dc->classification_name_en }} @endif</option>
                                     @endforeach
@@ -942,7 +942,7 @@ function initialize() {
     @endif
     <script type="text/javascript">
         //// Edit Asset Matrix
-        $("#update_asset_locz").on("change", function() {
+        $(".for_change").on("change", function() {
 
             var as_id = $("#as_id_up").val();
             $.ajax({
