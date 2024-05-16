@@ -185,7 +185,11 @@ var rememberme = 'No';
  var code = $('#data-id').val();
 
 if(code == ''){
+@if(session('locale')=='fr')
+alert('Veuillez saisir le code.');return false;
+@else
 alert('Please enter code.');return false;
+@endif
 } 
 
 
