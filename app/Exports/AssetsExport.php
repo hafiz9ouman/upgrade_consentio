@@ -21,7 +21,7 @@ class AssetsExport implements FromCollection,WithHeadings
     public function headings():array{
         if(session('locale') == 'fr'){
             return [
-                "Élément d'audit", "Type d'actif", "Type d'hébergement", "Fournisseur d'hébergement", "Pays", "Ville", "État", "Impacte", "Classification des données", "Niveau", "Propriétaire informatique", "Propriétaire d'entreprise", "Unité commerciale", "Interne ou tiers", "Volume de données sensibles","Nombre d'utilisateurs","Fournisseur","Liste des types de données dans l'application","Conservation des données","Notes","Description",
+                "Élément d'audit", "Type d'actif", "Type d'hébergement", "Fournisseur d'hébergement", "Pays", "Ville", "État", "Impacte", "Classification des données", "Niveau", "Organization", "Propriétaire informatique", "Propriétaire d'entreprise", "Unité commerciale", "Interne ou tiers", "Volume de données sensibles","Nombre d'utilisateurs","Fournisseur","Liste des types de données dans l'application","Conservation des données","Notes","Description",
             ];
         }else{
             return [
