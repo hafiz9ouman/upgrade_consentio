@@ -78,6 +78,44 @@ class AssetsImport implements ToModel
         if(strtolower($row[13]) == '3ème partie'){
             $row[13] = "3rd Party";
         }
+
+        //check Data Retention
+        if (strtolower($row[18]) == '0-30 jours') {
+            $row[18] = "0-30 days";
+        }
+        if (strtolower($row[18]) == '30-90 jours') {
+            $row[18] = "30-90 days";
+        }
+        if (strtolower($row[18]) == '3-6 mois') {
+            $row[18] = "3-6 months";
+        }
+        if (strtolower($row[18]) == '6-12 mois') {
+            $row[18] = "6-12 months";
+        }
+        if (strtolower($row[18]) == '1-3 ans') {
+            $row[18] = "1-3 years";
+        }
+        if (strtolower($row[18]) == '3-5 ans') {
+            $row[18] = "3-5 years";
+        }
+        if (strtolower($row[18]) == '5-7 ans') {
+            $row[18] = "5-7 years";
+        }
+        if (strtolower($row[18]) == '7-10 ans') {
+            $row[18] = "7-10 years";
+        }
+        if (strtolower($row[18]) == '10-12 ans') {
+            $row[18] = "10-12 years";
+        }
+        if (strtolower($row[18]) == '12-15 ans') {
+            $row[18] = "12-15 years";
+        }
+        if (strtolower($row[18]) == '15-20 ans') {
+            $row[18] = "15-20 years";
+        }
+        if (strtolower($row[18]) == 'plus de 20 ans') {
+            $row[18] = "Over 20 years";
+        }
         
         $data = ucwords($row[7]);
         $impact= DB::table('impact')->where('impact_name_en', $data)->get();
@@ -146,6 +184,12 @@ class AssetsImport implements ToModel
                 "business_unit" => $row[12],
                 "internal_3rd_party" => $row[13],
                 "data_subject_volume" => $row[14],
+                "no_of_user" => $row[15],
+                "supplier" => $row[16],
+                "list_data_type" => $row[17],
+                "data_retention" => $row[18],
+                "notes" => $row[19],
+                "description" => $row[20],
                 "asset_number" => $asset_number,
                 "client_id"=> $client_id,
                 "lat" => $latitude,
@@ -169,6 +213,12 @@ class AssetsImport implements ToModel
                 "business_unit" => $row[12],
                 "internal_3rd_party" => $row[13],
                 "data_subject_volume" => $row[14],
+                "no_of_user" => $row[15],
+                "supplier" => $row[16],
+                "list_data_type" => $row[17],
+                "data_retention" => $row[18],
+                "notes" => $row[19],
+                "description" => $row[20],
                 "client_id"=> $client_id,
                 "asset_number" => $data1,
                 "lat" => $latitude,
