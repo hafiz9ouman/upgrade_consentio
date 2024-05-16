@@ -220,7 +220,7 @@ input:checked + .slider:before {
                             <div class="form-group row">
 								<label class="form-control-label change_color">Website</label>
 								<div class="">
-									<input id="website_" type="text" class="form-control website_error" name="website" onkeyup="isValidURL(this.value)" value="{{ old('website') }}" autofocus> 
+									<input id="website_" type="text" class="form-control website_error" name="website" onkeyup="isValidURL(this.value)" value="{{ old('website') }}" required autofocus> 
 									<div class="show_error">
 										<small>Please provide proper web address</small>
 									</div>
@@ -233,7 +233,7 @@ input:checked + .slider:before {
 							<div class="form-group row">
 								<label class="form-control-label change_color">Remember Me Days</label>
 								<div class="">
-									<input id="website_" type="number" class="form-control website_error" name="rememberme_days" max="90" min="1" value="{{ old('rememberme_days') }}" autofocus> 
+									<input id="website_" type="number" class="form-control website_error" name="rememberme_days" max="90" min="1" value="{{ old('rememberme_days') }}" required autofocus> 
 									<div class="show_error">
 										<small></small>
 									</div>

@@ -187,7 +187,7 @@ input:checked + .slider:before {
 
 								<label class="form-control-label">Website</label>
 
-								<input id="website_" type="text" class="form-control change_color" onkeyup="isValidURL(this.value)" name="website" value="{{ $user->website }}"  autofocus>
+								<input id="website_" type="text" class="form-control change_color" onkeyup="isValidURL(this.value)" name="website" value="{{ $user->website }}" required autofocus>
 								<div class="show_error"  style="color: red; display: none;">
 										<small>Please provide proper web address</small>
 									</div>	
@@ -198,7 +198,7 @@ input:checked + .slider:before {
 
 								<label class="form-control-label">Remember Me Days</label>
 
-								<input id="website_" type="number" class="form-control change_color" min="1" max="90" name="rememberme_days" value="{{ $user->rememberme_days }}"  autofocus>
+								<input id="website_" type="number" class="form-control change_color" min="1" max="90" name="rememberme_days" value="{{ $user->rememberme_days }}" required autofocus>
 								<div class="show_error"  style="color: red; display: none;">
 										
 									</div>	
