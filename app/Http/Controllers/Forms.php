@@ -42,6 +42,253 @@ class Forms extends Controller{
         }
     }
 
+    public function form_backup($id){
+        try {
+            // Creating Form
+
+            $old_form       = DB::table('forms')->where('id', $id)->first();
+            // dd($old_form);
+
+            $new_form_id    = DB::table('forms_backup')->insert([
+                "id"            => $old_form->id,
+                "lang"          => $old_form->lang,
+                "code"          => $old_form->code,
+                "user_id"       => $old_form->user_id,
+                "title"         => $old_form->title,
+                "title_fr"      => $old_form->title_fr,
+                "type"          => $old_form->type,
+                "date_created"  => $old_form->date_created,
+                "expiry"        => $old_form->expiry,
+                "date_updated"  => $old_form->date_updated,
+                "group_id"      => $old_form->group_id,
+                "is_fav"        => $old_form->is_fav,
+            ]);
+
+            // Form Created Successfully
+
+            // Create Sections
+            $old_sections = DB::table('admin_form_sections')->where('form_id', $old_form->id)->get();
+            // dd($old_sections);
+
+            foreach($old_sections as $old_section){
+                // Create Section
+                $new_section_id = DB::table('admin_form_sections_backup')->insert([
+                    "id"                => $old_section->id,
+                    "sec_num"           => $old_section->sec_num,
+                    "section_title"     => $old_section->section_title,
+                    "section_title_fr"  => $old_section->section_title_fr,
+                    "form_id"           => $old_section->form_id,
+                ]);
+            }
+
+            // Get Old Questions
+            $old_questions = DB::table("questions")->where('form_id', $old_form->id)->get();
+            // dd($old_questions);
+
+            foreach($old_questions as $old_question){
+                $new_question_id = DB::table('questions_backup')->insert([
+                        "id"                            => $old_question->id,
+                        "question"                      => $old_question->question,
+                        "question_fr"                   => $old_question->question_fr,
+                        "question_info"                 => $old_question->question_info,
+                        "question_info_fr"              => $old_question->question_info_fr,
+                        "question_num"                  => $old_question->question_num,
+                        "is_assets_question"            => $old_question->is_assets_question,
+                        "question_comment"              => $old_question->question_comment,
+                        "question_comment_fr"           => $old_question->question_comment_fr,
+                        "additional_comments"           => $old_question->additional_comments,
+                        "question_assoc_type"           => $old_question->question_assoc_type,
+                        "parent_question"               => $old_question->parent_question,
+                        "is_parent"                     => $old_question->is_parent,
+                        "parent_q_id"                   => $old_question->parent_q_id,
+                        "form_key"                      => $old_question->form_key,
+                        "type"                          => $old_question->type,
+                        "is_data_inventory_question"    => $old_question->is_data_inventory_question,
+                        "options"                       => $old_question->options,
+                        "options_fr"                    => $old_question->options_fr,
+                        "question_section"              => $old_question->question_section,
+                        "question_section_id"           => $old_question->question_section_id,
+                        "question_category"             => $old_question->question_category,
+                        "form_id"                       => $old_question->form_id,
+                        "created_at"                    => $old_question->created_at,
+                        "updated_at"                    => $old_question->updated_at,
+                        "display"                       => $old_question->display,
+                        "attachments"                   => $old_question->attachments,
+                        "dropdown_value_from"           => $old_question->dropdown_value_from,
+                        "not_sure_option"               => $old_question->not_sure_option,
+                        "question_short"                => $old_question->question_short,
+                        "question_short_fr"             => $old_question->question_short_fr,
+                        "attachment_allow"              => $old_question->attachment_allow,
+                ]);
+
+            }
+
+            $old_options = DB::table("options_link")->where('form_id', $old_form->id)->get();
+            // dd($old_options);
+
+            ////option link
+            foreach($old_options as $old_option){
+                DB::table('options_link_backup')->insert([
+                    'id'            => $old_option->id,
+                    'option_en'     => $old_option->option_en,
+                    'option_fr'     => $old_option->option_fr,
+                    'question_id'   => $old_option->question_id,
+                    'form_id'       => $old_option->form_id,
+                    'created_at'    => $old_option->created_at,
+                    'updated_at'    => $old_option->updated_at,
+                ]);
+            }
+            /////
+
+            $old_fqs = DB::table("form_questions")->where('form_id', $old_form->id)->get();
+            // dd($old_fqs);
+
+            foreach($old_fqs as $old_fq){
+                DB::table('form_questions_backup')->insert([
+                    'fq_id'             => $old_fq->fq_id,
+                    'form_id'           => $old_fq->form_id,
+                    'question_id'       => $old_fq->question_id,
+                    'sort_order'        => $old_fq->sort_order,
+                    'display_question'  => $old_fq->display_question,
+                ]);
+            }
+            
+
+
+            return redirect('Forms/AdminFormsList')->with('message', __('Form Backup Generated Successfully'));  
+        } 
+        catch (\Exception $ex) {
+            return redirect()->back()->with('msg', $ex->getMessage());
+        }
+    }
+
+    public function form_restore($id){
+        try {
+            // Creating Form
+
+            $old_form       = DB::table('forms_backup')->where('id', $id)->first();
+            // dd($old_form);
+
+            $new_form = DB::table('forms')->updateOrInsert(
+                ['id' => $old_form->id], // Check if a record with this ID exists
+                [
+                    "lang"          => $old_form->lang,
+                    "code"          => $old_form->code,
+                    "user_id"       => $old_form->user_id,
+                    "title"         => $old_form->title,
+                    "title_fr"      => $old_form->title_fr,
+                    "type"          => $old_form->type,
+                    "date_created"  => $old_form->date_created,
+                    "expiry"        => $old_form->expiry,
+                    "date_updated"  => $old_form->date_updated,
+                    "group_id"      => $old_form->group_id,
+                    "is_fav"        => $old_form->is_fav,
+                ]
+            );
+            // Form Created Successfully
+
+            // Create Sections
+            $old_sections = DB::table('admin_form_sections_backup')->where('form_id', $old_form->id)->get();
+            // dd($old_sections);
+
+            foreach($old_sections as $old_section){
+                // Create Section
+                $new_section_id = DB::table('admin_form_sections')->updateOrInsert(
+                    ["id" => $old_section->id],
+                    [
+                        "sec_num"           => $old_section->sec_num,
+                        "section_title"     => $old_section->section_title,
+                        "section_title_fr"  => $old_section->section_title_fr,
+                        "form_id"           => $old_section->form_id,
+                    ]
+                );
+                
+            }
+
+            // Get Old Questions
+            $old_questions = DB::table("questions_backup")->where('form_id', $old_form->id)->get();
+            // dd($old_questions);
+
+            foreach($old_questions as $old_question){
+                $new_question_id = DB::table('questions')->updateOrInsert(
+                    ["id" => $old_question->id],
+                    [
+                        "question"                      => $old_question->question,
+                        "question_fr"                   => $old_question->question_fr,
+                        "question_info"                 => $old_question->question_info,
+                        "question_info_fr"              => $old_question->question_info_fr,
+                        "question_num"                  => $old_question->question_num,
+                        "is_assets_question"            => $old_question->is_assets_question,
+                        "question_comment"              => $old_question->question_comment,
+                        "question_comment_fr"           => $old_question->question_comment_fr,
+                        "additional_comments"           => $old_question->additional_comments,
+                        "question_assoc_type"           => $old_question->question_assoc_type,
+                        "parent_question"               => $old_question->parent_question,
+                        "is_parent"                     => $old_question->is_parent,
+                        "parent_q_id"                   => $old_question->parent_q_id,
+                        "form_key"                      => $old_question->form_key,
+                        "type"                          => $old_question->type,
+                        "is_data_inventory_question"    => $old_question->is_data_inventory_question,
+                        "options"                       => $old_question->options,
+                        "options_fr"                    => $old_question->options_fr,
+                        "question_section"              => $old_question->question_section,
+                        "question_section_id"           => $old_question->question_section_id,
+                        "question_category"             => $old_question->question_category,
+                        "form_id"                       => $old_question->form_id,
+                        "created_at"                    => $old_question->created_at,
+                        "updated_at"                    => $old_question->updated_at,
+                        "display"                       => $old_question->display,
+                        "attachments"                   => $old_question->attachments,
+                        "dropdown_value_from"           => $old_question->dropdown_value_from,
+                        "not_sure_option"               => $old_question->not_sure_option,
+                        "question_short"                => $old_question->question_short,
+                        "question_short_fr"             => $old_question->question_short_fr,
+                        "attachment_allow"              => $old_question->attachment_allow,
+                    ]
+                );
+            }
+
+            $old_options = DB::table("options_link_backup")->where('form_id', $old_form->id)->get();
+            // dd($old_options);
+
+            ////option link
+            foreach($old_options as $old_option){
+                DB::table('options_link')->updateOrInsert(
+                    ['id'  => $old_option->id],
+                    [
+                        'option_en'     => $old_option->option_en,
+                        'option_fr'     => $old_option->option_fr,
+                        'question_id'   => $old_option->question_id,
+                        'form_id'       => $old_option->form_id,
+                        'created_at'    => $old_option->created_at,
+                        'updated_at'    => $old_option->updated_at,
+                    ]
+                );
+            }
+            /////
+
+            $old_fqs = DB::table("form_questions_backup")->where('form_id', $old_form->id)->get();
+            // dd($old_fqs);
+
+            foreach($old_fqs as $old_fq){
+                DB::table('form_questions')->updateOrInsert(
+                    ['fq_id'  => $old_fq->fq_id],
+                    [
+                    'form_id'           => $old_fq->form_id,
+                    'question_id'       => $old_fq->question_id,
+                    'sort_order'        => $old_fq->sort_order,
+                    'display_question'  => $old_fq->display_question,
+                    ]
+                );
+            }
+            
+            return redirect('Forms/AdminFormsList')->with('message', __('Form Backup Generated Successfully'));  
+        } 
+        catch (\Exception $ex) {
+            return redirect()->back()->with('msg', $ex->getMessage());
+        }
+    }
+
     public function data_classification(){
         $data = DB::table('data_classifications')
             ->where('organization_id', Auth::user()->client_id)

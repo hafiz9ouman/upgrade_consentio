@@ -102,6 +102,7 @@
                   <th scope="col">Show Form</th>
                   @if(Request::is('Forms/AdminFormsList'))
                     <th scope="col">Dublicate</th>
+                    <th scope="col">Backup & Restore</th>
                     <th scope="col">Add Questions</th>
                   @endif
                   <?php if (Auth::user()->role != 1): ?>
@@ -116,6 +117,9 @@
                 </tr>
               </thead>
               <tbody>
+                @php
+                  $backup = DB::table('forms_backup')->pluck('id')->toArray();
+                @endphp
                 <?php foreach ($forms_list as $form_info): ?>
                 <tr>
                   <td>{{ $form_info->title }}</td>
@@ -149,6 +153,11 @@
                   @if(Request::is('Forms/AdminFormsList'))
                     <td ><a  href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
                     <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate Form</a></td></td>
+                    @if(!in_array($form_info->form_id, $backup))
+                    <td><a class="btn btn-sm btn-info" href={{ url('Forms/backup/'.$form_info->form_id) }} @if($check <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
+                    @else
+                    <td><a class="btn btn-sm btn-success" href={{ url('Forms/restore/'.$form_info->form_id) }}>Restore Form</a></td></td>
+                    @endif
                     <td>
                     @if($check > 0 || $form_info->form_id < 14)
                       <a href="{{ url('Forms/'.$form_info->form_id.'/add/questions') }}" class="btn btn-sm btn-success disabled" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add Questions</a>

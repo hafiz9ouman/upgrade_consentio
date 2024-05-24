@@ -355,6 +355,11 @@ Route::group(["middleware" => 'admin'], function () {
     Route::get('duplicate/{id}', 'Forms@duplicate')->name('form_duplicate')->middleware(['auth']);
     
     // ------------------------------------------ RESTORE FORMS -----------------------------------------------
+    
+    
+    Route::get('Forms/backup/{id}', 'Forms@form_backup')->name('form_backup');
+    Route::get('Forms/restore/{id}', 'Forms@form_restore')->name('form_restore');
+
     Route::get('group/restore', 'Groups@groups_restore')->name('groups_restore');
     Route::get('Forms/restore', 'Forms@forms_restore')->name('forms_restore');
     
