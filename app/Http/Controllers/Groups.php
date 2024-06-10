@@ -41,7 +41,7 @@ class Groups extends Controller
             $old_form       = DB::table('audit_questions_groups')->where('id', $id)->first();
             // dd($old_form);
 
-            $new_form_id    = DB::table('audit_questions_groups_backup')->insert([
+            $new_form_id    = DB::table('audit_questions_groups_backup')->updateOrInsert([
                 "id"                  => $old_form->id,
                 "group_name"          => $old_form->group_name,
                 "group_name_fr"       => $old_form->group_name_fr,
@@ -57,7 +57,7 @@ class Groups extends Controller
 
             foreach($old_sections as $old_section){
                 // Create Section
-                $new_section_id = DB::table('group_section_backup')->insert([
+                $new_section_id = DB::table('group_section_backup')->updateOrInsert([
                     "id"                => $old_section->id,
                     "section_title"     => $old_section->section_title,
                     "section_title_fr"  => $old_section->section_title_fr,
@@ -72,7 +72,7 @@ class Groups extends Controller
                 // dd($old_questions);
 
                 foreach($old_questions as $old_question){
-                    $new_question_id = DB::table('group_questions_backup')->insert([
+                    $new_question_id = DB::table('group_questions_backup')->updateOrInsert([
                             "id"                            => $old_question->id,
                             "question"                      => $old_question->question,
                             "question_fr"                   => $old_question->question_fr,
@@ -106,7 +106,7 @@ class Groups extends Controller
 
                     ////option link
                     foreach($old_options as $old_option){
-                        DB::table('options_link_backup')->insert([
+                        DB::table('options_link_backup')->updateOrInsert([
                             'id'            => $old_option->id,
                             'option_en'     => $old_option->option_en,
                             'option_fr'     => $old_option->option_fr,
@@ -146,6 +146,12 @@ class Groups extends Controller
             );
             // Group Created Successfully
 
+            // Delete Section
+            $new_sec = DB::table('group_section')->where('group_id', $old_form->id)->get();
+            DB::table('group_section')->where('group_id', $old_form->id)->delete();
+            foreach($new_sec as $new_se){
+                DB::table("group_questions")->where('section_id', $new_se->id)->delete();
+            }
             // Create Sections
             $old_sections = DB::table('group_section_backup')->where('group_id', $old_form->id)->get();
             // dd($old_sections);
@@ -227,6 +233,14 @@ class Groups extends Controller
         catch (\Exception $ex) {
             return redirect()->back()->with('msg', $ex->getMessage());
         }
+    }
+
+    public function Show_backup_groups()
+    {
+        $forms_info = DB::table('audit_questions_groups_backup')->orderBy('created_at', 'desc')->get();
+        // dd($forms_info);
+        return view('forms.audits.backup_list', ['user_type' => 'admin', 'forms_list' => $forms_info]);
+
     }
 
     // ----------------- GROUPS CRUD --------------------- //

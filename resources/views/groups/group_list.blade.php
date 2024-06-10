@@ -20,6 +20,7 @@
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <h3>{{ __('Question Groups') }}</h3>
         <div>
+            <a href="{{ url('/Group/backup_list') }}"  class="btn btn-sm btn-primary"><i class="fa fa-eye mr-0"></i> {{ __('View Group Backup') }}</a>
             <a href="{{ route('groups_restore') }}"  class="btn btn-sm btn-secondary"><i class="fa fa-plus mr-0"></i> {{ __('Group Restore') }}</a>
             <a href="{{ route('group_add') }}"  class="btn btn-sm btn-primary"><i class="fa fa-plus mr-0"></i> {{ __('Add Group') }}</a>
         </div>
@@ -60,9 +61,6 @@
                                 ->select('group_questions.*')
                                 ->count();
 
-                                $backup=DB::table('audit_questions_groups_backup')
-                                ->where('id', $group->id)
-                                ->count();
                             @endphp
                             <!-- <a href="{{ route('group_edit',$group->id) }}"  class="btn btn-sm btn-primary" title="Edit Group"><i class="fa fa-edit mr-0"></i></a> -->
                             @if($check>0)
@@ -73,11 +71,9 @@
                                 <a href="{{ route('group_add_quetion', $group->id) }}"  class="btn btn-sm btn-primary"> Add / Edit Questions</a>
                             @endif
                             <a href="javascript:" onclick="submitDuplicate('/group/duplicate/{{$group->id}}')"  class="btn btn-sm btn-primary" title="Duplicate Group"><i> Duplicate </i></a>
-                            @if($backup <= 0)
-                            <a class="btn btn-sm btn-info" href={{ url('Group/backup/'.$group->id) }} @if($count <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a>
-                            @else
-                            <a class="btn btn-sm btn-success" href={{ url('Group/restore/'.$group->id) }}>Restore Form</a>
-                            @endif
+                            
+                            <a class="btn btn-sm btn-info" href="javascript:" onclick="backup('/Group/backup/{{$group->id}}')" @if($count <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a>
+                            
                             
                             <!-- <a href="javascript:" onclick="submitDelete('/group/delete/{{$group->id}}')"        class="btn btn-sm btn-danger" title="Delete Group"><i class="fa fa-times mr-0"></i></a>  -->
                             @if($check>0)
@@ -125,6 +121,23 @@
         function submitDuplicate(url){
             swal({
                 title:"Are you sure you want to duplicate?",
+                type: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#05DD6B",
+                confirmButtonText: "YES",
+                cancelButtonText: "NO",
+                closeOnConfirm: false
+            }, function(val){
+                if (val){
+                    $('#delete_item').attr('href', url);
+                    document.getElementById('delete_item').click();
+                }
+                swal.close();
+            })
+        }
+        function backup(url){
+            swal({
+                title:"Are you sure you want to take Backup?",
                 type: "info",
                 showCancelButton: true,
                 confirmButtonColor: "#05DD6B",

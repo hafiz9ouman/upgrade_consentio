@@ -357,9 +357,11 @@ Route::group(["middleware" => 'admin'], function () {
     // ------------------------------------------ RESTORE FORMS -----------------------------------------------
     
     
+    Route::get('Forms/backup_list', 'Forms@Show_backup_forms')->name('show.form_backup');
     Route::get('Forms/backup/{id}', 'Forms@form_backup')->name('form_backup');
     Route::get('Forms/restore/{id}', 'Forms@form_restore')->name('form_restore');
 
+    Route::get('Group/backup_list', 'Groups@Show_backup_groups')->name('show.group_backup');
     Route::get('Group/backup/{id}', 'Groups@group_backup')->name('group_backup');
     Route::get('Group/restore/{id}', 'Groups@group_restore')->name('group_restore');
 

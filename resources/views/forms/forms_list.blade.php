@@ -82,7 +82,7 @@
             @if(Request::is('Forms/AdminFormsList/audit'))
               <h3 class="tile-title">Audit Forms <a href="{{ route('add_audit_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @else
-              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a><a href="{{ route('forms_restore') }}" class="btn btn-sm btn-secondary pull-right" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Restore Forms</a></h3>
+              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a><a href="{{ route('forms_restore') }}" class="btn btn-sm btn-secondary pull-right" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Restore Forms</a><a href="{{ url('/Forms/backup_list') }}" class="btn btn-sm btn-primary pull-right" style="margin-right: 10px;"><i class="fa fa-eye" aria-hidden="true"></i>View Backup Forms</a></h3>
             @endif
             
             <table class="table" id="forms-table">
@@ -117,9 +117,6 @@
                 </tr>
               </thead>
               <tbody>
-                @php
-                  $backup = DB::table('forms_backup')->pluck('id')->toArray();
-                @endphp
                 <?php foreach ($forms_list as $form_info): ?>
                 <tr>
                   <td>{{ $form_info->title }}</td>
@@ -153,11 +150,9 @@
                   @if(Request::is('Forms/AdminFormsList'))
                     <td ><a  href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
                     <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate Form</a></td></td>
-                    @if(!in_array($form_info->form_id, $backup))
-                    <td><a class="btn btn-sm btn-info" href={{ url('Forms/backup/'.$form_info->form_id) }} @if($check <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
-                    @else
-                    <td><a class="btn btn-sm btn-success" href={{ url('Forms/restore/'.$form_info->form_id) }}>Restore Form</a></td></td>
-                    @endif
+                    
+                    <td><a class="btn btn-sm btn-info" id="backup_item" href="javascript:" onclick="backup('/Forms/backup/{{$form_info->form_id}}')" @if($check <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
+                    
                     <td>
                     @if($check > 0 || $form_info->form_id < 14)
                       <a href="{{ url('Forms/'.$form_info->form_id.'/add/questions') }}" class="btn btn-sm btn-success disabled" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add Questions</a>
@@ -223,6 +218,23 @@
                 if (val){
                     $('#delete_item').attr('href', url);
                     document.getElementById('delete_item').click();
+                }
+                swal.close();
+            })
+        }
+        function backup(url){
+            swal({
+                title:"Are you sure you want to take Backup?",
+                type: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#05DD6B",
+                confirmButtonText: "YES",
+                cancelButtonText: "NO",
+                closeOnConfirm: false
+            }, function(val){
+                if (val){
+                    $('#backup_item').attr('href', url);
+                    document.getElementById('backup_item').click();
                 }
                 swal.close();
             })

@@ -49,7 +49,7 @@ class Forms extends Controller{
             $old_form       = DB::table('forms')->where('id', $id)->first();
             // dd($old_form);
 
-            $new_form_id    = DB::table('forms_backup')->insert([
+            $new_form_id    = DB::table('forms_backup')->updateOrInsert([
                 "id"            => $old_form->id,
                 "lang"          => $old_form->lang,
                 "code"          => $old_form->code,
@@ -72,7 +72,7 @@ class Forms extends Controller{
 
             foreach($old_sections as $old_section){
                 // Create Section
-                $new_section_id = DB::table('admin_form_sections_backup')->insert([
+                $new_section_id = DB::table('admin_form_sections_backup')->updateOrInsert([
                     "id"                => $old_section->id,
                     "sec_num"           => $old_section->sec_num,
                     "section_title"     => $old_section->section_title,
@@ -86,7 +86,7 @@ class Forms extends Controller{
             // dd($old_questions);
 
             foreach($old_questions as $old_question){
-                $new_question_id = DB::table('questions_backup')->insert([
+                $new_question_id = DB::table('questions_backup')->updateOrInsert([
                         "id"                            => $old_question->id,
                         "question"                      => $old_question->question,
                         "question_fr"                   => $old_question->question_fr,
@@ -128,7 +128,7 @@ class Forms extends Controller{
 
             ////option link
             foreach($old_options as $old_option){
-                DB::table('options_link_backup')->insert([
+                DB::table('options_link_backup')->updateOrInsert([
                     'id'            => $old_option->id,
                     'option_en'     => $old_option->option_en,
                     'option_fr'     => $old_option->option_fr,
@@ -144,7 +144,7 @@ class Forms extends Controller{
             // dd($old_fqs);
 
             foreach($old_fqs as $old_fq){
-                DB::table('form_questions_backup')->insert([
+                DB::table('form_questions_backup')->updateOrInsert([
                     'fq_id'             => $old_fq->fq_id,
                     'form_id'           => $old_fq->form_id,
                     'question_id'       => $old_fq->question_id,
@@ -187,6 +187,8 @@ class Forms extends Controller{
             );
             // Form Created Successfully
 
+            // Delete Sections
+            DB::table('admin_form_sections')->where('form_id', $old_form->id)->delete();
             // Create Sections
             $old_sections = DB::table('admin_form_sections_backup')->where('form_id', $old_form->id)->get();
             // dd($old_sections);
@@ -205,6 +207,8 @@ class Forms extends Controller{
                 
             }
 
+            // Delete Question
+            DB::table("questions")->where('form_id', $old_form->id)->delete();
             // Get Old Questions
             $old_questions = DB::table("questions_backup")->where('form_id', $old_form->id)->get();
             // dd($old_questions);
@@ -287,6 +291,14 @@ class Forms extends Controller{
         catch (\Exception $ex) {
             return redirect()->back()->with('msg', $ex->getMessage());
         }
+    }
+
+    public function Show_backup_forms()
+    {
+        $forms_info = DB::table('forms_backup')->where('type', 'assessment')->orderBy('date_created', 'desc')->get();
+        // dd($forms_info);
+        return view('forms.backup_list', ['user_type' => 'admin', 'forms_list' => $forms_info]);
+
     }
 
     public function data_classification(){
