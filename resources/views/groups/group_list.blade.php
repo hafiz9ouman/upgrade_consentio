@@ -52,6 +52,17 @@
                                 ->join('forms', 'forms.id', 'sub_forms.parent_form_id')
                                 ->where('forms.group_id', $group->id)
                                 ->count();
+
+                                $count=DB::table("audit_questions_groups")
+                                ->join('group_section', 'group_section.group_id', 'audit_questions_groups.id')
+                                ->join('group_questions', 'group_questions.section_id', 'group_section.id')
+                                ->where('audit_questions_groups.id', $group->id)
+                                ->select('group_questions.*')
+                                ->count();
+
+                                $backup=DB::table('audit_questions_groups_backup')
+                                ->where('id', $group->id)
+                                ->count();
                             @endphp
                             <!-- <a href="{{ route('group_edit',$group->id) }}"  class="btn btn-sm btn-primary" title="Edit Group"><i class="fa fa-edit mr-0"></i></a> -->
                             @if($check>0)
@@ -61,7 +72,13 @@
                                 <a href="{{ route('group_edit',$group->id) }}"  class="btn btn-sm btn-primary" title="Edit Group"><i class="fa fa-edit mr-0"></i></a>
                                 <a href="{{ route('group_add_quetion', $group->id) }}"  class="btn btn-sm btn-primary"> Add / Edit Questions</a>
                             @endif
-                            <a href="javascript:" onclick="submitDuplicate('/group/duplicate/{{$group->id}}')"  class="btn btn-sm btn-primary" title="Duplicate Group"><i> Duplicate </i></a> 
+                            <a href="javascript:" onclick="submitDuplicate('/group/duplicate/{{$group->id}}')"  class="btn btn-sm btn-primary" title="Duplicate Group"><i> Duplicate </i></a>
+                            @if($backup <= 0)
+                            <a class="btn btn-sm btn-info" href={{ url('Group/backup/'.$group->id) }} @if($count <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a>
+                            @else
+                            <a class="btn btn-sm btn-success" href={{ url('Group/restore/'.$group->id) }}>Restore Form</a>
+                            @endif
+                            
                             <!-- <a href="javascript:" onclick="submitDelete('/group/delete/{{$group->id}}')"        class="btn btn-sm btn-danger" title="Delete Group"><i class="fa fa-times mr-0"></i></a>  -->
                             @if($check>0)
                                 <a class="btn btn-sm btn-primary" style="color:white;background:grey;border-color:grey;" title="Delete Group"><i class="fa fa-times mr-0"></i></a> 

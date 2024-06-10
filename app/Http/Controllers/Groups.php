@@ -34,6 +34,201 @@ class Groups extends Controller
         }
     }
 
+    public function group_backup($id){
+        try {
+            // Creating Form
+
+            $old_form       = DB::table('audit_questions_groups')->where('id', $id)->first();
+            // dd($old_form);
+
+            $new_form_id    = DB::table('audit_questions_groups_backup')->insert([
+                "id"                  => $old_form->id,
+                "group_name"          => $old_form->group_name,
+                "group_name_fr"       => $old_form->group_name_fr,
+                "created_at"          => $old_form->created_at,
+                "updated_at"          => $old_form->updated_at,
+            ]);
+
+            // Group Created Successfully
+
+            // Create Sections
+            $old_sections = DB::table('group_section')->where('group_id', $old_form->id)->get();
+            // dd($old_sections);
+
+            foreach($old_sections as $old_section){
+                // Create Section
+                $new_section_id = DB::table('group_section_backup')->insert([
+                    "id"                => $old_section->id,
+                    "section_title"     => $old_section->section_title,
+                    "section_title_fr"  => $old_section->section_title_fr,
+                    "group_id"          => $old_section->group_id,
+                    "number"            => $old_section->number,
+                    "created_at"        => $old_section->created_at,
+                    "updated_at"        => $old_section->updated_at,
+                ]);
+
+                // Get Old Questions
+                $old_questions = DB::table("group_questions")->where('section_id', $old_section->id)->get();
+                // dd($old_questions);
+
+                foreach($old_questions as $old_question){
+                    $new_question_id = DB::table('group_questions_backup')->insert([
+                            "id"                            => $old_question->id,
+                            "question"                      => $old_question->question,
+                            "question_fr"                   => $old_question->question_fr,
+                            "question_short"                => $old_question->question_short,
+                            "question_short_fr"             => $old_question->question_short_fr,
+                            "question_num"                  => $old_question->question_num,
+                            "question_comment"              => $old_question->question_comment,
+                            "question_comment_fr"           => $old_question->question_comment_fr,
+                            "additional_comments"           => $old_question->additional_comments,
+                            "question_assoc_type"           => $old_question->question_assoc_type,
+                            "parent_question"               => $old_question->parent_question,
+                            "is_parent"                     => $old_question->is_parent,
+                            "parent_q_id"                   => $old_question->parent_q_id,
+                            "form_key"                      => $old_question->form_key,
+                            "type"                          => $old_question->type,
+                            "options"                       => $old_question->options,
+                            "options_fr"                    => $old_question->options_fr,
+                            "is_data_inventory_question"    => $old_question->is_data_inventory_question,   
+                            "accepted_formates"             => $old_question->accepted_formates,
+                            "dropdown_value_from"           => $old_question->dropdown_value_from,
+                            "attachment_allow"              => $old_question->attachment_allow,
+                            "not_sure_option"               => $old_question->not_sure_option,             
+                            "control_id"                    => $old_question->control_id,
+                            "section_id"                    => $old_question->section_id,
+                            "created_at"                    => $old_question->created_at,
+                            "updated_at"                    => $old_question->updated_at,
+                    ]);
+
+                    $old_options = DB::table("options_link")->where('question_id', $old_question->id)->get();
+                    // dd($old_options);
+
+                    ////option link
+                    foreach($old_options as $old_option){
+                        DB::table('options_link_backup')->insert([
+                            'id'            => $old_option->id,
+                            'option_en'     => $old_option->option_en,
+                            'option_fr'     => $old_option->option_fr,
+                            'question_id'   => $old_option->question_id,
+                            'form_id'       => $old_option->form_id,
+                            'created_at'    => $old_option->created_at,
+                            'updated_at'    => $old_option->updated_at,
+                        ]);
+                    }
+                    /////
+    
+                }
+            }
+
+            return redirect('group/list')->with('msg', __('Group Backup Generated Successfully'));  
+        } 
+        catch (\Exception $ex) {
+            return redirect()->back()->with('msg', $ex->getMessage());
+        }
+    }
+
+    public function group_restore($id){
+        try {
+            // Creating Form
+
+            $old_form       = DB::table('audit_questions_groups_backup')->where('id', $id)->first();
+            // dd($old_form);
+
+            $new_form = DB::table('audit_questions_groups')->updateOrInsert(
+                ['id' => $old_form->id], // Check if a record with this ID exists
+                [
+                    "group_name"          => $old_form->group_name,
+                    "group_name_fr"       => $old_form->group_name_fr,
+                    "created_at"          => $old_form->created_at,
+                    "updated_at"          => $old_form->updated_at,
+                ]
+            );
+            // Group Created Successfully
+
+            // Create Sections
+            $old_sections = DB::table('group_section_backup')->where('group_id', $old_form->id)->get();
+            // dd($old_sections);
+
+            foreach($old_sections as $old_section){
+                // Create Section
+                $new_section_id = DB::table('group_section')->updateOrInsert(
+                    ["id" => $old_section->id],
+                    [
+                        "section_title"     => $old_section->section_title,
+                        "section_title_fr"  => $old_section->section_title_fr,
+                        "group_id"          => $old_section->group_id,
+                        "number"            => $old_section->number,
+                        "created_at"        => $old_section->created_at,
+                        "updated_at"        => $old_section->updated_at,
+                    ]
+                );
+
+                // Get Old Questions
+                $old_questions = DB::table("group_questions_backup")->where('section_id', $old_section->id)->get();
+                // dd($old_questions);
+
+                foreach($old_questions as $old_question){
+                    $new_question_id = DB::table('group_questions')->updateOrInsert(
+                        ["id" => $old_question->id],
+                        [
+                                "question"                      => $old_question->question,
+                                "question_fr"                   => $old_question->question_fr,
+                                "question_short"                => $old_question->question_short,
+                                "question_short_fr"             => $old_question->question_short_fr,
+                                "question_num"                  => $old_question->question_num,
+                                "question_comment"              => $old_question->question_comment,
+                                "question_comment_fr"           => $old_question->question_comment_fr,
+                                "additional_comments"           => $old_question->additional_comments,
+                                "question_assoc_type"           => $old_question->question_assoc_type,
+                                "parent_question"               => $old_question->parent_question,
+                                "is_parent"                     => $old_question->is_parent,
+                                "parent_q_id"                   => $old_question->parent_q_id,
+                                "form_key"                      => $old_question->form_key,
+                                "type"                          => $old_question->type,
+                                "options"                       => $old_question->options,
+                                "options_fr"                    => $old_question->options_fr,
+                                "is_data_inventory_question"    => $old_question->is_data_inventory_question,   
+                                "accepted_formates"             => $old_question->accepted_formates,
+                                "dropdown_value_from"           => $old_question->dropdown_value_from,
+                                "attachment_allow"              => $old_question->attachment_allow,
+                                "not_sure_option"               => $old_question->not_sure_option,             
+                                "control_id"                    => $old_question->control_id,
+                                "section_id"                    => $old_question->section_id,
+                                "created_at"                    => $old_question->created_at,
+                                "updated_at"                    => $old_question->updated_at,
+                        ]
+                    );
+
+                    $old_options = DB::table("options_link_backup")->where('question_id', $old_question->id)->get();
+                    // dd($old_options);
+
+                    ////option link
+                    foreach($old_options as $old_option){
+                        DB::table('options_link')->updateOrInsert(
+                            ['id'  => $old_option->id],
+                            [
+                                'option_en'     => $old_option->option_en,
+                                'option_fr'     => $old_option->option_fr,
+                                'question_id'   => $old_option->question_id,
+                                'form_id'       => $old_option->form_id,
+                                'created_at'    => $old_option->created_at,
+                                'updated_at'    => $old_option->updated_at,
+                            ]
+                        );
+                    }
+                    /////
+                }
+                
+            }
+            
+            return redirect('group/list')->with('msg', __('Group Restored Successfully'));  
+        } 
+        catch (\Exception $ex) {
+            return redirect()->back()->with('msg', $ex->getMessage());
+        }
+    }
+
     // ----------------- GROUPS CRUD --------------------- //
     
     public function list(){
