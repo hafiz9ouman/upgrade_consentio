@@ -101,7 +101,7 @@
                   <?php endif; ?>
                   <th scope="col">Show Form</th>
                   @if(Request::is('Forms/AdminFormsList'))
-                    <th scope="col">Dublicate</th>
+                    <th scope="col">Duplicate</th>
                     <th scope="col">Backup & Restore</th>
                     <th scope="col">Add Questions</th>
                   @endif
