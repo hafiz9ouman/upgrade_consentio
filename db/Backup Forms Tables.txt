@@ -1,0 +1,87 @@
+CREATE TABLE `forms_backup` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `lang` varchar(4) NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `title` varchar(191) NOT NULL,
+  `title_fr` varchar(255) DEFAULT NULL,
+  `comments` text,
+  `type` varchar(50) DEFAULT NULL,
+  `date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expiry` datetime DEFAULT NULL,
+  `date_updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `group_id` int DEFAULT NULL,
+  `is_fav` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+CREATE TABLE `admin_form_sections_backup` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `sec_num` int NOT NULL,
+  `section_title` varchar(100) NOT NULL,
+  `section_title_fr` text,
+  `form_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `section_title_2` (`section_title`,`form_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+CREATE TABLE `questions_backup` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `question` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `question_fr` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_info` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Additional field added for handling of custom cases which has info in JSON',
+  `question_info_fr` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Additional field added for handling of custom cases which has info in JSON',
+  `question_num` varchar(11) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_assets_question` tinyint(1) DEFAULT '0',
+  `question_comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `question_comment_fr` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `additional_comments` tinyint NOT NULL DEFAULT '0',
+  `question_assoc_type` tinyint NOT NULL DEFAULT '0' COMMENT '0 = No Relationship, 1 = Parent Question, 2 = Child Questions ',
+  `parent_question` int NOT NULL DEFAULT '0',
+  `is_parent` tinyint(1) DEFAULT '0',
+  `parent_q_id` int DEFAULT NULL,
+  `form_key` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `type` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'tf = True False, sc = Single Choice, mc = Multiple Choice, qa = Question & Answer, blank = Fill in the blanks',
+  `is_data_inventory_question` tinyint(1) DEFAULT '0',
+  `options` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `options_fr` varchar(5000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_section` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_section_id` int NOT NULL,
+  `question_category` tinyint NOT NULL DEFAULT '2' COMMENT '1 = Asset, 2 = Data Inventory',
+  `form_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `display` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'yes',
+  `attachments` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dropdown_value_from` int DEFAULT NULL,
+  `not_sure_option` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_short` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_short_fr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `attachment_allow` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+CREATE TABLE `form_questions_backup` (
+  `fq_id` int NOT NULL AUTO_INCREMENT,
+  `form_id` int NOT NULL,
+  `question_id` int NOT NULL,
+  `sort_order` double NOT NULL,
+  `display_question` varchar(3) DEFAULT 'yes',
+  PRIMARY KEY (`fq_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+CREATE TABLE `options_link_backup` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `option_en` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `option_fr` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `question_id` bigint unsigned DEFAULT NULL,
+  `form_id` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
