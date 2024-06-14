@@ -76,7 +76,7 @@
                     </div>
                     <input type="hidden" name="id" value="{{ $data->id }}" id="as_id_up">
                     <div class="form-group">
-                        <label>{{ __('Asset Name') }}<span class="red">*</span></label>
+                        <label>{{ __('Assets Name') }}<span class="red">*</span></label>
                         <input type="text" name="namez" value="{{ $data->name }}" class="form-control" required
                             disabled>
                     </div>
@@ -101,7 +101,7 @@
                     <div class="form-group">
                         <label>{{ __('Hosting Provider') }} </label>
                         <input type="text" name="hosting_providerz" value="{{ $data->hosting_provider }}"
-                            class="form-control" required>
+                            class="form-control">
                     </div>
                     <div class="form-group">
                         <div class='input-field'>
@@ -126,7 +126,7 @@
                         <input type="text" name="statez" value="{{ $data->state }}" class="form-control">
                     </div>
                     <div class="form-gourp">
-                                <label for="">{{ __('Impact') }}</label>
+                                <label for="">{{ __('Impact') }}<span class="red">*</span></label>
                                 <select name="impact" id="impact_name_up" class="form-control for_change">
                                     @foreach ($impact as $imp)
                                         <option value="{{ $imp->id }}" {{ $imp->id == $data->impact_id ? "selected" : "" }}> @if(session('locale') == 'fr') {{ $imp->impact_name_fr }} @else {{ $imp->impact_name_en }} @endif</option>
@@ -134,7 +134,7 @@
                                 </select>
                             </div>
                             <div class="form-gourp">
-                                <label for="">{{ __('Data Classification') }}</label>
+                                <label for="">{{ __('Data Classification') }}<span class="red">*</span></label>
                                 <select name="data_classification" id="classification_name_up"
                                     class="form-control for_change">
                                     @foreach ($dt_classification->take(5) as $dc)
@@ -144,7 +144,7 @@
                             </div>
                             <div class="form-group">
                                 <div class='input-field'>
-                                    <label for='country'>{{ __('Category (Asset Tier)') }}</label>
+                                    <label for='country'>{{ __('Category (Asset Tier)') }}<span class="red">*</span></label>
                                     <select id='tier_sub_field_up' class="form-control" required name='tier_sub_filed'>
                                         <option value="Crown Jewels" {{ $data->tier == "Crown Jewels" ? "selected" : "" }}> {{__('Crown Jewels')}}</option>
                                         <option value="tier 1" {{ $data->tier == "tier 1" ? "selected" : "" }}> {{__('Tier 1')}}</option>
@@ -201,7 +201,7 @@
                     </div>
                     <div class="form-group">
                         <label for="">{{ __('Data Retention') }}</label>
-                        <select class="form-control" required id="data_retention" name='data_retention'>
+                        <select class="form-control" id="data_retention" name='data_retention'>
                             <option value="0-30 days" {{ $data->data_retention === "0-30 days" ? "selected" : "" }}>{{ __('0-30 days') }}</option>
                             <option value="30-90 days" {{ $data->data_retention === "30-90 days" ? "selected" : "" }}>{{ __('30-90 days') }}</option>
                             <option value="3-6 months" {{ $data->data_retention === "3-6 months" ? "selected" : "" }}>{{ __('3-6 months') }}</option>
@@ -469,7 +469,7 @@
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label for="">{{ __('Data Classification') }}</label>
+                                        <label for="">{{ __('Data Classification') }}<span class="red">*</span></label>
                                         <select name="data_classification" id="classification_name"
                                             class="form-control for_change_triger">
                                             @foreach ($dt_classification as $dc)
@@ -528,20 +528,20 @@
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>{{ __('Asset Name') }}<span class="red">*</span></label>
+                                        <label>{{ __('Assets Name') }}<span class="red">*</span></label>
                                         <input type="text" id="name1" name="name" class="form-control" required>
                                     </div>
                                     <div class="form-group">
                                         <label>{{ __('Hosting Provider') }} </label>
                                         <input type="text" id="hosting_provider1" name="hosting_provider"
-                                            class="form-control" required>
+                                            class="form-control">
                                     </div>
                                     <div class="form-group">
                                         <label>{{ __('Hosting City') }} </label>
                                         <input type="text" id="city1" name="city" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label for="">{{ __('Impact') }}</label>
+                                        <label for="">{{ __('Impact') }}<span class="red">*</span></label>
                                         <select name="impact" id="impact_name" class="form-control for_change_triger">
                                             @foreach ($impact as $imp)
                                                 <option value="{{ $imp->id }}"> @if(session('locale') == 'fr') {{ $imp->impact_name_fr }} @else {{ $imp->impact_name_en }} @endif</option>
@@ -550,7 +550,7 @@
                                     </div>
                                     <div class="form-group">
                                         <div class='input-field'>
-                                            <label for='country'>{{ __('Category (Asset Tier)') }}</label>
+                                            <label for='country'>{{ __('Category (Asset Tier)') }}<span class="red">*</span></label>
                                             <select id='tier_sub_field' class="form-control" required name='tier_sub_filed'>
                                                 <option value="Crown Jewels"> {{__('Crown Jewels')}}</option>
                                                 <option value="tier 1"> {{__('Tier 1')}}</option>
@@ -989,6 +989,7 @@ function initialize() {
                     document.getElementById("langutitudez").value = lng;
 
                     document.getElementById("update_asset_locz").removeAttribute("onsubmit");
+                    console.log("Asset Ajax Call");
 
                     $.ajax({
 

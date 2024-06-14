@@ -334,11 +334,11 @@ class AssetsController extends Controller
         
         $request->validate([
             'name' => 'required|max:255',
-            'hosting_provider' => 'required',
+            'hosting_type' => 'required',
             ],
             [
             'name.required' => __('Please provide proper asset name to proceed.'),
-            'hosting_provider.required' => __('Please Provide Hosting Provider.')
+            'hosting_type.required' => __('Please Provide Hosting Type.')
             ]
             );
         
@@ -487,10 +487,10 @@ class AssetsController extends Controller
         //dd($request->all());
         $request->validate([
                 'name' => 'required|max:255',
-                'hosting_provider' => 'required',
+                'hosting_type' => 'required',
             ],
             [
-                'hosting_provider.required' => __('Please Provide Hosting Provider.')
+                'hosting_type.required' => __('Please Provide Hosting Provider.')
             ]
         );
 
