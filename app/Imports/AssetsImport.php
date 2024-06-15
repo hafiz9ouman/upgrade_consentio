@@ -5,9 +5,15 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpClient\HttpClient;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use App\Exceptions\ExcelValidationException;
+use Illuminate\Validation\ValidationException;
 
-class AssetsImport implements ToModel
+class AssetsImport implements ToModel, WithValidation
 {
+    private $rowNumber = 0;
     /**
     * @param array $row
     *
@@ -16,6 +22,7 @@ class AssetsImport implements ToModel
     public function model(array $row)
     {
 
+        $this->rowNumber++;
         // Check if it's the first row
         static $firstRow = true;
         if ($firstRow) {
@@ -26,6 +33,12 @@ class AssetsImport implements ToModel
         $client_id = Auth::user()->client_id;
         //dd($client_id);
 
+        for ($i = 0; $i <= 20; $i++) {
+            if (isset($row[$i])) {
+                $row[$i] = trim($row[$i]);
+            }
+        }
+        
         //check Asset Type
         if(strtolower($row[1]) == 'serveur'){
             $row[1] = "Server";
@@ -122,13 +135,19 @@ class AssetsImport implements ToModel
         if(count($impact) == 0 ){
             $impact= DB::table('impact')->where('impact_name_fr', $data)->get();
         }
+        if (count($impact) == 0 ) {
+            throw ValidationException::withMessages(["Row {$this->rowNumber}: The impact '{$row[7]}' is not valid Value."]);
+        }
         // dd($impact);
         $row[7]= $impact;
 
-        $var = ucfirst($row[8]);
+        $var = ucwords($row[8]);
         $data_class= DB::table('data_classifications')->where('classification_name_en', $var)->where('organization_id', $client_id)->get();
         if(count($data_class) == 0 ){
             $data_class= DB::table('data_classifications')->where('classification_name_fr', $var)->where('organization_id', $client_id)->get();
+        }
+        if (count($data_class) == 0) {
+            throw ValidationException::withMessages(["Row {$this->rowNumber}: The data classification '{$row[8]}' is not valid Value."]);
         }
         // dd($data_class);
         $row[8]= $data_class;
@@ -155,6 +174,38 @@ class AssetsImport implements ToModel
                 // Now you can use $latitude and $longitude as needed
             }
 
+        }
+
+        $is_exist = DB::table('assets')->where('name', $row[0])->where('client_id', $client_id)->first();
+
+        if($is_exist){
+            // dd("dublicate");
+            DB::table('assets')->where('id', $is_exist->id)->update([
+                "asset_type" => $row[1],
+                "hosting_type" => $row[2],
+                "hosting_provider" => $row[3],
+                "country" => $row[4],
+                "city" => $row[5],
+                "state" => $row[6],
+                "impact_id" => $row[7][0]->id,
+                "data_classification_id" => $row[8][0]->id,
+                "tier" => $row[9],
+                "it_owner" => $row[10],
+                "business_owner" => $row[11],
+                "business_unit" => $row[12],
+                "internal_3rd_party" => $row[13],
+                "data_subject_volume" => $row[14],
+                "no_of_user" => $row[15],
+                "supplier" => $row[16],
+                "list_data_type" => $row[17],
+                "data_retention" => $row[18],
+                "notes" => $row[19],
+                "description" => $row[20],
+                "lat" => $latitude,
+                "lng" => $longitude,
+            ]);
+
+            return null;
         }
 
         
@@ -226,5 +277,33 @@ class AssetsImport implements ToModel
             ]);
 
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            '*.0' => 'required', // Name
+            '*.1' => 'required', // Asset type
+            '*.2' => 'required', // Hosting type
+            '*.4' => 'required', // Country
+            '*.7' => 'required', // Impact ID
+            '*.8' => 'required', // Data classification ID
+            '*.9' => 'required', // Tier
+        ];
+    }
+    public function customValidationMessages()
+    {
+        return [
+            '*.0.required' => 'The Name field is required.',
+            '*.1.required' => 'The Asset type field is required.',
+            '*.2.required' => 'The Hosting type field is required.',
+            '*.4.required' => 'The Country field is required.',
+            '*.7.required' => 'The Impact field is required.',
+            '*.8.required' => 'The Data classification field is required.',
+            '*.9.required' => 'The Tier field is required.',
+        ];
     }
 }

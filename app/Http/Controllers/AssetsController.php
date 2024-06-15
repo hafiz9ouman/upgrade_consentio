@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use App\Exports\AssetDataElementExport;
 
 
@@ -580,21 +581,54 @@ class AssetsController extends Controller
         return view('assets.import');
     }
 
-    public function importAssetsData(Request $req){
-        try{
-            Excel::import(new AssetsImport, $req->file('import_file'));
-            return redirect('assets')->with("success","Your are successfully Imported");
-        }
-        catch(\Exception $exception)
-        {
-            if(session('locale') == 'fr'){
-                return redirect()->back()->with(['msg'=>'Veuillez sélectionner le fichier approprié']);
-            }
-            else{
-                return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
-            }
-        }
+    // public function importAssetsData(Request $req){
+    //     try{
+    //         Excel::import(new AssetsImport, $req->file('import_file'));
+    //         return redirect('assets')->with("success","Your are successfully Imported");
+    //     }
+    //     catch(\Exception $exception)
+    //     {
+    //         if(session('locale') == 'fr'){
+    //             return redirect()->back()->with(['msg'=>'Veuillez sélectionner le fichier approprié']);
+    //         }
+    //         else{
+    //             return redirect()->back()->with(['msg'=>'Please Select Appropriate File']);
+    //         }
+    //     }
         
+    // }
+    public function importAssetsData(Request $req){
+        // Define the validation rules
+        $rules = [
+            'import_file' => 'required|file|mimes:xlsx,xls,csv'
+        ];
+
+        // Create the validator instance
+        $validator = Validator::make($req->all(), $rules);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return redirect()->back()->with(['msg'=>'Please Upload Excel File']);
+        }
+            
+        try{
+            // Import the data using the AssetsImport class
+            Excel::import(new AssetsImport, $req->file('import_file'));
+            
+            // Redirect to the assets page with a success message
+            return redirect('assets')->with('success', 'You have successfully imported the data.');
+        }catch (ValidationException $e) {
+            // Collect the validation errors
+            $failures = $e->failures();
+            $errorMessages = [];
+
+            foreach ($failures as $failure) {
+                $errorMessages[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            }
+
+            // Redirect to the previous page with the error messages
+            return redirect()->back()->withErrors($errorMessages)->withInput();
+        }
     }
 
     public function DataElementSample(){
