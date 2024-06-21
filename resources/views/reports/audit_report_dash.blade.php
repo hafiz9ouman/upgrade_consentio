@@ -339,7 +339,7 @@ $busData = [
     @php
         $chartData = array_map(function ($item) {
             if ($item[0] == "Crown Jewels") {
-                $item[0] = "Les joyaux de la couronne";
+                $item[0] = "Joyaux de la couronne";
             } elseif ($item[0] == "tier 1") {
                 $item[0] = "Niveau 1";
             } elseif ($item[0] == "tier 2") {
@@ -876,7 +876,7 @@ $(document).ready(function() {
                         var custom_tier;
                         @if(session('locale')=='fr')
                             if(plan[0].tier == 'Crown Jewels'){
-                                custom_tier = "Les joyaux de la couronne";
+                                custom_tier = "Joyaux de la couronne";
                             }else if(plan[0].tier == 'tier 1'){
                                 custom_tier = "niveau 1";
                             }else if(plan[0].tier == 'tier 2'){
@@ -956,7 +956,7 @@ $(document).ready(function() {
                     // console.log('zetiertiertieree', tier)
 
                     @if(session('locale')=='fr')
-                    tierchart.push(['Les joyaux de la couronne', tier.Crown_Jewels]);
+                    tierchart.push(['Joyaux de la couronne', tier.Crown_Jewels]);
                     tierchart.push(['Niveau 1', tier.tier1]);
                     tierchart.push(['Niveau 2', tier.tier2]);
                     tierchart.push(['Niveau 3', tier.tier3]);

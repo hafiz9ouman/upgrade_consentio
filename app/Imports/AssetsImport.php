@@ -71,7 +71,7 @@ class AssetsImport implements ToModel, WithValidation
         }
 
         //check Tier
-        if(strtolower($row[9]) == 'les joyaux de la couronne'){
+        if(strtolower($row[9]) == 'Joyaux de la couronne'){
             $row[9] = "Crown Jewels";
         }
         if(strtolower($row[9]) == 'niveau 1'){

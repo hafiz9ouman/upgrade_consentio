@@ -145,13 +145,14 @@
                   @endif
                   @php
                      $check=DB::table('sub_forms')->where('parent_form_id', $form_info->form_id)->count();
+                     $check_que=DB::table('questions')->where('form_id', $form_info->form_id)->count();
                      
                     @endphp
                   @if(Request::is('Forms/AdminFormsList'))
                     <td ><a  href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
                     <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate Form</a></td></td>
                     
-                    <td><a class="btn btn-sm btn-info" id="backup_item" href="javascript:" onclick="backup('/Forms/backup/{{$form_info->form_id}}')" @if($check <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
+                    <td><a class="btn btn-sm btn-info" id="backup_item" href="javascript:" onclick="backup('/Forms/backup/{{$form_info->form_id}}')" @if($check_que <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
                     
                     <td>
                     @if($check > 0 || $form_info->form_id < 14)

@@ -73,7 +73,7 @@ class AssetsExport implements FromCollection,WithHeadings
         
                 //check Tier
                 if(strtolower($data->tier) == 'crown jewels'){
-                    $data->tier = "Les joyaux de la couronne";
+                    $data->tier = "Joyaux de la couronne";
                 }
                 if(strtolower($data->tier) == 'tier 1'){
                     $data->tier = "Niveau 1";
