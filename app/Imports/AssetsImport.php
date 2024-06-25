@@ -52,15 +52,15 @@ class AssetsImport implements ToModel, WithValidation
         if(strtolower($row[1]) == 'autre'){
             $row[1] = "Other";
         }
-        if(strtolower($row[1]) == 'site internet'){
+        if(strtolower($row[1]) == 'site web'){
             $row[1] = "Website";
         }
 
         //check Hosting Type
-        if(strtolower($row[2]) == 'nuage'){
+        if(strtolower($row[2]) == 'infonuagique'){
             $row[2] = "Cloud";
         }
-        if(strtolower($row[2]) == 'sur site'){
+        if(strtolower($row[2]) == 'sur-site'){
             $row[2] = "On-Premise";
         }
         if(strtolower($row[2]) == 'pas certain'){
@@ -88,7 +88,7 @@ class AssetsImport implements ToModel, WithValidation
         if(strtolower($row[13]) == 'interne'){
             $row[13] = "internal";
         }
-        if(strtolower($row[13]) == '3ème partie'){
+        if(strtolower($row[13]) == 'Fournisseurs tiers'){
             $row[13] = "3rd Party";
         }
 
