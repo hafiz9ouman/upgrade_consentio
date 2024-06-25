@@ -637,8 +637,21 @@ class AssetsController extends Controller
     }
 
     public function exportSampleData(){
-        return Excel::download(new AssetsSampleExport, 'sample.xlsx');
-        return redirect('import-asset')->with("success","Your are successfully Sample Exported");
+        // return Excel::download(new AssetsSampleExport, 'sample.xlsx');
+        if(session('locale')=='fr'){
+            $FilePath = storage_path('Sample Asset_French.xlsx');
+            if (!File::exists($FilePath)) {
+                return redirect('import-asset')->with("msg", "File not found.");
+            }
+            return response()->download($FilePath, 'Sample Asset_French.xlsx');
+        }else{
+            $FilePath = storage_path('Sample Asset_English.xlsx');
+            if (!File::exists($FilePath)) {
+                return redirect('import-asset')->with("msg", "File not found.");
+            }
+            return response()->download($FilePath, 'Sample Asset_English.xlsx');
+        }
+        
     }
 
     public function save_asset_data_elements(Request $req){

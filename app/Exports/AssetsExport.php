@@ -21,11 +21,11 @@ class AssetsExport implements FromCollection,WithHeadings
     public function headings():array{
         if(session('locale') == 'fr'){
             return [
-                "Élément d'audit", "Type d'actif", "Type d'hébergement", "Fournisseur d'hébergement", "Pays", "Ville", "État", "Impacte", "Classification des données", "Niveau", "Organization", "Propriétaire informatique", "Propriétaire d'entreprise", "Unité commerciale", "Interne ou tiers", "Volume de données sensibles","Nombre d'utilisateurs","Fournisseur","Liste des types de données dans l'application","Conservation des données","Notes","Description",
+                "Nom de l'actif", "Type d'actif", "Type d'hébergement", "Fournisseur d'hébergement", "Pays", "Ville", "État", "Impacte", "Classification des données", "Niveau de l'actif", "Organization", "Responsable TI", "Responsable d’affaire", "Unité d’affaire", "Interne ou Fournisseurs tiers ", "Nombre de personnes concernées","Nombre d'utilisateurs","Fournisseur","Liste des types de données dans l'application","Conservation des données","Notes","Description",
             ];
         }else{
             return [
-                "Audit Item","Asset Type","Hosting Type","Hosting Provider","Country","City","State","Impact","Data Classiication","Asset Tier","Organization","IT Owner","Business Owner","Business Unit","Internal 3rd Party","Volume of Sensitive Data","Number of Users","Supplier","List of Data Type in Application","Data Retention","Notes","Description",
+                "Asset Name","Asset Type","Hosting Type","Hosting Provider","Country","City","State","Impact","Data Classiication","Asset Tier","Organization","IT Owner","Business Owner","Business Unit","Internal or 3rd Party","Data Subjects Volume","Number of Users","Supplier","List of Data Type in Application","Data Retention","Notes","Description",
             ];
         }
      }

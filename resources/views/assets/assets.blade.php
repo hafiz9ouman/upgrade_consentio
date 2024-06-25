@@ -179,7 +179,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="">{{ __('Volume of Sensitive Data') }}</label>
+                        <label for="">{{ __('Data Subjects Volume') }}</label>
                         <select class="form-control" required id="data_subject_volume" name='data_subject_volume'>
                             <option value="0-100" {{ $data->data_subject_volume === "0-100" ? "selected" : "" }}>{{ __('0-100') }}</option>
                             <option value="100-500" {{ $data->data_subject_volume === "100-500" ? "selected" : "" }}>{{ __('100-500') }}</option>
@@ -321,7 +321,7 @@
                                     <th scope="col">{{ __('BUSINESS OWNER') }}</th>
                                     <th scope="col">{{ __('BUSINESS UNIT') }}</th>
                                     <th scope="col">{{ __('INTERNAL 3RD PARTY') }}</th>
-                                    <th scope="col">{{ __('VOLUME OF SENSITIVE DATA') }}</th>
+                                    <th scope="col">{{ __('DATA SUBJECTS VOLUME') }}</th>
 
                                     <th scope="col">{{ __('ACTIONS') }}</th>
                                 </tr>
@@ -486,7 +486,7 @@
                                         <input type="text" id="business_unit" name="business_unit" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label for="">{{ __('Volume of Sensitive Data') }}</label>
+                                        <label for="">{{ __('Data Subjects Volume') }}</label>
                                         <select class="form-control" required id="data_subject_volume" name='data_subject_volume'>
                                             <option value="0-100">{{ __('0-100') }}</option>
                                             <option value="100-500">{{ __('100-500') }}</option>
