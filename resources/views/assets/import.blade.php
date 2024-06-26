@@ -32,7 +32,11 @@
 							</div>
 							<div class="form-group">
 								<button type="submit" class="button">{{__('Import Data')}}</button>
-								<a href="{{url('export-sample-data')}}" class="button float-right">{{__('Sample Data')}}</a>
+								@if(session('locale')=='fr')
+								<a href="{{url('assets-new/Sample_Asset_French.xlsx')}}" class="button float-right" download>{{__('Sample Data')}}</a>
+								@else
+								<a href="{{url('assets-new/Sample_Asset_English.xlsx')}}" class="button float-right" download>{{__('Sample Data')}}</a>
+								@endif
 							</div>
 						</form>
 					</div>
