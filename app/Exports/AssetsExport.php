@@ -89,8 +89,8 @@ class AssetsExport implements FromCollection,WithHeadings
                 if(strtolower($data->internal_3rd_party) == 'internal'){
                     $data->internal_3rd_party = "Interne";
                 }
-                if(strtolower($data->internal_3rd_party) == '3rd party'){
-                    $data->internal_3rd_party = "3ème Partie";
+                if(strtolower($data->internal_3rd_party) == '3rd party provider'){
+                    $data->internal_3rd_party = "Fournisseurs tiers";
                 }
 
                 //check Data Retention

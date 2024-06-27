@@ -175,7 +175,7 @@
                         
                         <select id='internal_3rd_party' class="form-control" required name='internal_3rd_party'>
                             <option value="internal" {{ $data->internal_3rd_party === "internal" ? "selected" : "" }}>{{__('Internal')}}</option>
-                            <option value="3rd Party" {{ $data->internal_3rd_party === "3rd Party" ? "selected" : "" }}>{{__('3rd Party')}}</option>
+                            <option value="3rd Party Provider" {{ $data->internal_3rd_party === "3rd Party Provider" ? "selected" : "" }}>{{__('3rd Party Provider')}}</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -568,7 +568,7 @@
                                         <!-- <input type="text" id="internal_3rd_party" name="internal_3rd_party" class="form-control"> -->
                                         <select id='internal_3rd_party' class="form-control" required name='internal_3rd_party'>
                                                 <option value="internal"> {{__('Internal')}}</option>
-                                                <option value="3rd Party"> {{__('3rd Party')}}</option>
+                                                <option value="3rd Party Provider"> {{__('3rd Party Provider')}}</option>
                                         </select>
                                     </div>
                                     <div class="form-group">

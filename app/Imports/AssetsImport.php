@@ -89,7 +89,7 @@ class AssetsImport implements ToModel, WithValidation
             $row[13] = "internal";
         }
         if(strtolower($row[13]) == 'Fournisseurs tiers'){
-            $row[13] = "3rd Party";
+            $row[13] = "3rd Party Provider";
         }
 
         //check Data Retention
