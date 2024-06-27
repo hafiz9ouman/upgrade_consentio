@@ -25,7 +25,7 @@ class AssetsExport implements FromCollection,WithHeadings
             ];
         }else{
             return [
-                "Asset Name","Asset Type","Hosting Type","Hosting Provider","Country","City","State","Impact","Data Classiication","Asset Tier","Organization","IT Owner","Business Owner","Business Unit","Internal or 3rd Party","Data Subjects Volume","Number of Users","Supplier","List of Data Type in Application","Data Retention","Notes","Description",
+                "Asset Name","Asset Type","Hosting Type","Hosting Provider","Country","City","State","Impact","Data Classiication","Asset Tier","Organization","IT Owner","Business Owner","Business Unit","Internal or 3rd Party","Volume of Sensitive Data","Number of Users","Supplier","List of Data Type in Application","Data Retention","Notes","Description",
             ];
         }
      }
