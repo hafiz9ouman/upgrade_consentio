@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use App\Exports\AssetDataElementExport;
+use App\Exports\FirstHundredRowsExport;
+use Storage;
 
 
 class AssetsController extends Controller
@@ -612,11 +614,40 @@ class AssetsController extends Controller
         }
             
         try{
-            // Import the data using the AssetsImport class
-            Excel::import(new AssetsImport, $req->file('import_file'));
+            // Load the file and get the first 100 rows
+        $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(200);
+
+        // Generate a unique file name for storing in storage
+        $fileName = 'first_100_rows_' . uniqid() . '.xlsx';
+
+        // Store the first 100 rows in an Excel file in storage
+        Excel::store(new FirstHundredRowsExport($data), $fileName, 'public');
+
+        // Get the full path of the stored Excel file
+        $filePath = storage_path('app/public/' . $fileName);
+
+        // Import the data from the stored Excel file using the AssetsImport class
+        Excel::import(new AssetsImport, $filePath);
+
+        // Delete the temporary Excel file after import (optional)
+        Storage::delete('public/' . $fileName);
+
+        // Redirect to the assets page with a success message
+        return redirect('assets')->with('success', 'You have successfully imported the data.');
+        ///////------
+            // // Load the file and get the first 100 rows
+            // $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(100);
+
+            // // Export the first 100 rows
+            // $export = new FirstHundredRowsExport($data);
+
+            // return Excel::download($export, 'first_100_rows.xlsx');
+                
+            // // Import the data using the AssetsImport class
+            // Excel::import(new AssetsImport, $req->file('import_file'));
             
-            // Redirect to the assets page with a success message
-            return redirect('assets')->with('success', 'You have successfully imported the data.');
+            // // Redirect to the assets page with a success message
+            // return redirect('assets')->with('success', 'You have successfully imported the data.');
         }catch (ValidationException $e) {
             // Collect the validation errors
             $failures = $e->failures();
