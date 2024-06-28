@@ -312,7 +312,7 @@
                                     <th scope="col">{{ __('ASSET NAME') }}</th>
                                     <th scope="col">{{ __('HOSTING TYPE') }}</th>
                                     <th scope="col">{{ __('HOSTING PROVIDER') }}</th>
-                                    <th scope="col">{{ __('COUNTRY') }}</th>
+                                    <th scope="col">{{ __('HOSTING COUNTRY') }}</th>
                                     <th scope="col">{{ __('CITY') }}</th>
                                     <th scope="col">{{ __('DATA CLASSIFICATION') }}</th>
                                     <th scope="col">{{ __('IMPACT') }}</th>

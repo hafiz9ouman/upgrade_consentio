@@ -384,8 +384,8 @@
     "On-Premise": "On-Premise",
     "Hybrid": "Hybrid",
     "Hosting Provider": "Hosting Provider",
-    "Country": "Country",
-    "City": "City",
+    "Hosting Country": "Hosting Country",
+    "Hosting City": "City",
     "State": "State",
     "Province": "Region",
     "Add More": "Add More",
@@ -723,6 +723,7 @@
     "ASSET NAME": "ASSET NAME",
     "HOSTING TYPE": "HOSTING TYPE",
     "HOSTING PROVIDER": "HOSTING PROVIDER",
+    "HOSTING COUNTRY": "HOSTING COUNTRY",
     "COUNTRY": "COUNTRY",
     "CITY": "CITY",
     "STATE": "STATE",
@@ -845,6 +846,8 @@
     "This asset is already present!": "This asset is already present!",
 
     "Tier": "Asset Tier",
+    "ASSET TIER": "ASSET TIER",
+    "Category (Asset Tier)": "Asset Tier",
 
     "Request Denide!": "Request Denide!",
     "Unable to Delete": "Unable to Delete",
