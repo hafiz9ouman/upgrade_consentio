@@ -150,7 +150,7 @@
             <h4 class="mt-2" style="color:black;"><b>{{__('Audit Remediation Plan')}}</b></h4>
         </div>
         <div class="col d-flex justify-content-end download-btn">
-            <img class="d-none mb-3" id="report-logo" src="{{ url('img/' . $company_logo) }}" alt="logo">
+            <img class="d-none mb-3" id="report-logo" style="max-width:280px;" src="{{ url('img/' . $company_logo) }}" alt="logo">
             <button id="screenshotButton" class="buton">{{__('Download Report')}}</button>
         </div>
     </div>
