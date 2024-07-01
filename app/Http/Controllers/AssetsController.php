@@ -610,7 +610,11 @@ class AssetsController extends Controller
 
         // Check if validation fails
         if ($validator->fails()) {
-            return redirect()->back()->with(['msg'=>'Please Upload Excel File']);
+            if(session('locale')=='fr'){
+                return redirect()->back()->with(['msg'=>'Veuillez télécharger le fichier Excel']);
+            }else{
+                return redirect()->back()->with(['msg'=>'Please Upload Excel File']);
+            }
         }
             
         try{
@@ -633,7 +637,11 @@ class AssetsController extends Controller
         Storage::delete('public/' . $fileName);
 
         // Redirect to the assets page with a success message
-        return redirect('assets')->with('success', 'You have successfully imported the data.');
+        if(session('locale')=='fr'){
+            return redirect('assets')->with('success', 'Vous avez importé les actifs avec succès.');
+        }else{
+            return redirect('assets')->with('success', 'You have successfully imported the data.');
+        }
         ///////------
             // // Load the file and get the first 100 rows
             // $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(100);

@@ -136,7 +136,11 @@ class AssetsImport implements ToModel, WithValidation
             $impact= DB::table('impact')->where('impact_name_fr', $data)->get();
         }
         if (count($impact) == 0 ) {
-            throw ValidationException::withMessages(["Row {$this->rowNumber}: The impact '{$row[7]}' is not valid Value."]);
+            if(session('locale')=='fr'){
+                throw ValidationException::withMessages(["Row {$this->rowNumber}: L’impacte '{$row[7]}' n’est pas une valeur valide."]);
+            }else{
+                throw ValidationException::withMessages(["Row {$this->rowNumber}: The impact '{$row[7]}' is not valid Value."]);
+            }
         }
         // dd($impact);
         $row[7]= $impact;
@@ -147,7 +151,12 @@ class AssetsImport implements ToModel, WithValidation
             $data_class= DB::table('data_classifications')->where('classification_name_fr', $var)->where('organization_id', $client_id)->get();
         }
         if (count($data_class) == 0) {
-            throw ValidationException::withMessages(["Row {$this->rowNumber}: The data classification '{$row[8]}' is not valid Value."]);
+            if(session('locale')=='fr'){
+                throw ValidationException::withMessages(["Row {$this->rowNumber}: La classification des données '{$row[8]}' n'est pas une valeur valide."]);
+            }else{
+                throw ValidationException::withMessages(["Row {$this->rowNumber}: The data classification '{$row[8]}' is not valid Value."]);
+            }
+            
         }
         // dd($data_class);
         $row[8]= $data_class;
@@ -162,6 +171,8 @@ class AssetsImport implements ToModel, WithValidation
             ]
         ]);
         // dd($response);
+        $latitude = Null;
+        $longitude = Null;
 
         if ($response->getStatusCode() === 200) {
             $content = $response->toArray(); // Convert response to array
@@ -296,14 +307,26 @@ class AssetsImport implements ToModel, WithValidation
     }
     public function customValidationMessages()
     {
-        return [
-            '*.0.required' => 'The Name field is required.',
-            '*.1.required' => 'The Asset type field is required.',
-            '*.2.required' => 'The Hosting type field is required.',
-            '*.4.required' => 'The Country field is required.',
-            '*.7.required' => 'The Impact field is required.',
-            '*.8.required' => 'The Data classification field is required.',
-            '*.9.required' => 'The Tier field is required.',
-        ];
+        if(session('locale')=='fr'){
+            return [
+                '*.0.required' => 'Le champ Nom de l\'actif est obligatoire.',
+                '*.1.required' => 'Le champ Type d\'actif est obligatoire.',
+                '*.2.required' => 'Le champ Type d\'hébergement est obligatoire.',
+                '*.4.required' => 'Le champ Pays est obligatoire.',
+                '*.7.required' => 'Le champ Impact est obligatoire.',
+                '*.8.required' => 'Le champ Classification des données est obligatoire.',
+                '*.9.required' => 'Le champ Niveau est obligatoire.',
+            ];
+        }else{
+            return [
+                '*.0.required' => 'The Name field is required.',
+                '*.1.required' => 'The Asset type field is required.',
+                '*.2.required' => 'The Hosting type field is required.',
+                '*.4.required' => 'The Country field is required.',
+                '*.7.required' => 'The Impact field is required.',
+                '*.8.required' => 'The Data classification field is required.',
+                '*.9.required' => 'The Tier field is required.',
+            ];
+        }
     }
 }

@@ -259,6 +259,14 @@
             {{ __('ASSETS LIST') }}
         @endsection
         <section class="assets_list">
+                @if (Session::has('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>{{ Session::get('success') }}</strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
             <div class="row mb-2 align-items-center">
                         
                         <div class="col">
