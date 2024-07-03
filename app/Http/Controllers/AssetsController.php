@@ -619,30 +619,48 @@ class AssetsController extends Controller
             
         try{
             // Load the file and get the first 100 rows
-        $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(200);
+            $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(200);
 
-        // Generate a unique file name for storing in storage
-        $fileName = 'first_100_rows_' . uniqid() . '.xlsx';
+            // Generate a unique file name for storing in storage
+            $fileName = 'first_100_rows_' . uniqid() . '.xlsx';
 
-        // Store the first 100 rows in an Excel file in storage
-        Excel::store(new FirstHundredRowsExport($data), $fileName, 'public');
+            // Store the first 100 rows in an Excel file in storage
+            Excel::store(new FirstHundredRowsExport($data), $fileName, 'public');
 
-        // Get the full path of the stored Excel file
-        $filePath = storage_path('app/public/' . $fileName);
+            // Get the full path of the stored Excel file
+            $filePath = storage_path('app/public/' . $fileName);
 
-        // Import the data from the stored Excel file using the AssetsImport class
-        Excel::import(new AssetsImport, $filePath);
+            // Load the Excel file
+            $rows = Excel::toArray(null, $filePath);
 
-        // Delete the temporary Excel file after import (optional)
-        Storage::delete('public/' . $fileName);
+            // Check if there are data rows (ignoring the first row)
+            $dataRows = array_slice($rows[0], 1);
+            
+            if (empty($dataRows)) {
+                // Delete the temporary Excel file
+                Storage::delete('public/' . $fileName);
+            
+                // Redirect to the assets page with an error message
+                if (session('locale') == 'fr') {
+                    return redirect('import-asset')->with('msg', 'Le fichier Excel est vide.');
+                } else {
+                    return redirect('import-asset')->with('msg', 'The Excel file is empty.');
+                }
+            }
 
-        // Redirect to the assets page with a success message
-        if(session('locale')=='fr'){
-            return redirect('assets')->with('success', 'Vous avez importé les actifs avec succès.');
-        }else{
-            return redirect('assets')->with('success', 'You have successfully imported the data.');
-        }
-        ///////------
+            // Import the data from the stored Excel file using the AssetsImport class
+            Excel::import(new AssetsImport, $filePath);
+
+            // Delete the temporary Excel file after import (optional)
+            Storage::delete('public/' . $fileName);
+
+            // Redirect to the assets page with a success message
+            if(session('locale')=='fr'){
+                return redirect('assets')->with('success', 'Vous avez importé les actifs avec succès.');
+            }else{
+                return redirect('assets')->with('success', 'You have successfully imported the data.');
+            }
+            ///////------
             // // Load the file and get the first 100 rows
             // $data = Excel::toCollection(null, $req->file('import_file'))->first()->take(100);
 
