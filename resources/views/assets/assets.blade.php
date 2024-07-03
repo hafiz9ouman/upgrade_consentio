@@ -221,7 +221,7 @@
                         <input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="no_users" name="no_users" class="form-control" value="{{ $data->no_of_user }}">
                     </div>
                     <div class="form-group">
-                        <label for="">{{ __('List of Data Type') }}</label>
+                        <label for="">{{ __('List of Data Type in the Application') }}</label>
                         <input type="text" id="data_type" name="data_type" class="form-control" value="{{ $data->list_data_type }}">
                     </div>
                     <div class="form-group">
@@ -584,7 +584,7 @@
                                         <input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="no_users" name="no_users" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label for="">{{ __('List of Data Type in Application') }}</label>
+                                        <label for="">{{ __('List of Data Type in the Application') }}</label>
                                         <input type="text" id="data_type" name="data_type" class="form-control">
                                     </div>
                                     <div class="form-group">
