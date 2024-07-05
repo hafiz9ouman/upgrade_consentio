@@ -217,7 +217,7 @@ class Groups extends Controller
                                 'option_en'     => $old_option->option_en,
                                 'option_fr'     => $old_option->option_fr,
                                 'question_id'   => $old_option->question_id,
-                                'form_id'       => $old_option->form_id,
+                                'group_id'       => $old_form->id,
                                 'created_at'    => $old_option->created_at,
                                 'updated_at'    => $old_option->updated_at,
                             ]
@@ -388,7 +388,7 @@ class Groups extends Controller
                                 'option_en'     => $op,
                                 'option_fr'     => $opt_fr[$index],
                                 'question_id'   => $question->id,
-                                'form_id'       => $question->section_id,
+                                'group_id'      => $group_id,
                             ]);
                         }
                     }
@@ -615,6 +615,8 @@ class Groups extends Controller
             }
             $question->save();
 
+            $group_id = DB::table('group_section')->where('id', $request->section_id)->pluck('group_id');
+
             ////option link
             if(isset($question->options) && isset($question->options_fr) && $question->type !="qa"){
                 $opt = explode(", ", $question->options);
@@ -624,7 +626,7 @@ class Groups extends Controller
                         'option_en'     => $op,
                         'option_fr'     => $opt_fr[$index],
                         'question_id'   => $question->id,
-                        'form_id'       => $question->section_id,
+                        'group_id'      => $group_id,
                     ]);
                 }
             }
