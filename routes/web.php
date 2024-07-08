@@ -356,14 +356,16 @@ Route::group(["middleware" => 'admin'], function () {
     
     // ------------------------------------------ RESTORE FORMS -----------------------------------------------
     
-    
-    Route::get('Forms/backup_list', 'Forms@Show_backup_forms')->name('show.form_backup');
-    Route::get('Forms/backup/{id}', 'Forms@form_backup')->name('form_backup');
-    Route::get('Forms/restore/{id}', 'Forms@form_restore')->name('form_restore');
+    //View Import Route
+    Route::get('Forms/view_import', 'BackupRestoreController@view_import')->name('show.form_import'); //working
 
-    Route::get('Group/backup_list', 'Groups@Show_backup_groups')->name('show.group_backup');
-    Route::get('Group/backup/{id}', 'Groups@group_backup')->name('group_backup');
-    Route::get('Group/restore/{id}', 'Groups@group_restore')->name('group_restore');
+    //Backup Generate
+    Route::get('Forms/all_backup', 'BackupRestoreController@all_backup')->name('all_export'); //working
+    Route::get('Forms/backup/{id}', 'BackupRestoreController@form_backup')->name('form_backup'); //working
+    Route::get('Group/backup/{id}', 'BackupRestoreController@group_backup')->name('group_backup'); //working
+    
+    //import file Processing
+    Route::post('Forms/import_file', 'BackupRestoreController@import_json')->name('import_file'); // working
 
     // Special Forms Restore
     Route::get('group/restore', 'Groups@groups_restore')->name('groups_restore');

@@ -20,34 +20,20 @@
 <div class="row bg-white py-3">  
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <!-- <h3>{{ __('Question Groups') }}</h3> -->
-        <h3>Forms Backup List</h3>
+        <h3>Import Forms</h3>
        
     </div>  
     <div class="col-md-12">
-        <table class="table " id="group-table">
-            <thead class="back_blue ">
-                <tr>
-                    <th class="">{{ __('Form Name En') }}</th>
-                    <th class="px-0">{{ __('Form Name Fr') }}</th>
-                    <th class="px-0">{{ __('Action') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if(count($forms_list) == 0)
-                    <tr>
-                        <td colspan="3" style="text-align: center; vertical-align: middle;">No Data Found</td>
-                    </tr>
-                @else
-                    @foreach($forms_list as $data)
-                        <tr>
-                            <td>{{ $data->title }}</td>
-                            <td>{{ $data->title_fr }}</td>
-                            <td><a class="btn btn-sm btn-success" href="javascript:" onclick="restore('/Forms/restore/{{$data->id}}')">Restore Form</a></td>
-                        </tr>
-                    @endforeach
-                @endif
-            </tbody>
-        </table>
+        <form method="POST" action="{{url('/Forms/import_file')}}" enctype="multipart/form-data">
+            @csrf
+            <div class="form-group">
+                <label for="import_file"></label>
+                <input type="file" class="form-control" name="import_file" required>
+            </div>
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary">
+            </div>
+        </form>
     </div>
 
 </div>
