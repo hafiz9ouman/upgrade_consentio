@@ -20,7 +20,7 @@
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <h3>{{ __('Question Groups') }}</h3>
         <div>
-            <a href="{{ url('/Forms/view_import') }}"  class="btn btn-sm btn-primary"><i class="fa fa-file-import mr-0"></i> {{ __('Import Group') }}</a>
+            <!-- <a href="{{ url('/Forms/view_import') }}"  class="btn btn-sm btn-primary"><i class="fa fa-file-import mr-0"></i> {{ __('Import Group') }}</a> -->
             <!-- <a href="{{ route('groups_restore') }}"  class="btn btn-sm btn-secondary"><i class="fa fa-plus mr-0"></i> {{ __('Group Restore') }}</a> -->
             <a href="{{ route('group_add') }}"  class="btn btn-sm btn-primary"><i class="fa fa-plus mr-0"></i> {{ __('Add Group') }}</a>
         </div>

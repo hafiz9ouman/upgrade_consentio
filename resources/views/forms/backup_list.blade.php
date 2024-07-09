@@ -6,7 +6,6 @@
 <div class="app-title">
     <ul class="app-breadcrumb breadcrumb">
     <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
-    <li class="breadcrumb-item"><a href="{{url('Forms/AdminFormsList')}}">{{ __('Manage Assessment Forms') }}</a></li>
     <li class="breadcrumb-item">{{ __('Import') }}</li>
     </ul>
 </div>
@@ -16,6 +15,18 @@
 @endif
 @if(Session::has('alert'))
     <p class="alert alert-danger">{{ Session::get('alert') }}</p>
+@endif
+@if(Session::has('message'))
+    <p class="alert alert-info">{{ Session::get('message') }}</p>
+@endif
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 @endif
 <div class="row bg-white py-3">  
     <div class="col-md-12 d-flex justify-content-between align-items-center">

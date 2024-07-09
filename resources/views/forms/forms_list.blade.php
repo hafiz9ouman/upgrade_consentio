@@ -94,7 +94,7 @@
             @if(Request::is('Forms/AdminFormsList/audit'))
               <h3 class="tile-title">Audit Forms <a href="{{ route('add_audit_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @else
-              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a><a href="{{ route('all_export') }}" class="btn btn-sm btn-secondary pull-right" @if($form_count <= 0) style="pointer-events: none;cursor: default;margin-right: 10px;opacity: 1;color:linen;" @else style="margin-right: 10px;" @endif><i class="fa fa-download" aria-hidden="true"></i>Export All</a><a href="{{ url('/Forms/view_import') }}" class="btn btn-sm btn-primary pull-right" style="margin-right: 10px;"><i class="fa fa-file-import" aria-hidden="true"></i>Import Forms</a></h3>
+              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a><a href="{{ route('all_export') }}" class="btn btn-sm btn-secondary pull-right" @if($form_count <= 0) style="pointer-events: none;cursor: default;margin-right: 10px;opacity: 1;color:linen;" @else style="margin-right: 10px;" @endif><i class="fa fa-download" aria-hidden="true"></i>Export All</a></h3>
             @endif
             
             <table class="table" id="forms-table">

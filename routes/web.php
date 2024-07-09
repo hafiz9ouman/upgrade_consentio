@@ -357,7 +357,7 @@ Route::group(["middleware" => 'admin'], function () {
     // ------------------------------------------ RESTORE FORMS -----------------------------------------------
     
     //View Import Route
-    Route::get('Forms/view_import', 'BackupRestoreController@view_import')->name('show.form_import'); //working
+    Route::get('import/view_import', 'BackupRestoreController@view_import')->name('show.form_import'); //working
 
     //Backup Generate
     Route::get('Forms/all_backup', 'BackupRestoreController@all_backup')->name('all_export'); //working

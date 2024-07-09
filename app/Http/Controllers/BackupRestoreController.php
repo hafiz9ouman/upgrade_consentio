@@ -406,7 +406,7 @@ class BackupRestoreController extends Controller
 
                 $message = "$forms_imported Forms and $groups_imported Groups Restored Successfully";
                 // dd($errors, $message);
-                return redirect('Forms/AdminFormsList')->with('message', __($message))->withErrors($errors);
+                return redirect('import/view_import')->with('message', __($message))->withErrors($errors);
             }
             return redirect()->back()->with('msg', "Something is wrong!");
         } 
