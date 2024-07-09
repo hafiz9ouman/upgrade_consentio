@@ -151,6 +151,10 @@ class BackupRestoreController extends Controller
                 // Update or insert 'forms' data
                 if (isset($data['forms'])) {
                     foreach ($data['forms'] as $form) {
+                        $subforms = DB::table('sub_forms')->where('parent_form_id', $form['id'])->count();
+                        if($subforms > 0){
+                            return redirect()->back()->with('msg', "Import Failed: This Form is already used by organization");
+                        }
                         $form_count = DB::table('forms')->where('id', $form['id'])->count();
                         // Delete Forms
                         if($form_count > 0){
@@ -202,6 +206,11 @@ class BackupRestoreController extends Controller
                 // Update or insert 'forms' data
                 if (isset($data['audit_questions_groups'])) {
                     foreach ($data['audit_questions_groups'] as $audit_questions_group) {
+                        $form_id = DB::table('forms')->where('group_id', $audit_questions_group['id'])->pluck('id')->first();
+                        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->count();
+                        if($subforms > 0){
+                            return redirect()->back()->with('msg', "Import Failed: This Group is already used by organization");
+                        }
                         // dd($audit_questions_group);
                         $group_count = DB::table('audit_questions_groups')->where('id', $audit_questions_group['id'])->count();
                         

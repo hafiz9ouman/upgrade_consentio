@@ -20,7 +20,7 @@
 <div class="row bg-white py-3">  
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <!-- <h3>{{ __('Question Groups') }}</h3> -->
-        <h3>Import Forms</h3>
+        <h3>Import</h3>
        
     </div>  
     <div class="col-md-12">
