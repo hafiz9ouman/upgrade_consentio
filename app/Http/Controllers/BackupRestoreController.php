@@ -132,7 +132,11 @@ class BackupRestoreController extends Controller
             ]);
     
             $file = $request->file('import_file');
-            // dd($file);
+            $originalExtension = $file->getClientOriginalExtension();
+            if($originalExtension != 'json'){
+                return redirect()->back()->with('alert', 'Please Upload Json File');
+            }
+            // dd($originalExtension);
 
             // Decrypt the content of the uploaded file
             $decryptedContent = Crypt::decryptString(file_get_contents($file));
