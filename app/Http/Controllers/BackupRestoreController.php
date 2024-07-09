@@ -259,6 +259,8 @@ class BackupRestoreController extends Controller
             }
             if ($data['import_type']=="All") {
                 // dd($data['forms']);
+                $forms_imported = 0;
+                $groups_imported = 0;
                 // Update or insert 'forms' data
                 if (isset($data['forms'])) {
                     foreach ($data['forms'] as $form) {
@@ -273,6 +275,7 @@ class BackupRestoreController extends Controller
 
                         // Assuming 'id' is the unique identifier for the 'forms' table
                         DB::table('forms')->updateOrInsert(['id' => $form['id']], $form);
+                        $forms_imported++;
                     }
                 }
                 // Update or insert 'admin_form_sections' data
@@ -326,6 +329,7 @@ class BackupRestoreController extends Controller
                         // dd($audit_questions_group);
                         // Assuming 'id' is the unique identifier for the 'forms' table
                         DB::table('audit_questions_groups')->updateOrInsert(['id' => $audit_questions_group['id']], $audit_questions_group);
+                        $groups_imported++;
                     }
                 }
                 // Update or insert 'admin_form_sections' data
@@ -350,8 +354,10 @@ class BackupRestoreController extends Controller
                         DB::table('options_link')->updateOrInsert(['id' => $options_link['id']], $options_link);
                     }
                 }
+
+                $message = "$forms_imported Forms and $groups_imported Groups Restored successfully";
     
-                return redirect('Forms/AdminFormsList')->with('message', __('All Forms & Groups Restored Successfully'));
+                return redirect('Forms/AdminFormsList')->with('message', __($message));
             }
             return redirect()->back()->with('msg', "Something is wrong!");
         } 
