@@ -355,7 +355,7 @@ class BackupRestoreController extends Controller
                     }
                 }
 
-                $message = "$forms_imported Forms and $groups_imported Groups Restored successfully";
+                $message = "$forms_imported Forms and $groups_imported Groups Restored Successfully";
     
                 return redirect('Forms/AdminFormsList')->with('message', __($message));
             }
