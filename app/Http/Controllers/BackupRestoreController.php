@@ -23,7 +23,7 @@ class BackupRestoreController extends Controller
             // Fetch data from the tables
             $data = [
                 'import_type'           =>"All",
-                'forms'                 =>DB::table('forms')->get()->toArray(),
+                'forms'                 =>DB::table('forms')->where('type', 'assessment')->get()->toArray(),
                 'admin_form_sections'   =>DB::table('admin_form_sections')->get()->toArray(),
                 'questions'             =>DB::table('questions')->get()->toArray(),
                 'form_questions'        =>DB::table('form_questions')->get()->toArray(),
@@ -261,9 +261,16 @@ class BackupRestoreController extends Controller
                 // dd($data['forms']);
                 $forms_imported = 0;
                 $groups_imported = 0;
+                $errors = [];
+
                 // Update or insert 'forms' data
                 if (isset($data['forms'])) {
                     foreach ($data['forms'] as $form) {
+                        $subforms = DB::table('sub_forms')->where('parent_form_id', $form['id'])->count();
+                        if($subforms > 0){
+                            $errors[] = "Import Failed: {$form['title']} Already in use.";
+                            continue;
+                        }
                         $form_count = DB::table('forms')->where('id', $form['id'])->count();
                         // Delete Forms
                         if($form_count > 0){
@@ -276,41 +283,63 @@ class BackupRestoreController extends Controller
                         // Assuming 'id' is the unique identifier for the 'forms' table
                         DB::table('forms')->updateOrInsert(['id' => $form['id']], $form);
                         $forms_imported++;
-                    }
-                }
-                // Update or insert 'admin_form_sections' data
-                if (isset($data['admin_form_sections'])) {
-                    foreach ($data['admin_form_sections'] as $admin_form_section) {
-                        // Assuming 'id' is the unique identifier for the 'forms' table
-                        // dd("ok", $admin_form_section);
-                        DB::table('admin_form_sections')->updateOrInsert(['id' => $admin_form_section['id']], $admin_form_section);
+                        
+                        //Sections
+                        // Filter and insert/update 'admin_form_sections' data
+                        if (isset($data['admin_form_sections'])) {
+                            $admin_form_sections = array_filter($data['admin_form_sections'], function($admin_form_section) use ($form) {
+                                return $admin_form_section['form_id'] == $form['id'];
+                            });
+
+                            foreach ($admin_form_sections as $admin_form_section) {
+                                DB::table('admin_form_sections')->updateOrInsert(['id' => $admin_form_section['id']], $admin_form_section);
+                            }
+                        }
+
+                        // Filter and insert/update 'questions' data
+                        if (isset($data['questions'])) {
+                            $questions = array_filter($data['questions'], function($question) use ($form) {
+                                return $question['form_id'] == $form['id'];
+                            });
+
+                            foreach ($questions as $question) {
+                                DB::table('questions')->updateOrInsert(['id' => $question['id']], $question);
+                            }
+                        }
+
+                        // Filter and insert/update 'form_questions' data
+                        if (isset($data['form_questions'])) {
+                            $form_questions = array_filter($data['form_questions'], function($form_question) use ($form) {
+                                return $form_question['form_id'] == $form['id'];
+                            });
+
+                            foreach ($form_questions as $form_question) {
+                                DB::table('form_questions')->updateOrInsert(['fq_id' => $form_question['fq_id']], $form_question);
+                            }
+                        }
+
+                        // Update or insert 'options_link' data
+                        if (isset($data['options_link'])) {
+                            $options_links = array_filter($data['options_link'], function($option_link) use ($form) {
+                                return $option_link['form_id'] == $form['id'];
+                            });
+
+                            foreach ($options_links as $options_link) {
+                                DB::table('options_link')->updateOrInsert(['id' => $options_link['id']], $options_link);
+                            }
+                        }
                     }
                 }
 
-                // Update or insert 'questions' data
-                if (isset($data['questions'])) {
-                    foreach ($data['questions'] as $question) {
-                        DB::table('questions')->updateOrInsert(['id' => $question['id']], $question);
-                    }
-                }
-
-                // Update or insert 'form_questions' data
-                if (isset($data['form_questions'])) {
-                    foreach ($data['form_questions'] as $form_question) {
-                        DB::table('form_questions')->updateOrInsert(['fq_id' => $form_question['fq_id']], $form_question);
-                    }
-                }
-
-                // Update or insert 'options_link' data
-                if (isset($data['options_link'])) {
-                    foreach ($data['options_link'] as $options_link) {
-                        DB::table('options_link')->updateOrInsert(['id' => $options_link['id']], $options_link);
-                    }
-                }
-                
                 // Update or insert Groups
                 if (isset($data['audit_questions_groups'])) {
                     foreach ($data['audit_questions_groups'] as $audit_questions_group) {
+                        $form_id = DB::table('forms')->where('group_id', $audit_questions_group['id'])->pluck('id')->first();
+                        $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->count();
+                        if($subforms > 0){
+                            $errors[] = "Import Failed: {$audit_questions_group['group_name']} Already in use.";
+                            continue;
+                        }
                         // dd($audit_questions_group);
                         $group_count = DB::table('audit_questions_groups')->where('id', $audit_questions_group['id'])->count();
                         
@@ -330,34 +359,54 @@ class BackupRestoreController extends Controller
                         // Assuming 'id' is the unique identifier for the 'forms' table
                         DB::table('audit_questions_groups')->updateOrInsert(['id' => $audit_questions_group['id']], $audit_questions_group);
                         $groups_imported++;
-                    }
-                }
-                // Update or insert 'admin_form_sections' data
-                if (isset($data['group_section'])) {
-                    foreach ($data['group_section'] as $group_sec) {
-                        // Assuming 'id' is the unique identifier for the 'forms' table
-                        // dd("ok", $admin_form_section);
-                        DB::table('group_section')->updateOrInsert(['id' => $group_sec['id']], $group_sec);
+
+                        // Update or insert 'admin_form_sections' data
+                        if (isset($data['group_section'])) {
+                            $group_sections = array_filter($data['group_section'], function($group_sec) use ($audit_questions_group) {
+                                return $group_sec['group_id'] == $audit_questions_group['id'];
+                            });
+                            
+                            foreach ($group_sections as $group_sec) {
+                                // Assuming 'id' is the unique identifier for the 'forms' table
+                                DB::table('group_section')->updateOrInsert(['id' => $group_sec['id']], $group_sec);
+                            }
+                        }
+                        
+                        // Extract section IDs
+                        $sectionIds = array_map(function($group_sec) {
+                            return $group_sec['id'];
+                        }, $group_sections);
+                        // dd($sectionIds);
+
+                        // Update or insert 'questions' data
+                        if (isset($data['group_questions'])) {
+                            $group_questions = array_filter($data['group_questions'], function($group_question) use ($sectionIds) {
+                                return in_array($group_question['section_id'], $sectionIds);
+                            });
+
+                            foreach ($group_questions as $group_question) {
+                                DB::table('group_questions')->updateOrInsert(['id' => $group_question['id']], $group_question);
+                            }
+                        }
+
+                        // Update or insert 'options_link' data
+                        if (isset($data['options_link'])) {
+                            $options_links = array_filter($data['options_link'], function($option_link) use ($audit_questions_group) {
+                                return $option_link['group_id'] == $audit_questions_group['id'];
+                            });
+                            foreach ($options_links as $options_link) {
+                                DB::table('options_link')->updateOrInsert(['id' => $options_link['id']], $options_link);
+                            }
+                        }
+
                     }
                 }
 
-                // Update or insert 'questions' data
-                if (isset($data['group_questions'])) {
-                    foreach ($data['group_questions'] as $group_question) {
-                        DB::table('group_questions')->updateOrInsert(['id' => $group_question['id']], $group_question);
-                    }
-                }
-
-                // Update or insert 'options_link' data
-                if (isset($data['options_link'])) {
-                    foreach ($data['options_link'] as $options_link) {
-                        DB::table('options_link')->updateOrInsert(['id' => $options_link['id']], $options_link);
-                    }
-                }
+                
 
                 $message = "$forms_imported Forms and $groups_imported Groups Restored Successfully";
-    
-                return redirect('Forms/AdminFormsList')->with('message', __($message));
+                // dd($errors, $message);
+                return redirect('Forms/AdminFormsList')->with('message', __($message))->withErrors($errors);
             }
             return redirect()->back()->with('msg', "Something is wrong!");
         } 

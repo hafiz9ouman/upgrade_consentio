@@ -81,6 +81,15 @@
             @if(Session::has('alert'))
               <p class="alert alert-danger">{{ Session::get('alert') }}</p>
             @endif
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             @if(Request::is('Forms/AdminFormsList/audit'))
               <h3 class="tile-title">Audit Forms <a href="{{ route('add_audit_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
