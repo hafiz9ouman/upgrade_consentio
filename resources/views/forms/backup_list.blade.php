@@ -41,7 +41,7 @@
                 <label for="import_file"></label>
                 <input type="file" class="form-control" name="import_file" required>
             </div>
-            <div class="form-group">
+            <div class="">
                 <input type="submit" class="btn btn-primary">
             </div>
         </form>
