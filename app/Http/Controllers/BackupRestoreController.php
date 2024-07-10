@@ -13,10 +13,9 @@ use Illuminate\Contracts\Validation\Validator;
 class BackupRestoreController extends Controller
 {
     public function view_import(){
-        // $forms_info = DB::table('forms_backup')->where('type', 'assessment')->orderBy('date_created', 'desc')->get();
-        // dd($forms_info);
-        return view('forms.backup_list');
 
+        return view('forms.backup_list');
+        
     }
     public function all_backup(){
         try {
@@ -37,13 +36,13 @@ class BackupRestoreController extends Controller
             $jsonData = json_encode($data, JSON_PRETTY_PRINT);
 
             // Encrypt the JSON data
-            $encryptedData = Crypt::encryptString($jsonData);
+            // $encryptedData = Crypt::encryptString($jsonData);
 
             // Define the filename with a timestamp for uniqueness
             $filename = 'alldata_' . now()->format('Y_m_d_H_i_s') . '.json';
 
             // Store the data as a JSON file in the storage
-            Storage::put($filename, $encryptedData);
+            Storage::put($filename, $jsonData);
 
             // Provide a download response for the JSON file
             return response()->download(storage_path("app/{$filename}"));
@@ -72,10 +71,10 @@ class BackupRestoreController extends Controller
             $jsonData = json_encode($data, JSON_PRETTY_PRINT);
 
             // Encrypt the JSON data
-            $encryptedData = Crypt::encryptString($jsonData);
+            // $encryptedData = Crypt::encryptString($jsonData);
     
             $filename = $name . '_' . now()->format('Y_m_d_H_i_s') . '.json';
-            Storage::put($filename, $encryptedData);
+            Storage::put($filename, $jsonData);
     
             return response()->download(storage_path("app/{$filename}"));
         } 
@@ -109,13 +108,13 @@ class BackupRestoreController extends Controller
             $jsonData = json_encode($data, JSON_PRETTY_PRINT);
 
             // Encrypt the JSON data
-            $encryptedData = Crypt::encryptString($jsonData);
+            // $encryptedData = Crypt::encryptString($jsonData);
 
             // Define the filename with a timestamp for uniqueness
             $filename = $name . '_' . now()->format('Y_m_d_H_i_s') . '.json';
             // dd($questions, $name, $data, $filename);
             // Store the data as a JSON file in the storage
-            Storage::put($filename, $encryptedData);
+            Storage::put($filename, $jsonData);
 
             // Provide a download response for the JSON file
             return response()->download(storage_path("app/{$filename}"));
@@ -139,7 +138,9 @@ class BackupRestoreController extends Controller
             // dd($originalExtension);
 
             // Decrypt the content of the uploaded file
-            $decryptedContent = Crypt::decryptString(file_get_contents($file));
+            // $decryptedContent = Crypt::decryptString(file_get_contents($file));
+
+            $decryptedContent = file_get_contents($file);
             // Decode decrypted JSON string into an array
             $data = json_decode($decryptedContent, true);
             // dd($data);
