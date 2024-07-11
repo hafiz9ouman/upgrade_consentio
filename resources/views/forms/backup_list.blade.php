@@ -28,12 +28,18 @@
         </ul>
     </div>
 @endif
+@php
+    $form_count = DB::table('forms')->where('type', 'assessment')->count();
+@endphp
 <div class="row bg-white py-3">  
     <div class="col-md-12 d-flex justify-content-between align-items-center">
         <!-- <h3>{{ __('Question Groups') }}</h3> -->
-        <h3>Import</h3>
-       
+        <h3>Import Forms & Question Groups</h3>
+        <a href="{{ route('all_export') }}" class="btn btn-sm btn-secondary pull-right" @if($form_count <= 0) style="pointer-events: none;cursor: default;margin-right: 10px;opacity: 1;color:linen;" @else style="margin-right: 10px;" @endif><i class="fa fa-download" aria-hidden="true"></i>Export All</a>
     </div>  
+    <div class="col-md-12 d-flex justify-content-end align-items-center">
+        <small class="text-danger">Click to Export all Forms and Question Groups</small>
+    </div> 
     <div class="col-md-12">
         <form method="POST" action="{{url('/Forms/import_file')}}" enctype="multipart/form-data">
             @csrf

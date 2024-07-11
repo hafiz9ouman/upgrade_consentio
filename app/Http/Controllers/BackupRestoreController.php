@@ -154,7 +154,7 @@ class BackupRestoreController extends Controller
                     foreach ($data['forms'] as $form) {
                         $subforms = DB::table('sub_forms')->where('parent_form_id', $form['id'])->count();
                         if($subforms > 0){
-                            return redirect()->back()->with('alert', "Import Failed: This Form is already used by organization");
+                            return redirect()->back()->with('alert', "Form Import Failed: This Form is already used by organization");
                         }
                         $form_count = DB::table('forms')->where('id', $form['id'])->count();
                         // Delete Forms
@@ -200,7 +200,7 @@ class BackupRestoreController extends Controller
                 }
                 // Insert other tables' data here
     
-                return redirect('Forms/AdminFormsList')->with('message', __('Form Restored Successfully'));
+                return redirect('Forms/AdminFormsList')->with('message', __('Form Imported Successfully'));
             }
             if ($data['import_type']=="Group") {
                 // dd("ok", $data);
@@ -210,7 +210,7 @@ class BackupRestoreController extends Controller
                         $form_id = DB::table('forms')->where('group_id', $audit_questions_group['id'])->pluck('id')->first();
                         $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->count();
                         if($subforms > 0){
-                            return redirect()->back()->with('alert', "Import Failed: This Group is already used by organization");
+                            return redirect()->back()->with('alert', "Group Import Failed: This Group is already used by organization");
                         }
                         // dd($audit_questions_group);
                         $group_count = DB::table('audit_questions_groups')->where('id', $audit_questions_group['id'])->count();
@@ -256,7 +256,7 @@ class BackupRestoreController extends Controller
                 }
                 // Insert other tables' data here
     
-                return redirect('group/list')->with('msg', __('Group Restored Successfully'));  
+                return redirect('group/list')->with('msg', __('Group Imported Successfully'));  
             }
             if ($data['import_type']=="All") {
                 // dd($data['forms']);
@@ -269,7 +269,7 @@ class BackupRestoreController extends Controller
                     foreach ($data['forms'] as $form) {
                         $subforms = DB::table('sub_forms')->where('parent_form_id', $form['id'])->count();
                         if($subforms > 0){
-                            $errors[] = "Import Failed: {$form['title']} Already in use.";
+                            $errors[] = "Form Import Failed: {$form['id']} - {$form['title']} Already in use.";
                             continue;
                         }
                         $form_count = DB::table('forms')->where('id', $form['id'])->count();
@@ -338,7 +338,7 @@ class BackupRestoreController extends Controller
                         $form_id = DB::table('forms')->where('group_id', $audit_questions_group['id'])->pluck('id')->first();
                         $subforms = DB::table('sub_forms')->where('parent_form_id', $form_id)->count();
                         if($subforms > 0){
-                            $errors[] = "Import Failed: {$audit_questions_group['group_name']} Already in use.";
+                            $errors[] = "Group Import Failed: {$audit_questions_group['id']} - {$audit_questions_group['group_name']} Already in use.";
                             continue;
                         }
                         // dd($audit_questions_group);
@@ -405,7 +405,7 @@ class BackupRestoreController extends Controller
 
                 
 
-                $message = "$forms_imported Forms and $groups_imported Groups Restored Successfully";
+                $message = "$forms_imported Forms and $groups_imported Groups Imported Successfully";
                 // dd($errors, $message);
                 return redirect('import/view_import')->with('message', __($message))->withErrors($errors);
             }

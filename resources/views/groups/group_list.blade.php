@@ -29,7 +29,7 @@
         <table class="table" id="group-table" style="min-width:720px">
             <thead class="back_blue">
                 <tr>
-                    <th class="px-0 pl-2">#</th>
+                    <th class="px-0 pl-2">{{ __('Group ID') }}</th>
 
                     <th class="px-0">{{ __('Group Name En') }}</th>
 
@@ -44,7 +44,7 @@
                 @else
                     @foreach($groups as $group)
                     <tr>
-                        <td> {{ $loop->iteration }} </td>
+                        <td> {{ $group->id }} </td>
                         <td> {{ $group->group_name }} </td>
                         <td> {{ $group->group_name_fr }} </td>
                         <td>
@@ -72,7 +72,7 @@
                             @endif
                             <a href="javascript:" onclick="submitDuplicate('/group/duplicate/{{$group->id}}')"  class="btn btn-sm btn-primary" title="Duplicate Group"><i> Duplicate </i></a>
                             
-                            <a class="btn btn-sm btn-info" href="javascript:" onclick="backup('/Group/backup/{{$group->id}}')" @if($count <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a>
+                            <a class="btn btn-sm btn-info" href="javascript:" onclick="backup('/Group/backup/{{$group->id}}')" @if($count <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Export</a>
                             
                             
                             <!-- <a href="javascript:" onclick="submitDelete('/group/delete/{{$group->id}}')"        class="btn btn-sm btn-danger" title="Delete Group"><i class="fa fa-times mr-0"></i></a>  -->

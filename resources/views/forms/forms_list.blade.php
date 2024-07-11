@@ -94,7 +94,7 @@
             @if(Request::is('Forms/AdminFormsList/audit'))
               <h3 class="tile-title">Audit Forms <a href="{{ route('add_audit_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @else
-              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a><a href="{{ route('all_export') }}" class="btn btn-sm btn-secondary pull-right" @if($form_count <= 0) style="pointer-events: none;cursor: default;margin-right: 10px;opacity: 1;color:linen;" @else style="margin-right: 10px;" @endif><i class="fa fa-download" aria-hidden="true"></i>Export All</a></h3>
+              <h3 class="tile-title">Assessment Forms <a href="{{ route('add_new_form') }}" class="btn btn-sm btn-success pull-right cust_color" style="margin-right: 10px;"><i class="fa fa-plus" aria-hidden="true"></i>Add New Form</a></h3>
             @endif
             
             <table class="table" id="forms-table">
@@ -105,6 +105,7 @@
                     <th scope="col" col-span="2" >Audit Name French </th>
                     <th scope="col" col-span="2" >Question Group</th>
                   @else
+                    <th scope="col" col-span="2" >Form ID </th>
                     <th scope="col" col-span="2" >Form Name English </th>
                     <th scope="col" col-span="2" >Form Name French </th>
                   @endif
@@ -114,7 +115,7 @@
                   <th scope="col">Show Form</th>
                   @if(Request::is('Forms/AdminFormsList'))
                     <th scope="col">Duplicate</th>
-                    <th scope="col">Backup & Restore</th>
+                    <th scope="col">Export</th>
                     <th scope="col">Add Questions</th>
                   @endif
                   <?php if (Auth::user()->role != 1): ?>
@@ -131,6 +132,9 @@
               <tbody>
                 <?php foreach ($forms_list as $form_info): ?>
                 <tr>
+                  @if(Request::is('Forms/AdminFormsList'))
+                  <td>{{ $form_info->form_id }}</td>
+                  @endif
                   <td>{{ $form_info->title }}</td>
                   <td><?php echo $form_info->title_fr?$form_info->title_fr:$form_info->title ?></td>
                   @if(Request::is('Forms/AdminFormsList/audit'))
@@ -162,9 +166,9 @@
                     @endphp
                   @if(Request::is('Forms/AdminFormsList'))
                     <td ><a  href={{ url('Forms/ViewForm/'.$form_info->form_id) }}> <i class="far fa-eye"></i> View Form</a></td></td>
-                    <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate Form</a></td></td>
+                    <td><a class="btn btn-sm btn-primary" href={{ url('duplicate/'.$form_info->form_id) }}> Duplicate</a></td></td>
                     
-                    <td><a class="btn btn-sm btn-info" id="backup_item" href="javascript:" onclick="backup('/Forms/backup/{{$form_info->form_id}}')" @if($check_que <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Generate Backup</a></td></td>
+                    <td><a class="btn btn-sm btn-info" id="backup_item" href="javascript:" onclick="backup('/Forms/backup/{{$form_info->form_id}}')" @if($check_que <= 0) style="pointer-events: none;cursor: default;color:white;background:grey;" @endif>Export</a></td></td>
                     
                     <td>
                     @if($check > 0 || $form_info->form_id < 14)

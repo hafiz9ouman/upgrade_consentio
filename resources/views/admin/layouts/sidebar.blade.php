@@ -19,7 +19,7 @@
     <li><a class="app-menu__item {{ Request::is('Forms/AdminFormsList/audit') ? 'active' : '' }}" href="{{route('admin_forms_list', 'audit')}}"><i class="app-menu__icon fas fa-window-restore"></i><span class="app-menu__label">{{ __('Manage Audit Form')}}</span></a></li>
 
     <li><a class="app-menu__item <?php if(Request::segment(1) == "group") echo "active"; ?>" href="{{route('groups_list')}}"><i class="app-menu__icon fas fa-layer-group"></i><span class="app-menu__label">{{ __('Manage Question Groups')}}</span></a></li>
-    <li><a class="app-menu__item <?php if(Request::segment(1) == "import") echo "active"; ?>" href="{{url('import/view_import')}}"><i class="app-menu__icon fas fa-file-import"></i><span class="app-menu__label">{{ __('Import Data')}}</span></a></li>
+    <li><a class="app-menu__item <?php if(Request::segment(1) == "import") echo "active"; ?>" href="{{url('import/view_import')}}"><i class="app-menu__icon fas fa-file-import"></i><span class="app-menu__label">{{ __('Import / Export')}}</span></a></li>
 
     <li><a class="app-menu__item <?php if(Request::segment(1) == "data_element") echo "active"; ?>" href="{{url('/data_element')}}"><i class="app-menu__icon fas fa-database"></i><span class="app-menu__label">{{ __('Data Element')}}</span></a></li>
     <li><a class="app-menu__item <?php if(Request::segment(1) == "login_img_settings") echo "active"; ?>" href="{{url('/login_img_settings')}}"><i class="app-menu__icon fas fa-image"></i><span class="app-menu__label">{{ __('Logo Settings')}}</span></a></li>
