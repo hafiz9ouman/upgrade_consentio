@@ -845,10 +845,17 @@ function initialize() {
                             url: '<?php echo url('delete_asset'); ?>',
                             data: form_data,
                             success: function(msg) {
-                                swal("@lang('users.success_delete')", '', 'success')
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 2500);
+                                console.log(msg);
+                                if(msg.status == 'error'){
+                                    swal(msg.title, msg.msg, 'error')
+                                }else{
+                                    swal("@lang('users.success_delete')", '', 'success')
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 2500);
+                                }
+                                
+                                
                             }
                         });
                     });

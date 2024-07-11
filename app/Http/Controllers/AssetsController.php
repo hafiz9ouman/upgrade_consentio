@@ -559,14 +559,17 @@ class AssetsController extends Controller
 
     public function delete_asset (Request $request){
         $asset_id = $request->id;
-        $status = 'error';
-        $title  = __('Unable to Delete');
-        $msg    = __('You are not allowed to perform this operation');        
-        
-        DB::table('assets')->where('id', $asset_id)->delete();
-        $status = 'success';
-        $title  = __('Removed');
-        $msg    = __('The requested asset was successfully removed');            
+        $check_subform = DB::table('sub_forms')->where('asset_id', $asset_id)->count();
+        if($check_subform > 0){
+            $status = 'error';
+            $title  = __('Unable to Delete');
+            $msg    = __('Asset already assign to Audit');  
+        }else{
+            DB::table('assets')->where('id', $asset_id)->delete();
+            $status = 'success';
+            $title  = __('Removed');
+            $msg    = __('The requested asset was successfully removed');  
+        }       
 
         return response()->json(['status' => $status, 'title' => $title, 'msg' => $msg]);
     }
