@@ -237,6 +237,7 @@ class RemediationController extends Controller{
                             "user_responses.rating",
                             "user_responses.question_response",
                             "user_responses.admin_comment",
+                            "evaluation_rating.rate_level",
                             "evaluation_rating.rating",
                             "evaluation_rating.color",
                             "evaluation_rating.text_color",
