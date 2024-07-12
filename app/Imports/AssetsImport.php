@@ -43,16 +43,31 @@ class AssetsImport implements ToModel, WithValidation
         if(strtolower($row[1]) == 'serveur'){
             $row[1] = "Server";
         }
+        if(strtolower($row[1]) == 'server'){
+            $row[1] = "Server";
+        }
         if(strtolower($row[1]) == 'base de données'){
+            $row[1] = "Database";
+        }
+        if(strtolower($row[1]) == 'database'){
             $row[1] = "Database";
         }
         if(strtolower($row[1]) == 'stockage physique'){
             $row[1] = "Physical Storage";
         }
+        if(strtolower($row[1]) == 'physical storage'){
+            $row[1] = "Physical Storage";
+        }
         if(strtolower($row[1]) == 'autre'){
             $row[1] = "Other";
         }
+        if(strtolower($row[1]) == 'other'){
+            $row[1] = "Other";
+        }
         if(strtolower($row[1]) == 'site web'){
+            $row[1] = "Website";
+        }
+        if(strtolower($row[1]) == 'website'){
             $row[1] = "Website";
         }
 
@@ -60,27 +75,51 @@ class AssetsImport implements ToModel, WithValidation
         if(strtolower($row[2]) == 'infonuagique'){
             $row[2] = "Cloud";
         }
+        if(strtolower($row[2]) == 'cloud'){
+            $row[2] = "Cloud";
+        }
         if(strtolower($row[2]) == 'sur-site'){
+            $row[2] = "On-Premise";
+        }
+        if(strtolower($row[2]) == 'on-premise'){
             $row[2] = "On-Premise";
         }
         if(strtolower($row[2]) == 'pas certain'){
             $row[2] = "Not Sure";
         }
+        if(strtolower($row[2]) == 'not sure'){
+            $row[2] = "Not Sure";
+        }
         if(strtolower($row[2]) == 'hybride'){
+            $row[2] = "Hybrid";
+        }
+        if(strtolower($row[2]) == 'hybrid'){
             $row[2] = "Hybrid";
         }
 
         //check Tier
-        if(strtolower($row[9]) == 'Joyaux de la couronne'){
+        if(strtolower($row[9]) == 'joyaux de la couronne'){
+            $row[9] = "Crown Jewels";
+        }
+        if(strtolower($row[9]) == 'crown jewels'){
             $row[9] = "Crown Jewels";
         }
         if(strtolower($row[9]) == 'niveau 1'){
             $row[9] = "tier 1";
         }
+        if(strtolower($row[9]) == 'tier 1'){
+            $row[9] = "tier 1";
+        }
         if(strtolower($row[9]) == 'niveau 2'){
-            $row[9] = "tier 3";
+            $row[9] = "tier 2";
+        }
+        if(strtolower($row[9]) == 'tier 2'){
+            $row[9] = "tier 2";
         }
         if(strtolower($row[9]) == 'niveau 3'){
+            $row[9] = "tier 3";
+        }
+        if(strtolower($row[9]) == 'tier 3'){
             $row[9] = "tier 3";
         }
 
@@ -88,7 +127,13 @@ class AssetsImport implements ToModel, WithValidation
         if(strtolower($row[13]) == 'interne'){
             $row[13] = "internal";
         }
+        if(strtolower($row[13]) == 'internal'){
+            $row[13] = "internal";
+        }
         if(strtolower($row[13]) == 'Fournisseurs tiers'){
+            $row[13] = "3rd Party Provider";
+        }
+        if(strtolower($row[13]) == '3rd party provider'){
             $row[13] = "3rd Party Provider";
         }
 
