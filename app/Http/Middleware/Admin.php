@@ -23,6 +23,10 @@ class Admin
             return redirect('dashboard');
         }
 
+        if(auth()->user()->is_email_varified == 0 ){
+            return redirect('verify-your-email');
+        }
+
         return $next($request);
     }
 }

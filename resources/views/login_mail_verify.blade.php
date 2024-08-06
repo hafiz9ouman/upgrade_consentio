@@ -105,10 +105,16 @@
                 @endif
 				<?php 
 				$user = DB::table('users')->where('id' , auth()->user()->client_id)->first();
-				
+				if(auth()->user()->role == 1){
+          $rememberme_days = 3;
+        }
 				?>
                 <span style="vertical-align: text-bottom;" ><input style="margin-bottom: 10px;" type="checkbox" name="rememberme" id="rememberme" />&nbsp;
+				@if(auth()->user()->role == 1)
+        {{ __('Donot_Ask_Again_Pre') }}{{$rememberme_days}}{{ __('Donot_Ask_Again_Post') }}
+        @else
 				{{ __('Donot_Ask_Again_Pre') }}{{$user->rememberme_days}}{{ __('Donot_Ask_Again_Post') }}
+        @endif
 				
 				</span>
 

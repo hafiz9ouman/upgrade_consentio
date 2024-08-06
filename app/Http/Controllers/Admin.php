@@ -332,11 +332,24 @@ class Admin extends Controller
 
                 $imgname =$test;
             }
-            $record = array(
-           "name" => $request->input('name'),
-           "image_name" => $imgname,
-           "is_blocked" => $request->input('is_blocked'),
-        );
+            if($request->mail_verification=='on'){
+                $record = array(
+                    "name" => $request->input('name'),
+                    "image_name" => $imgname,
+                    "is_blocked" => $request->input('is_blocked'),
+                    "tfa" => 1,
+                    "is_email_varified" => 0,
+                 );
+            }else{
+                $record = array(
+                    "name" => $request->input('name'),
+                    "image_name" => $imgname,
+                    "is_blocked" => $request->input('is_blocked'),
+                    "tfa" => 0,
+                    "is_email_varified" => 1,
+                 );
+            }
+        
         if($request->input('password')) { 
             $record['password'] = bcrypt($request->input('password'));
         }
@@ -396,12 +409,23 @@ class Admin extends Controller
                 $imgname =$test;
             }
         
-            $record = array(
-               "name" => $request->input('name'),
-               "image_name" => $imgname,
-               "is_blocked" => $request->input('is_blocked'),
-               "tfa" => 0,           
-            );
+            if($request->mail_verification=='on'){
+                $record = array(
+                    "name" => $request->input('name'),
+                    "image_name" => $imgname,
+                    "is_blocked" => $request->input('is_blocked'),
+                    "tfa" => 1,           
+                    "is_email_varified" => 0,           
+                 );
+            }else{
+                $record = array(
+                    "name" => $request->input('name'),
+                    "image_name" => $imgname,
+                    "is_blocked" => $request->input('is_blocked'),
+                    "tfa" => 0,           
+                    "is_email_varified" => 1,   
+                 );
+            }
 
             if($request->input('password')) 
             { 
@@ -526,17 +550,29 @@ class Admin extends Controller
           
         //     }
             // print_r($imgname);exit();
-
-        $data = array(
-            "name" => $request->input('name'),
-            "email" => $request->input('email'),
-            "is_email_varified" => 1,
-            "role" => 1,
-            "image_name" => $imgname,
-            "tfa" => 0,
-            "client_id" => 0,
-            "created_by" =>Auth::user()->id,
-        );
+        if($request->mail_verification == 'on'){
+            $data = array(
+                "name" => $request->input('name'),
+                "email" => $request->input('email'),
+                "is_email_varified" => 0,
+                "role" => 1,
+                "image_name" => $imgname,
+                "tfa" => 1,
+                "client_id" => 0,
+                "created_by" =>Auth::user()->id,
+            );
+        }else{
+            $data = array(
+                "name" => $request->input('name'),
+                "email" => $request->input('email'),
+                "is_email_varified" => 1,
+                "role" => 1,
+                "image_name" => $imgname,
+                "tfa" => 0,
+                "client_id" => 0,
+                "created_by" =>Auth::user()->id,
+            );
+        }
             
         if($request->input('password')) { 
             $data['password'] = bcrypt($request->input('password'));

@@ -103,6 +103,8 @@ class HomeController extends Controller
         // Mail::setSwiftMailer($swift_mailer);        
         $reciever_email = $email;
         $sender_email = 'noreply@consentio.cloud';  
+
+        DB::table('users')->where('email' , $user->email)->update(['email_varification_code' => $random]);
 		
         Mail::send(['html'=>'varification_email'], $data, function($message) use($reciever_email , $sender_email, $subject ) {
             $message->to($reciever_email, 'Consentio Forms')->subject
@@ -113,7 +115,7 @@ class HomeController extends Controller
 	    // echo $user->id.'------';
 		// echo $user->is_email_varified.'------';exit;
 		// dd($user);
-        DB::table('users')->where('email' , $user->email)->update(['email_varification_code' => $random]);
+        
 			//echo 'asdfsdf';exit;
 			//echo $rememberme.'------------';
 			//return view('admin.client.test');exit;
@@ -177,7 +179,7 @@ class HomeController extends Controller
 				//if rememberme= no then take to take to verification screen
 				// if rememberme = '' then take to dashboard
 				//echo $rememberme;exit;
-				if($rememberme=='No'  && $emailExists->role!=1){
+				if($rememberme=='No'){
 					//$this->comman_model->update('users', array('id'=>$emailExists->id), array('is_email_varified'=>0));
 					
 					//echo $emailExists->id.'.....';exit;
@@ -190,12 +192,19 @@ class HomeController extends Controller
 				
 				if($rememberme=='Yes'){
 					//echo $rememberme.'=============';exit;
-					$loggeduser = DB::table('users')->where('id' , $emailExists->client_id)->first();
-					$days = $this->durationdifference($emailExists->rememberme_start_time); 
-					
-					$company_rememberme_days = $loggeduser->rememberme_days;
-					//echo $days. "-----" . $company_rememberme_days;exit;
-					if($days>$company_rememberme_days && $emailExists->role!=1){
+                    if(auth()->user()->role == 1){
+                        $days = $this->durationdifference($emailExists->rememberme_start_time); 
+                        
+                        $company_rememberme_days = 3;
+                        //echo $days. "-----" . $company_rememberme_days;exit;
+                    }else{
+                        $loggeduser = DB::table('users')->where('id' , $emailExists->client_id)->first();
+                        $days = $this->durationdifference($emailExists->rememberme_start_time); 
+                        
+                        $company_rememberme_days = $loggeduser->rememberme_days;
+                        //echo $days. "-----" . $company_rememberme_days;exit;
+                    }
+					if($days>$company_rememberme_days){
 						//echo 'here insdie....';
 						DB::table('users')->where('id', $emailExists->id)->update(['is_email_varified' => 0]);
 					

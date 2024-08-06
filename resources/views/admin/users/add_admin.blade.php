@@ -278,6 +278,13 @@
 							</div>
 							<div class="line"></div>
 
+							<div class="form-group row">
+							<label class="col-sm-4 form-control-label">{{ __('Enable Email Verification')}}</label>
+								<label class="switch">
+									  <input name="mail_verification" type="checkbox" checked>
+									  <span class="slider round"></span>
+								</label>
+							</div>
 							<div class="line"></div>	
 						
 						</div>					

@@ -337,6 +337,23 @@ input:checked + .slider:before {
 
 						</div>
 
+						<div class="col-sm-6 col-md-4">
+
+							<div class="form-group">
+
+								<label class="form-control-label">Enable Email Verification</label>
+
+								<label class="switch">
+											<input name="mail_verification" type="checkbox" <?php if($user['tfa']==1){ echo 'checked';  } ?> >
+										<span class="slider round"></span>
+										</label>
+
+								<span id='message'></span>
+
+							</div>
+
+						</div>
+
 					
 
 						</div>
