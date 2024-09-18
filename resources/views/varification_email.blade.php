@@ -426,7 +426,7 @@
                                 
                                     
                                         <!--<img align="center" alt="" src="https://gallery.mailchimp.com/8a385bbbef9bfe0fc9ee21634/images/9539b284-ba3f-40d3-8350-f354f74e75b0.png" width="300" style="max-width:300px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">-->
-                                        <img align="center" alt="" src="http://dev.d3gdpr.com/image/5e8d9d3b8c643D3GRC_W300c.png" width="300" style="max-width:300px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
+                                        <img align="center" alt="" src="https://dev.consentio.cloud/public/assets-new/img/logo.png" width="300" style="max-width:300px; padding-bottom: 0; display: inline !important; vertical-align: bottom;" class="mcnImage">
                                     
                             </td>
                         </tr>
@@ -470,7 +470,7 @@
                         
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
-                            <p>{{ __('Hello') }} {{$name}},</p>
+                            <p>{{ __('Hello') }} {{$name}}!</p>
                             {{-- To help comply with D3GRC, we need you to complete an assessment form.<br>
 Please click on the <strong>Complete Form</strong> button below to fill this assessment form before --}}
 <p>CONSENTIO  {{ __('Needs to verify your email, Your verification code is') }}  <span style="color:#f00">{{$code}}</span><strong></strong> <br>
