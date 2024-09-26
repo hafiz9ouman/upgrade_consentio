@@ -141,7 +141,14 @@ class HomeController extends Controller
         if(!$emailExists){
             return redirect()->back()->with('status', __('Login_Failed_Wrong_User_Credentials'));
             $errors['email_not_exist'] = __('Login_Failed_Wrong_User_Credentials');
+        }else{
+            DB::table('users')->where('email' , $request->email)->update([
+                'email_varification_code' => '',
+                'is_email_varified' => 0
+            ]);
         }
+
+        $emailExists = DB::table('users')->where('email',$request->email)->first();
 
         $emailVerified = DB::table('users')->where('email',$request->email)->where('is_email_varified', 0)->first();
         // if($emailVerified){
@@ -161,19 +168,22 @@ class HomeController extends Controller
         }
 		
         if (Auth::attempt($userdata)) {
-			
             // return Auth::user();
 			//echo '<pre>';print_r($emailExists);
             $rememberme = $emailExists->rememberme; 
             $rememberme_browser_name = $emailExists->rememberme_browser_name; 
             $rememberme_browser_type = $emailExists->rememberme_browser_type; 
-            if($emailVerified){
-				//dd("emailverified");
-				//in case if user not verified, then always send code in email
-                $this->send_code($rememberme); 
-				return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
+            if ($emailExists->tfa == 1) {
+                return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
+            }
+            // if($emailVerified){
+			// 	//dd("emailverified");
+			// 	//in case if user not verified, then always send code in email
+            //     $this->send_code($rememberme); 
+			// 	return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
 				
-            }else{
+            // }
+            else{
 				//If email is verified already then check if he has rememberme=yes then if check if days diff. is more 
 				//than allowed number of days. Then ask for verification else do not ask
 				//if rememberme= no then take to take to verification screen
@@ -215,18 +225,20 @@ class HomeController extends Controller
 				}
 				if($rememberme=='' || $rememberme ==0){
 					//continue
-				DB::table('users')->where('email' , $emailExists->email)->update([
-                    'email_varification_code' => '',
-                    'is_email_varified' => 1
-                ]);
-				if(Auth::user()->role==1 && App::getLocale()=='fr'){
-                // dd('ok');
-                $lang = "en";
-                \Session::put('locale', $lang);
-            }
-            return redirect('/dashboard');
+				// DB::table('users')->where('email' , $emailExists->email)->update([
+                //     'email_varification_code' => '',
+                //     'is_email_varified' => 1
+                // ]);
+                $this->send_code($rememberme); 
+				return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
 					
 				}
+                if(Auth::user()->role==1 && App::getLocale()=='fr'){
+                    // dd('ok');
+                    $lang = "en";
+                    \Session::put('locale', $lang);
+                }
+                return redirect('/dashboard');
 				DB::table('users')->where('email' , $emailExists->email)->update([
                     'email_varification_code' => '',
                     'is_email_varified' => 1

@@ -15,16 +15,16 @@ class Admin
     
     public function handle($request, Closure $next){
         if (!Auth::check()) {
-
             return redirect('');
         }
-
-        if ($request->user()->role != 1) {
-            return redirect('dashboard');
+        if(auth()->user()->tfa == 1 && auth()->user()->is_email_varified == 0){
+            return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
         }
-
         if(auth()->user()->is_email_varified == 0 ){
             return redirect('verify-your-email');
+        }
+        if ($request->user()->role != 1) {
+            return redirect('dashboard');
         }
 
         return $next($request);

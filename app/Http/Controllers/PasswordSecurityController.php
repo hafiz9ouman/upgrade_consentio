@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Auth;
 use Hash;
+use DB;
 use App\PasswordSecurity;
 
 class PasswordSecurityController extends Controller
@@ -12,6 +13,9 @@ class PasswordSecurityController extends Controller
   public function show2faForm(Request $request){
 
     $user = Auth::user();
+	if($user->is_email_varified == 1){
+		return redirect('dashboard');
+	}
     $google2fa = app('pragmarx.google2fa');
     PasswordSecurity::create([
       'user_id'          => $user->id,
@@ -26,7 +30,7 @@ class PasswordSecurityController extends Controller
   	if($user->passwordSecurity()->exists()){
   		$google2fa = app('pragmarx.google2fa');
   		$google2fa_url = $google2fa->getQRCodeUrl(
-  			'Sufyan Zaigham CH',
+  			'Consentio',
   			$user->email,
   			$user->passwordSecurity->google2fa_secret
   		);
@@ -61,7 +65,19 @@ class PasswordSecurityController extends Controller
   	if($valid){
   		$user->passwordSecurity->google2fa_enable = 1;
   		$user->passwordSecurity->save();
-  return redirect('dashboard');	
+		DB::table('users')->where('email' , $user->email)->update([
+			'email_varification_code' => '',
+			'is_email_varified' => 1
+		]);
+		if($user->role == 1) {
+			return redirect()->route('admin_def')->with('success', '2FA Verified Successfully');
+			
+		}
+		else{
+			// dd('oke');
+			return redirect()->route('dashboard')->with('success', '2FA Verified Successfully');
+		
+		}
   		// return redirect('2fa')->with('success', '2FA Enabled Successfully');
   	}else{
   		return redirect('2fa')->with('error', __('Invalid Verification Code'));

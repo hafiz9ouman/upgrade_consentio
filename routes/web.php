@@ -61,7 +61,7 @@ Route::get('send_code', 'UsersController@send_code')->middleware(['auth', '2fa']
 Route::post('verify_code', 'HomeController@verify_code');
 Route::get('/logout', 'Auth\LoginController@logout');
 
-Route::get('/2fa', 'PasswordSecurityController@show2faform');
+Route::get('/2fa', 'PasswordSecurityController@show2faform')->middleware(['auth']);
 Route::post('/2fa', 'PasswordSecurityController@enable2fa')->name('enable2fa');
 Route::post('/generate2fasecret', 'PasswordSecurityController@generate2fasecret')->name('generate2fasecret');
 Route::post('/disable2fa', 'PasswordSecurityController@disable2fa')->name('disable2fa');

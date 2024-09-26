@@ -346,7 +346,7 @@ class Admin extends Controller
                     "image_name" => $imgname,
                     "is_blocked" => $request->input('is_blocked'),
                     "tfa" => 0,
-                    "is_email_varified" => 1,
+                    "is_email_varified" => 0,
                  );
             }
         
@@ -423,7 +423,7 @@ class Admin extends Controller
                     "image_name" => $imgname,
                     "is_blocked" => $request->input('is_blocked'),
                     "tfa" => 0,           
-                    "is_email_varified" => 1,   
+                    "is_email_varified" => 0,   
                  );
             }
 
@@ -565,7 +565,7 @@ class Admin extends Controller
             $data = array(
                 "name" => $request->input('name'),
                 "email" => $request->input('email'),
-                "is_email_varified" => 1,
+                "is_email_varified" => 0,
                 "role" => 1,
                 "image_name" => $imgname,
                 "tfa" => 0,

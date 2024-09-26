@@ -1524,14 +1524,16 @@ class UsersController extends Controller
             'client_info' => $client_info,
             'code' => $random,
         );
+        DB::table('users')->where('email', $user->email)->update([
+            'email_varification_code' => $random,
+        ]);
+        
         Mail::send(['html' => 'varification_email'], $data, function ($message) use ($user, $subject) {
             $message->to($user->email, 'Consentio Forms')->subject($subject);
             $message->from('noreply@consentio.cloud', 'Consentio Forms');
         });
 
-        DB::table('users')->where('email', $user->email)->update([
-            'email_varification_code' => $random,
-        ]);
+        
         return 'success';
     }
 

@@ -26,9 +26,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
-    // public function passwordSecurity(){
-    //     return $this->hasOne('App\PasswordSecurity');
-    // }   
+    public function passwordSecurity(){
+        return $this->hasOne('App\PasswordSecurity');
+    }   
     public function loginSecurity()
         {
         return $this->hasOne('App\LoginSecurity');

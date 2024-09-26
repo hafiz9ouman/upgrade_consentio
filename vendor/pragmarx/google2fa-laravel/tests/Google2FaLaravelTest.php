@@ -5,6 +5,7 @@ namespace PragmaRX\Google2FALaravel\Tests;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FA;
 use PragmaRX\Google2FALaravel\Support\Authenticator;
 use PragmaRX\Google2FALaravel\Support\Constants as PackageConstants;
@@ -44,7 +45,7 @@ class Google2FaLaravelTest extends TestCase
             ->pushMiddleware('Illuminate\Session\Middleware\StartSession')
             ->pushMiddleware('Illuminate\View\Middleware\ShareErrorsFromSession::class');
 
-        \View::addLocation(__DIR__.'/views');
+        View::addLocation(__DIR__.'/views');
 
         $this->loginUser();
     }
@@ -184,7 +185,7 @@ class Google2FaLaravelTest extends TestCase
         $this->startSession();
 
         $request = $this->createEmptyRequest();
-        $request->setLaravelSession($this->app['session']);
+        $request->setLaravelSession($this->app['session.store']);
 
         $authenticator = app(\PragmaRX\Google2FALaravel\Google2FA::class)->boot($request);
 
@@ -251,7 +252,7 @@ class Google2FaLaravelTest extends TestCase
         $qrCode = Google2FA::getQRCodeInline('company name', 'email@company.com', Constants::SECRET);
 
         $this->assertStringStartsWith(
-            'data:image/png;base64',
+            '<?xml version="1.0"',
             $qrCode
         );
 
@@ -282,14 +283,14 @@ class Google2FaLaravelTest extends TestCase
     public function testQrCodeBackend()
     {
         $this->assertEquals(
-            PackageConstants::QRCODE_IMAGE_BACKEND_IMAGEMAGICK,
+            PackageConstants::QRCODE_IMAGE_BACKEND_SVG,
             Google2FA::getQRCodeBackend()
         );
 
-        Google2FA::setQRCodeBackend('svg');
+        Google2FA::setQRCodeBackend('imagemagick');
 
         $this->assertEquals(
-            PackageConstants::QRCODE_IMAGE_BACKEND_SVG,
+            PackageConstants::QRCODE_IMAGE_BACKEND_IMAGEMAGICK,
             Google2FA::getQRCodeBackend()
         );
     }
