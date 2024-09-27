@@ -21,9 +21,9 @@ class Google2FAMiddleware
         //     return $next($request);
         // }
         // return $authenticator->makeRequestOneTimePasswordResponse();
-        if(auth()->user()->tfa == 1 && auth()->user()->is_email_varified == 0){
-            return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
-        }
+        // if(auth()->user()->tfa == 1 && auth()->user()->is_email_varified == 0){
+        //     return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
+        // }
         
         return $next($request);
     }

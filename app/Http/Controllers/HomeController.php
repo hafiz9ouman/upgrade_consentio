@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\File;
 use Sentinel;
 use Rminder;
 use Mail;
+use Socialite;
 use App\PasswordSecurity;
 use Swift_Mailer;
 use Swift_SmtpTransport;
@@ -27,6 +28,31 @@ use Swift_Attachment;
 class HomeController extends Controller
 {
     public function __construct() {
+    }
+
+    public function google_callback(Request $req){
+        if($req->error){
+            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+        }
+        $user = Socialite::driver('google')->user();
+        $email = session('user_email');
+        // $user->email = "sis.admin@gmail.com";
+
+        if($user->email == $email){
+            // dd("Email Matched");
+            $user = User::where('email', $user->email)->first();
+            Auth::login($user);
+            DB::table('users')->where('email', $user->email)->update([
+                'is_email_varified' => 1
+            ]);
+            if($user->role == 1){
+                return redirect('/admin');
+            }else{
+                return redirect('/dashboard');
+            }
+        }else{
+            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+        }
     }
 
     function getBrowser() {
@@ -146,6 +172,7 @@ class HomeController extends Controller
                 'email_varification_code' => '',
                 'is_email_varified' => 0
             ]);
+            $auth_type = DB::table('users')->where('id', $emailExists->client_id)->pluck('auth_type')->first();
         }
 
         $emailExists = DB::table('users')->where('email',$request->email)->first();
@@ -166,23 +193,37 @@ class HomeController extends Controller
             Session::flush();    
             return redirect()->back()->with('status', __('Your_account_is_currently_blocked'));
         }
+
+        $auth = DB::table("users")->where('email', $request->email)->first();
+
+        if ($auth && Hash::check($request->password, $auth->password)) {
+            session(['user_email' => $auth->email]);
+            if($auth_type == 'google' && $auth){
+                return Socialite::driver('google')->redirect();
+            }
+            if($auth_type == 'microsoft' && $auth){
+                return Socialite::driver('o')->redirect();
+            }
+        }
 		
+
         if (Auth::attempt($userdata)) {
             // return Auth::user();
 			//echo '<pre>';print_r($emailExists);
+            
             $rememberme = $emailExists->rememberme; 
             $rememberme_browser_name = $emailExists->rememberme_browser_name; 
             $rememberme_browser_type = $emailExists->rememberme_browser_type; 
-            if ($emailExists->tfa == 1) {
-                return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
-            }
-            // if($emailVerified){
-			// 	//dd("emailverified");
-			// 	//in case if user not verified, then always send code in email
-            //     $this->send_code($rememberme); 
-			// 	return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
-				
+            // if ($emailExists->tfa == 1) {
+            //     return redirect()->route('enable2fa')->with('message', __('Please complete 2FA verification'));
             // }
+            if(!$emailVerified){
+				//dd("emailverified");
+				//in case if user not verified, then always send code in email
+                $this->send_code($rememberme); 
+				return redirect('verify-your-email')->with('message' , __('Verification code is sent, Please check your email '));
+				
+            }
             else{
 				//If email is verified already then check if he has rememberme=yes then if check if days diff. is more 
 				//than allowed number of days. Then ask for verification else do not ask

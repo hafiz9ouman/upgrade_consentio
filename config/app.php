@@ -163,6 +163,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Mews\Captcha\CaptchaServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Laravel\Socialite\SocialiteServiceProvider::class,
         
         // pdf package
         //Barryvdh\DomPDF\ServiceProvider::class,
@@ -242,7 +243,7 @@ return [
         'Helper' => App\Helper\Helper::class,
         'Captcha' => Mews\Captcha\Facades\Captcha::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
-
+        'Socialite' => Laravel\Socialite\Facades\Socialite::class,
     ],
 
 ];
