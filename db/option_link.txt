@@ -1,3 +1,7 @@
 Option Link Updated
 
 ALTER TABLE `options_link` ADD `group_id` BIGINT(20) UNSIGNED NULL DEFAULT NULL AFTER `form_id`;
+
+User Table Updated
+
+ALTER TABLE `users` ADD `auth_type` VARCHAR(255) NULL DEFAULT NULL AFTER `user_type`;

@@ -192,6 +192,20 @@ input:checked + .slider:before {
 										<small>Please provide proper web address</small>
 									</div>	
 							</div> 
+
+
+							<div class="form-group">
+
+								<label class="form-control-label">Authentication Type<span class="text-danger">*</span></label>
+
+								<select name="auth_type" id="auth_type" class="form-control" required>
+									<option <?php echo ($user->auth_type == 'google') ? 'selected' : ''; ?> value="google">Google</option>
+									<option <?php echo ($user->auth_type == 'microsoft') ? 'selected' : ''; ?> value="microsoft">Microsoft</option>
+								</select>
+								<div class="show_error"  style="color: red; display: none;">
+
+									</div>	
+							</div> 
 							
 							
 							<div class="form-group">

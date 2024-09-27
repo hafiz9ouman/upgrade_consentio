@@ -228,6 +228,22 @@ input:checked + .slider:before {
 								</div>
 
 							</div>
+
+
+							<div class="form-group row">
+								<label class="form-control-label change_color">Authentication Type<span class="text-danger">*</span></label>
+								<div class="">
+									<select name="auth_type" class="form-control" id="auth_type" required>
+										<option value="google">Google</option>
+										<option value="microsoft">Microsoft</option>
+									</select>
+									<div class="show_error">
+										
+									</div>
+										
+								</div>
+
+							</div>
 							
 							
 							<div class="form-group row">

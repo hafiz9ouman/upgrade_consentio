@@ -474,6 +474,7 @@ class UsersController extends Controller
 				"rememberme_days" => $request->input('rememberme_days'),
                 "website" => $request->input('website'),
                 "phone" => $request->input('phone'),
+                "auth_type" => $request->input('auth_type'),
                 "role" => 4,
                 "image_name" => $file_name,
                 "tfa" => 0,
@@ -1461,6 +1462,7 @@ class UsersController extends Controller
             "company" => $request->input('name'),
 			"rememberme_days" => $request->input('rememberme_days'),
             "phone" => $request->input('phone'),
+            "auth_type" => $request->input('auth_type'),
             "website" => $request->input('website'),
             "image_name" => $imgname,
         );
