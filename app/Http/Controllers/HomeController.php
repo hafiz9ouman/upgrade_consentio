@@ -196,13 +196,13 @@ class HomeController extends Controller
 
         $auth = DB::table("users")->where('email', $request->email)->first();
 
-        if ($auth && Hash::check($request->password, $auth->password)) {
+        if ($auth && $auth->role != 1 && Hash::check($request->password, $auth->password)) {
             session(['user_email' => $auth->email]);
             if($auth_type == 'google' && $auth){
                 return Socialite::driver('google')->redirect();
             }
             if($auth_type == 'microsoft' && $auth){
-                return Socialite::driver('o')->redirect();
+                return Socialite::driver('microsoft')->redirect();
             }
         }
 		
