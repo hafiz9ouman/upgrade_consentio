@@ -62,7 +62,7 @@ class HomeController extends Controller
         // }
         $user = Socialite::driver('microsoft')->stateless()->user();
         $email = session('user_email');
-        $user->email = "sis.admin@gmail.com";
+        // $user->email = "sis.admin@gmail.com";
 
         if($user->email == $email){
             // dd("Email Matched");
