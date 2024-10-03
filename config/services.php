@@ -46,7 +46,6 @@ return [
         'redirect' => env('MICROSOFT_REDIRECT_URI'),
         'tenant' => 'common',
         'include_tenant_info' => true,
-        'proxy' => env('PROXY')
     ],
 
     'stripe' => [

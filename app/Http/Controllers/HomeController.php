@@ -55,6 +55,32 @@ class HomeController extends Controller
         }
     }
 
+    public function microsoft_callback(Request $req){
+        // dd($req->all());
+        // if($req->error){
+        //     return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+        // }
+        $user = Socialite::driver('microsoft')->stateless()->user();
+        $email = session('user_email');
+        $user->email = "sis.admin@gmail.com";
+
+        if($user->email == $email){
+            // dd("Email Matched");
+            $user = User::where('email', $user->email)->first();
+            Auth::login($user);
+            DB::table('users')->where('email', $user->email)->update([
+                'is_email_varified' => 1
+            ]);
+            if($user->role == 1){
+                return redirect('/admin');
+            }else{
+                return redirect('/dashboard');
+            }
+        }else{
+            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+        }
+    }
+
     function getBrowser() {
         $user_agent = $_SERVER['HTTP_USER_AGENT'];
         $browser = "N/A";
@@ -202,7 +228,8 @@ class HomeController extends Controller
                 return Socialite::driver('google')->redirect();
             }
             if($auth_type == 'microsoft' && $auth){
-                return Socialite::driver('microsoft')->redirect();
+                // return Socialite::driver('microsoft')->redirect();
+                return Socialite::driver('microsoft')->with(['redirect_uri' => env('MICROSOFT_REDIRECT_URI')])->redirect();
             }
         }
 		
