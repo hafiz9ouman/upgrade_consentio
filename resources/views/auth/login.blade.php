@@ -136,7 +136,7 @@
                   </div>
               </div>
           </form>
-          <div>Login with</div>
+          <div><strong>{{__('Login with')}}</strong></div>
           <div>
             <!-- <a href="" class="m-5"><i class="bi bi-microsoft"></i></a>
             <a href="" class="m-5"><i class="bi bi-google"></i></a> -->
