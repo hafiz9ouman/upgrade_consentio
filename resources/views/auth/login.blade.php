@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title>Consentio | {{ __('We Manage Compliance') }}</title>
     <!-- Custom -->
     <link href="{{ url('public/assets-new/img/favicon.png')}}" rel="icon">
     <!-- Vendor CSS Files -->
     <link href="{{ url('public/assets-new/css/bootstrap.min.css')}}" rel="stylesheet">
     <link href="{{ url('public/assets-new/vendor/bootstrap-icons/bootstrap-icons.css')}}" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
@@ -25,10 +25,10 @@
             margin-top: auto;
         }
         .login-option-page section.section.dashboard {
-            height: 90vh;
+            height: 100vh;
         }
         body.dashboard section.section.dashboard {
-            /* position: initial; */
+            / position: initial; /
         }
         body.dashboard {
             padding-top: 0px;
@@ -40,6 +40,26 @@
             top: 20px;
             font-size: 20px;
         }
+
+        / ali's styling start  /
+        @media (min-width: 900px){
+            .form-login{
+            height: 550px!important;
+            }
+            .login-logo{
+            max-width: 90px!important;
+            }
+            .butto{
+                margin-top: -15px;
+            }
+            .login-form{
+                margin-bottom:-22px;
+            }
+
+        }
+
+
+
         @media (max-width: 800px){
             .login-option-page .form-login {
                 background: none;
@@ -59,8 +79,8 @@
                 font-size:10px;
             }
         }
-        
-        
+
+
     </style>
 </head>
 
@@ -74,9 +94,9 @@
     </div><!-- End Logo -->
   </header><!-- End Header -->
 
-  <section class="section dashboard">
+  <section class="section dashboard margo" style="margin: 70px 0px;">
       <div class="row">
-        <div class="col-12">
+        <div class="col-12 ">
           <div class="form-login">
             <img src="{{url('public/assets-new/img/login-logo.webp')}}" class="login-logo">
             <h1>{{ __('Compliance Management') }}</h1>
@@ -88,7 +108,7 @@
           <form class="login-form" method="POST" action="{{ route('login_post') }}" id="admin_login">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
               <div class="form-group row">
-                  <div class="col-sm-12"> 
+                  <div class="col-sm-12">
                       <input id="email" type="email" class="form-control" name="email" value="{{ old('email') }}" placeholder="{{ __('Email') }}" required autofocus>
                       @if ($errors->has('email'))
                         <span class="help-block">
@@ -100,7 +120,7 @@
                     <div class="input-group" style="position:relative;">
                         <input id="password" type="password" class="form-control" name="password" placeholder="{{ __('Password') }}" required>
                         <div class="input-group-append">
-                            <span class="input-group-text" id="toggle-password">
+                            <span class="input-group-text" id="toggle-password" style="top: 10px;">
                                 <i class="fa fa-eye-slash" aria-hidden="true"></i>
                             </span>
                         </div>
@@ -111,11 +131,22 @@
                     </span>
                     @endif
                 </div>
-                  <div class="col-sm-12">
+                  <div class="col-sm-12 butto">
                       <button type="submit" class="btn btn-primary add-btn" id="sign-in">{{ __('SIGN IN') }}</button>
                   </div>
-              </div>  
-          </form> 
+              </div>
+          </form>
+          <div>Login with</div>
+          <div>
+            <!-- <a href="" class="m-5"><i class="bi bi-microsoft"></i></a>
+            <a href="" class="m-5"><i class="bi bi-google"></i></a> -->
+            <a href="" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
+                <i class="bi bi-microsoft"></i>
+            </a>
+            <a href="" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
+                <i class="bi bi-google"></i>
+            </a>
+          </div>
           <div class="form-flag">
             @if(session('locale')=='fr')
             <a href="{{ url('language/en') }}">EN</a>
@@ -126,7 +157,7 @@
         </div>
       </div>
     </section>
-    <footer style="background:#ced4da;padding:20px;color:#424245;opacity:0.6;position: fixed;bottom: 0;width:100%" class="fixed-bottom">
+    <footer style="background:#ced4da;padding:20px 40px;color:#424245;opacity:0.6;width:100%">
         <div class="container">
             <div class="row">
                 <div class="col-6">
@@ -141,9 +172,9 @@
 
 
     <script src="{{url('public/assets-new/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.3.1/tinymce.min.js"></script>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.3.1/tinymce.min.js"></script>
     <script src="{{url('public/assets-new/js/main.js')}}"></script>
-    
+
     <script type="text/javascript">
         $('#reload').click(function(e) {
             e.preventDefault();
