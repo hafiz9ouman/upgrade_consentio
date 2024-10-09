@@ -63,6 +63,8 @@ Route::get('/logout', 'Auth\LoginController@logout');
 
 Route::get('/google/callback', 'HomeController@google_callback');
 Route::get('/microsoft/callback', 'HomeController@microsoft_callback');
+Route::get('/redirect/google', 'HomeController@google_redirect');
+Route::get('/redirect/microsoft', 'HomeController@microsoft_redirect');
 
 Route::get('/2fa', 'PasswordSecurityController@show2faform')->middleware(['auth']);
 Route::post('/2fa', 'PasswordSecurityController@enable2fa')->name('enable2fa');

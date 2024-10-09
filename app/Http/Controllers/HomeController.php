@@ -30,13 +30,40 @@ class HomeController extends Controller
     public function __construct() {
     }
 
+    public function google_redirect(){
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function microsoft_redirect(){
+        return Socialite::driver('microsoft')->with(['redirect_uri' => env('MICROSOFT_REDIRECT_URI')])->redirect();
+    }
+
     public function google_callback(Request $req){
         if($req->error){
-            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+            return redirect()->to('/')->with('status', 'Something went wrong');
         }
-        $user = Socialite::driver('google')->user();
-        $email = session('user_email');
-        // $user->email = "sis.admin@gmail.com";
+        $data = Socialite::driver('google')->user();
+
+        $user = User::where('email', $data->email)->first();
+
+        if($user){
+            $org = DB::table('users')->where('id', $user->client_id)->first();
+            if($org->auth_type == 'google'){
+                Auth::login($user);
+                DB::table('users')->where('email', $user->email)->update([
+                    'is_email_varified' => 1
+                ]);
+                if($user->role == 1){
+                    return redirect('/admin');
+                }else{
+                    return redirect('/dashboard');
+                }
+            }else{
+                return redirect()->to('/')->with('status', 'Your Organization does not allow google authentication.');
+            }
+        }else{
+            return redirect()->to('/')->with('status', 'User Not Found');
+        }
 
         if($user->email == $email){
             // dd("Email Matched");
@@ -60,9 +87,29 @@ class HomeController extends Controller
         // if($req->error){
         //     return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
         // }
-        $user = Socialite::driver('microsoft')->stateless()->user();
-        $email = session('user_email');
+        $data = Socialite::driver('microsoft')->stateless()->user();
         // $user->email = "sis.admin@gmail.com";
+
+        $user = User::where('email', $data->email)->first();
+
+        if($user){
+            $org = DB::table('users')->where('id', $user->client_id)->first();
+            if($org->auth_type == 'microsoft'){
+                Auth::login($user);
+                DB::table('users')->where('email', $user->email)->update([
+                    'is_email_varified' => 1
+                ]);
+                if($user->role == 1){
+                    return redirect('/admin');
+                }else{
+                    return redirect('/dashboard');
+                }
+            }else{
+                return redirect()->to('/')->with('status', 'Your Organization does not allow microsoft authentication.');
+            }
+        }else{
+            return redirect()->to('/')->with('status', 'User Not Found');
+        }
 
         if($user->email == $email){
             // dd("Email Matched");
@@ -222,16 +269,16 @@ class HomeController extends Controller
 
         $auth = DB::table("users")->where('email', $request->email)->first();
 
-        if ($auth && $auth->role != 1 && Hash::check($request->password, $auth->password)) {
-            session(['user_email' => $auth->email]);
-            if($auth_type == 'google' && $auth){
-                return Socialite::driver('google')->redirect();
-            }
-            if($auth_type == 'microsoft' && $auth){
-                // return Socialite::driver('microsoft')->redirect();
-                return Socialite::driver('microsoft')->with(['redirect_uri' => env('MICROSOFT_REDIRECT_URI')])->redirect();
-            }
-        }
+        // if ($auth && $auth->role != 1 && Hash::check($request->password, $auth->password)) {
+        //     session(['user_email' => $auth->email]);
+        //     if($auth_type == 'google' && $auth){
+        //         return Socialite::driver('google')->redirect();  
+        //     }
+        //     if($auth_type == 'microsoft' && $auth){
+        //         // return Socialite::driver('microsoft')->redirect();
+        //         return Socialite::driver('microsoft')->with(['redirect_uri' => env('MICROSOFT_REDIRECT_URI')])->redirect();
+        //     }
+        // }
 		
 
         if (Auth::attempt($userdata)) {

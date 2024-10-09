@@ -140,10 +140,10 @@
           <div>
             <!-- <a href="" class="m-5"><i class="bi bi-microsoft"></i></a>
             <a href="" class="m-5"><i class="bi bi-google"></i></a> -->
-            <a href="" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
+            <a href="{{ url('/redirect/microsoft') }}" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
                 <i class="bi bi-microsoft"></i>
             </a>
-            <a href="" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
+            <a href="{{ url('/redirect/google') }}" class="m-4" style="display: inline-block; padding: 12px 15px; margin: 10px; border: 2px solid #ccc; border-radius: 8px; background-color: #f8f9fa; transition: background-color 0.3s;">
                 <i class="bi bi-google"></i>
             </a>
           </div>
