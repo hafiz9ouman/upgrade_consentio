@@ -40,7 +40,7 @@ class HomeController extends Controller
 
     public function google_callback(Request $req){
         if($req->error){
-            return redirect()->to('/')->with('status', 'Something went wrong');
+            return redirect()->to('/login')->with('status', 'Something went wrong');
         }
         $data = Socialite::driver('google')->user();
 
@@ -59,10 +59,10 @@ class HomeController extends Controller
                     return redirect('/dashboard');
                 }
             }else{
-                return redirect()->to('/')->with('status', 'Your Organization does not allow google authentication.');
+                return redirect()->to('/login')->with('status', 'Your Organization does not allow google authentication.');
             }
         }else{
-            return redirect()->to('/')->with('status', 'User Not Found');
+            return redirect()->to('/login')->with('status', 'User Not Found');
         }
 
         if($user->email == $email){
@@ -78,7 +78,7 @@ class HomeController extends Controller
                 return redirect('/dashboard');
             }
         }else{
-            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+            return redirect()->to('/login')->with('status', 'Your Entered Email does not match with Google data.');
         }
     }
 
@@ -105,10 +105,10 @@ class HomeController extends Controller
                     return redirect('/dashboard');
                 }
             }else{
-                return redirect()->to('/')->with('status', 'Your Organization does not allow microsoft authentication.');
+                return redirect()->to('/login')->with('status', 'Your Organization does not allow microsoft authentication.');
             }
         }else{
-            return redirect()->to('/')->with('status', 'User Not Found');
+            return redirect()->to('/login')->with('status', 'User Not Found');
         }
 
         if($user->email == $email){
@@ -124,7 +124,7 @@ class HomeController extends Controller
                 return redirect('/dashboard');
             }
         }else{
-            return redirect()->to('/')->with('status', 'Your Entered Email does not match with Google data.');
+            return redirect()->to('/login')->with('status', 'Your Entered Email does not match with Google data.');
         }
     }
 
